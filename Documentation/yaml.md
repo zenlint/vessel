@@ -125,3 +125,8 @@ mysql-log:
         - RACK_ENV=development
         - SESSION_SECRE
 ```
+
+## 其它说明
+
+- 分区之间不能存在循环依赖：`A -> B, B -> C, C -> A`
+- 只有 `app` 分区允许拥有子分区 `notify`
