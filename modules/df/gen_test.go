@@ -22,6 +22,7 @@ const (
       - go get -u github.com/go-sql-driver/mysql
       - go get -u github.com/go-xorm/xorm
       - go build
+    cmd: ["./gogs", "web"]
     notify: 
       email:
         recipients:
@@ -37,6 +38,8 @@ RUN go get -u github.com/martini-contrib/render
 RUN go get -u github.com/go-sql-driver/mysql
 RUN go get -u github.com/go-xorm/xorm
 RUN go build
+
+CMD ["./gogs", "web"]
 `
 )
 

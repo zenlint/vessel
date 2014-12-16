@@ -9,10 +9,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Config represents a YAML config section.
 type Config struct {
 	Image       string
 	Environment []string
 	Script      []string
+	Cmd         []string
 }
 
 func generate(cfg *Config) ([]byte, error) {
@@ -28,7 +30,9 @@ func generate(cfg *Config) ([]byte, error) {
 	for _, spt := range cfg.Script {
 		buf.WriteString(fmt.Sprintf("RUN %s\n", spt))
 	}
-	// buf.WriteString("\n")
+	buf.WriteString("\n")
+
+	buf.WriteString(fmt.Sprintf("CMD [\"%s\"]\n", strings.Join(cfg.Cmd, "\", \"")))
 
 	return buf.Bytes(), nil
 }

@@ -24,6 +24,8 @@ app:
       - go get -u github.com/go-sql-driver/mysql
       - go get -u github.com/go-xorm/xorm
       - go build
+    # 最后要执行的命令 
+    cmd: ./gogs web
     notify: # 用于指定通知信息（可选）
       email: # 用于指定邮箱通知信息
         recipients:
