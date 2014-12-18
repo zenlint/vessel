@@ -19,8 +19,7 @@ app:
       - go get -u github.com/go-sql-driver/mysql
       - go get -u github.com/go-xorm/xorm
       - go build
-    # 最后要执行的命令 
-    cmd: ["./gogs", "web"]
+    cmd: ["./gogs", "web"] # 最后要执行的命令
     services: # 用于指定依赖服务，每个依赖需要另外建立分区说明详细信息（可选）
       - redis # 依赖服务名称是任意的，但必须和相关分区名称相匹配
       - mysql
