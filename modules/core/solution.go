@@ -33,17 +33,23 @@ func (s *Service) Dockerfile() ([]byte, error) {
 
 	buf.WriteString(fmt.Sprintf("FROM %s\n\n", s.Image))
 
-	for _, env := range s.Environment {
-		buf.WriteString(fmt.Sprintf("ENV %s\n", strings.Replace(env, "=", " ", 1)))
+	if len(s.Environment) > 0 {
+		for _, env := range s.Environment {
+			buf.WriteString(fmt.Sprintf("ENV %s\n", strings.Replace(env, "=", " ", 1)))
+		}
+		buf.WriteString("\n")
 	}
-	buf.WriteString("\n")
 
-	for _, spt := range s.Script {
-		buf.WriteString(fmt.Sprintf("RUN %s\n", spt))
+	if len(s.Script) > 0 {
+		for _, spt := range s.Script {
+			buf.WriteString(fmt.Sprintf("RUN %s\n", spt))
+		}
+		buf.WriteString("\n")
 	}
-	buf.WriteString("\n")
 
-	buf.WriteString(fmt.Sprintf("CMD [\"%s\"]\n", strings.Join(s.Cmd, "\", \"")))
+	if len(s.Cmd) > 0 {
+		buf.WriteString(fmt.Sprintf("CMD [\"%s\"]\n", strings.Join(s.Cmd, "\", \"")))
+	}
 
 	return buf.Bytes(), nil
 }
@@ -120,7 +126,7 @@ type Solution struct {
 func NewSolutionFromBytes(data []byte) (_ *Solution, err error) {
 	sections := make(map[string]map[string]interface{})
 	if err = yaml.Unmarshal(data, &sections); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing YAML: %v", err)
 	}
 
 	sln := new(Solution)
@@ -134,10 +140,12 @@ func NewSolutionFromBytes(data []byte) (_ *Solution, err error) {
 	sln.Git.Auth = parseString(gitSec["auth"])
 	sln.Git.Path = parseString(gitSec["path"])
 
-	recipients := app["notify"].(map[interface{}]interface{})["email"].(map[interface{}]interface{})["recipients"].([]interface{})
-	sln.Notify.Email.Recipients = make([]string, len(recipients))
-	for i := range recipients {
-		sln.Notify.Email.Recipients[i] = recipients[i].(string)
+	if app["notify"] != nil {
+		recipients := app["notify"].(map[interface{}]interface{})["email"].(map[interface{}]interface{})["recipients"].([]interface{})
+		sln.Notify.Email.Recipients = make([]string, len(recipients))
+		for i := range recipients {
+			sln.Notify.Email.Recipients[i] = recipients[i].(string)
+		}
 	}
 
 	sln.Service, err = parseService("app", sections, map[string]bool{})
