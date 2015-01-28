@@ -1,13 +1,22 @@
 package core
 
 import (
+	"archive/tar"
 	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
+	"path"
+	"regexp"
 	"strings"
+	"time"
 
+	api "github.com/fsouza/go-dockerclient"
 	"gopkg.in/yaml.v2"
+
+	"github.com/dockercn/vessel/modules/utils"
 )
 
 // Git represents Git repository information.
@@ -24,6 +33,8 @@ type Service struct {
 	Cmd         []string
 	Ports       []string
 	Expose      []string
+	Git         Git
+	client      *api.Client
 	Services    []*Service
 }
 
@@ -40,6 +51,16 @@ func (s *Service) Dockerfile() ([]byte, error) {
 		buf.WriteString("\n")
 	}
 
+	if len(s.Cmd) > 0 {
+		buf.WriteString(fmt.Sprintf("CMD [\"%s\"]\n", strings.Join(s.Cmd, "\", \"")))
+	}
+
+	if s.Name == "app" {
+		buf.WriteString("WORKDIR $GOPATH/src/" + path.Dir(s.Git.Path) + "\n")
+		buf.WriteString("RUN git clone https://" + s.Git.Path + ".git\n")
+		buf.WriteString("WORKDIR " + path.Base(s.Git.Path) + "\n")
+	}
+
 	if len(s.Script) > 0 {
 		for _, spt := range s.Script {
 			buf.WriteString(fmt.Sprintf("RUN %s\n", spt))
@@ -47,11 +68,70 @@ func (s *Service) Dockerfile() ([]byte, error) {
 		buf.WriteString("\n")
 	}
 
-	if len(s.Cmd) > 0 {
-		buf.WriteString(fmt.Sprintf("CMD [\"%s\"]\n", strings.Join(s.Cmd, "\", \"")))
+	fmt.Println(buf.String())
+	return buf.Bytes(), nil
+}
+
+var imageIdPattern = regexp.MustCompile("Successfully built ([0-9a-f]+)")
+
+// FIXME: recursively build.
+// Build builds services recursively and returns image ID.
+func (s *Service) Build() (string, error) {
+	log.Println("Building image...")
+
+	data, err := s.Dockerfile()
+	if err != nil {
+		return "", err
 	}
 
-	return buf.Bytes(), nil
+	var input bytes.Buffer
+	so := utils.NewStreamOutput()
+	t := time.Now()
+
+	tr := tar.NewWriter(&input)
+	tr.WriteHeader(&tar.Header{Name: "Dockerfile", Size: int64(len(data)), ModTime: t, AccessTime: t, ChangeTime: t})
+	tr.Write(data)
+	tr.Close()
+	opts := api.BuildImageOptions{
+		Name:           "test",
+		RmTmpContainer: true,
+		InputStream:    &input,
+		OutputStream:   so,
+		RawJSONStream:  true,
+	}
+	if err = s.client.BuildImage(opts); err != nil {
+		return "", err
+	}
+
+	var imageId string
+	if len(so.Events) > 0 {
+		e := so.Events[len(so.Events)-1]
+		m := imageIdPattern.FindAllStringSubmatch(e["stream"], 1)
+		if m != nil {
+			imageId = m[0][1]
+		}
+	}
+	return imageId, nil
+}
+
+// FIXME: recursively start.
+func (s *Service) Start(id string) error {
+	c, err := s.client.CreateContainer(api.CreateContainerOptions{
+		Config: &api.Config{
+			Image: id,
+		},
+	})
+	if err != nil {
+		fmt.Println("fail to create container")
+		return err
+	}
+	if err = s.client.StartContainer(c.ID, &api.HostConfig{}); err != nil {
+		return err
+	}
+	s.client.WaitContainer(c.ID)
+	return s.client.RemoveContainer(api.RemoveContainerOptions{
+		ID: c.ID,
+	})
 }
 
 func parseString(v interface{}) string {
@@ -92,6 +172,10 @@ func parseService(name string, sections map[string]map[string]interface{}, marke
 	if name != "app" {
 		s.Ports = parseStrings(sec["ports"])
 		s.Expose = parseStrings(sec["expose"])
+	} else {
+		gitSec := sec["git"].(map[interface{}]interface{})
+		s.Git.Auth = parseString(gitSec["auth"])
+		s.Git.Path = parseString(gitSec["path"])
 	}
 
 	serviceNames := parseStrings(sec["services"])
@@ -117,9 +201,20 @@ type Notify struct {
 
 // Solution represents a build solution with needed information.
 type Solution struct {
-	Git Git
 	Notify
 	*Service
+}
+
+// NewClient creates and returns a Docker client.
+func NewClient() (c *api.Client, err error) {
+	host := os.Getenv("DOCKER_HOST")
+	if os.Getenv("DOCKER_TLS_VERIFY") == "1" {
+		certPath := os.Getenv("DOCKER_CERT_PATH")
+		c, err = api.NewTLSClient(host, path.Join(certPath, "cert.pem"), path.Join(certPath, "key.pem"), path.Join(certPath, "ca.pem"))
+	} else {
+		c, err = api.NewClient(host)
+	}
+	return c, err
 }
 
 // NewSolutionFromBytes creates and returns a new solution with given YAML in bytes.
@@ -136,10 +231,6 @@ func NewSolutionFromBytes(data []byte) (_ *Solution, err error) {
 		return nil, errors.New("section 'app' not found")
 	}
 
-	gitSec := app["git"].(map[interface{}]interface{})
-	sln.Git.Auth = parseString(gitSec["auth"])
-	sln.Git.Path = parseString(gitSec["path"])
-
 	if app["notify"] != nil {
 		recipients := app["notify"].(map[interface{}]interface{})["email"].(map[interface{}]interface{})["recipients"].([]interface{})
 		sln.Notify.Email.Recipients = make([]string, len(recipients))
@@ -153,7 +244,8 @@ func NewSolutionFromBytes(data []byte) (_ *Solution, err error) {
 		return nil, err
 	}
 
-	return sln, nil
+	sln.client, err = NewClient()
+	return sln, err
 }
 
 // NewSolutionFromFile creates and returns a new solution with given YAML file.
