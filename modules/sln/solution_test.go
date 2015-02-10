@@ -1,4 +1,4 @@
-package core
+package sln
 
 import (
 	"strings"
@@ -32,6 +32,10 @@ const (
 
 ENV GOROOT /usr/local/go
 ENV PATH $PATH:$GOROOT/bin:$GOPATH/bin
+
+WORKDIR $GOPATH/src/github.com/drone
+RUN git clone https://github.com/drone/drone.git
+WORKDIR drone
 
 RUN go get -u github.com/hoisie/redis
 RUN go get -u github.com/go-martini/martini

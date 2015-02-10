@@ -1,0 +1,12 @@
+[run]
+init_cmd = ["go", "install"]
+watch_all = true
+watch_dirs = [
+	"../modules",
+	"$GOPATH/src/github.com/dockercn/rudder"
+]
+watch_exts = [".go"]
+build_delay = 1500
+cmds = [
+	["go", "install"]
+]

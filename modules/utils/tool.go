@@ -8,25 +8,32 @@ import (
 )
 
 type StreamOutput struct {
-	Events []map[string]string
+	Events []map[string]interface{}
 }
 
 func NewStreamOutput() *StreamOutput {
 	return &StreamOutput{
-		Events: make([]map[string]string, 0),
+		Events: make([]map[string]interface{}, 0),
 	}
 }
 
 func (so *StreamOutput) Write(p []byte) (int, error) {
-	e := make(map[string]string)
+	e := make(map[string]interface{})
 	for _, line := range bytes.Split(p, []byte("\n")) {
 		if len(line) == 0 {
 			continue
 		}
 		if err := json.Unmarshal(line, &e); err != nil {
-			return 0, err
+			return 0, fmt.Errorf("unmarshal '%s': %v", string(line), err)
 		}
-		fmt.Print(string(e["stream"]))
+		if e["stream"] != nil {
+			fmt.Print(e["stream"].(string))
+		} else if e["error"] != nil {
+			fmt.Println(e["error"].(string))
+		} else if e["status"] != nil {
+		} else {
+			fmt.Println(e)
+		}
 		so.Events = append(so.Events, e)
 	}
 	return len(p), nil
