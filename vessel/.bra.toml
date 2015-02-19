@@ -1,12 +1,18 @@
 [run]
-init_cmd = ["go", "install"]
+init_cmds = [
+	["go", "install"],
+	["vessel", "web"]
+]
 watch_all = true
 watch_dirs = [
 	"../modules",
-	"$GOPATH/src/github.com/dockercn/rudder"
+	"../cmd",
+	"$GOPATH/src/github.com/dockercn/rudder",
+	"$GOPATH/src/github.com/dockercn/anchor"
 ]
 watch_exts = [".go"]
 build_delay = 1500
 cmds = [
-	["go", "install"]
+	["go", "install"],
+	["vessel", "web"]
 ]
