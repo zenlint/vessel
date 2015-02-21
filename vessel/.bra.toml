@@ -7,6 +7,7 @@ watch_all = true
 watch_dirs = [
 	"../modules",
 	"../cmd",
+	"../models",
 	"$GOPATH/src/github.com/dockercn/rudder",
 	"$GOPATH/src/github.com/dockercn/anchor"
 ]

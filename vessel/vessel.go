@@ -1,16 +1,13 @@
 package main
 
 import (
-	"log"
 	"os"
 	"runtime"
 
 	"github.com/codegangsta/cli"
 
 	"github.com/dockercn/vessel/cmd"
-	"github.com/dockercn/vessel/modules/flow"
 	"github.com/dockercn/vessel/modules/setting"
-	"github.com/dockercn/vessel/modules/sln"
 )
 
 const APP_VER = "0.0.1.0219"
@@ -50,17 +47,17 @@ func main() {
 }
 
 func main1() {
-	log.Println("Creating solution...")
-	sln, err := sln.NewSolutionFromFile(os.Args[1])
-	if err != nil {
-		log.Fatalf("Fail to create solution: %v", err)
-	}
+	// log.Println("Creating solution...")
+	// sln, err := sln.NewSolutionFromFile(os.Args[1])
+	// if err != nil {
+	// 	log.Fatalf("Fail to create solution: %v", err)
+	// }
 
-	stage := flow.NewStage()
-	stage.SetJob(sln)
-	if err = stage.Run(); err != nil {
-		log.Fatalf("Fail to run stage: %v", err)
-	}
+	// stage := flow.NewStage()
+	// stage.SetJob(sln)
+	// if err = stage.Run(); err != nil {
+	// 	log.Fatalf("Fail to run stage: %v", err)
+	// }
 
 	// log.Println("Starting container...")
 	// if err = sln.Start(imageId); err != nil {
