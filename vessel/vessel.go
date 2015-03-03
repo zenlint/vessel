@@ -36,7 +36,7 @@ GLOBAL OPTIONS:
 func main() {
 	app := cli.NewApp()
 	app.Name = "Vessel"
-	app.Usage = "Vessel is a command line utility tool for Vessel API."
+	app.Usage = "Vessel is a command line utility tool."
 	app.Version = APP_VER
 	app.Commands = []cli.Command{
 		cmd.CmdWeb,

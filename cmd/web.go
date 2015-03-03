@@ -6,7 +6,11 @@ import (
 
 	"github.com/Unknwon/macaron"
 	"github.com/codegangsta/cli"
+	"github.com/macaron-contrib/binding"
 
+	api "github.com/dockercn/anchor"
+
+	"github.com/dockercn/vessel/models"
 	"github.com/dockercn/vessel/modules/log"
 	"github.com/dockercn/vessel/modules/setting"
 	"github.com/dockercn/vessel/modules/web"
@@ -22,9 +26,15 @@ var CmdWeb = cli.Command{
 }
 
 func runWeb(c *cli.Context) {
+	if err := models.InitDb(); err != nil {
+		log.Fatal("Fail to init DB: %v", err)
+	}
+
 	if c.IsSet("port") {
 		setting.HTTPPort = c.Int("port")
 	}
+
+	bindIgnErr := binding.BindIgnErr
 
 	m := macaron.New()
 	m.Use(macaron.Logger())
@@ -35,6 +45,8 @@ func runWeb(c *cli.Context) {
 	m.Use(web.Contexter())
 
 	group := func() {
+		m.Combo("/flow").Post(bindIgnErr(api.CreateFlowOptions{}), web.CreateFlow)
+
 		m.Post("/build", web.Build)
 	}
 	m.Group("", group)
