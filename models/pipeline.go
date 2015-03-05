@@ -25,7 +25,7 @@ const (
 
 // Pipeline represents a list of processes in order.
 type Pipeline struct {
-	uuid   string
+	UUID   string
 	state  State
 	stages []*Stage
 
@@ -37,14 +37,10 @@ type Pipeline struct {
 // NewPipeline creates and returns a new pipeline.
 func NewPipeline() *Pipeline {
 	return &Pipeline{
-		uuid:   uuid.NewV4().String(),
+		UUID:   uuid.NewV4().String(),
 		state:  STATE_WAITING,
 		stages: make([]*Stage, 0, 3),
 	}
-}
-
-func (p *Pipeline) UUID() string {
-	return p.uuid
 }
 
 // AddStage adds a new stage to pipeline.
@@ -80,7 +76,7 @@ func (p *Pipeline) Run() (err error) {
 	}()
 
 	for _, s := range p.stages {
-		s.Stdout = utils.NewPrefixWriter("["+p.UUID()+"]", p.Stdout)
+		s.Stdout = utils.NewPrefixWriter("["+p.UUID+"]", p.Stdout)
 		if err = s.Run(); err != nil {
 			return fmt.Errorf("run stage(%s): %v", s.UUID(), err)
 		}
