@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -8,31 +9,30 @@ import (
 	gouuid "github.com/satori/go.uuid"
 )
 
+var (
+	ErrFlowNotExist = errors.New("Flow does not exist")
+)
+
 // Flow represents a complete CI solution.
 type Flow struct {
 	UUID string `json:"-"`
 	Name string
 
-	// pipelines stores execution dependency relations of pipelines.
-	pipelines [][]*Pipeline
-	Pipelines [][]string // Store UUIDs when save.
-
-	// Tree marks whether prerequisites are satisfied for a pipeline to run.
-	treeLock sync.RWMutex
-	Tree     map[string]map[string]bool
+	// Pipelines stores UUIDs of pipelines.
+	Pipelines map[string]bool
 
 	Created time.Time
 }
 
-func CreateFlow(uuid, name string) *Flow {
+func NewFlow(uuid, name string) *Flow {
 	if len(uuid) == 0 {
 		uuid = gouuid.NewV4().String()
 	}
 	return &Flow{
-		UUID:    uuid,
-		Name:    name,
-		Tree:    make(map[string]map[string]bool),
-		Created: time.Now(),
+		UUID:      uuid,
+		Name:      name,
+		Pipelines: make(map[string]bool),
+		Created:   time.Now(),
 	}
 }
 
@@ -44,19 +44,7 @@ func DeleteFlow(uuid string) (err error) {
 	return err
 }
 
-// RefreshPipelineUUIDs iterates pipelines and only store UUIDs to map their relations.
-func (f *Flow) RefreshPipelineUUIDs() {
-	f.Pipelines = make([][]string, len(f.pipelines))
-	for i := range f.pipelines {
-		f.Pipelines[i] = make([]string, len(f.pipelines[i]))
-		for j := range f.pipelines[i] {
-			f.Pipelines[i][j] = f.pipelines[i][j].UUID
-		}
-	}
-}
-
 func (f *Flow) Save() error {
-	f.RefreshPipelineUUIDs()
 	return Save(f.UUID, f)
 }
 
@@ -64,8 +52,28 @@ func (f *Flow) Retrieve() error {
 	return Retrieve(f.UUID, f)
 }
 
-func (f *Flow) Run() error {
+func (f *Flow) SetPipelines(uuids ...string) (err error) {
+	var (
+		pipelines = make(map[string]bool)
+		pipe      *Pipeline
+	)
+	for _, uuid := range uuids {
+		if pipelines[uuid] {
+			continue
+		}
 
+		pipe = NewPipeline(uuid, "")
+		if err = pipe.Retrieve(); err != nil {
+			if err == ErrObjectNotExist {
+				return ErrPipelineNotExist{uuid}
+			} else {
+				return err
+			}
+		}
+		pipelines[uuid] = true
+	}
+
+	f.Pipelines = pipelines
 	return nil
 }
 
@@ -77,11 +85,45 @@ func ListFlows() ([]*Flow, error) {
 
 	flows := make([]*Flow, len(keys))
 	for i := range keys {
-		flows[i] = CreateFlow(string(keys[i]), "")
+		flows[i] = NewFlow(string(keys[i]), "")
 		if err = flows[i].Retrieve(); err != nil {
 			return nil, fmt.Errorf("Retrieve '%s': %v", flows[i].UUID, err)
 		}
 	}
 
 	return flows, nil
+}
+
+// ___________.__                .___                 __
+// \_   _____/|  |   ______  _  _|   | ____   _______/  |______    ____   ____  ____
+//  |    __)  |  |  /  _ \ \/ \/ /   |/    \ /  ___/\   __\__  \  /    \_/ ___\/ __ \
+//  |     \   |  |_(  <_> )     /|   |   |  \\___ \  |  |  / __ \|   |  \  \__\  ___/
+//  \___  /   |____/\____/ \/\_/ |___|___|  /____  > |__| (____  /___|  /\___  >___  >
+//      \/                                \/     \/            \/     \/     \/    \/
+
+// FlowInstance represents a running instance of flow.
+type FlowInstance struct {
+	Flow
+
+	// pipelines stores actual objects of pipelines.
+	pipelines []*Pipeline
+	// tree marks if a pipeline is done.
+	treeLock sync.RWMutex
+	tree     map[string]bool
+}
+
+// NewInstance creates and returns a new flow instance.
+func (f *Flow) NewInstance() *FlowInstance {
+	fi := &FlowInstance{
+		Flow: Flow{
+			UUID:    gouuid.NewV4().String(),
+			Name:    f.Name,
+			Created: time.Now(),
+		},
+		tree: make(map[string]bool),
+	}
+
+	// TODO: clone new instances of pipelines.
+
+	return fi
 }

@@ -12,11 +12,13 @@ var CmdBuild = cli.Command{
 	Name:   "build",
 	Usage:  "Build a solution",
 	Action: runBuild,
-	Flags:  []cli.Flag{},
+	Flags: []cli.Flag{
+		cli.StringFlag{"url", "http://localhost:4000", "API server end point", "VESSEL_URL"},
+	},
 }
 
 func runBuild(c *cli.Context) {
-	client := api.NewClient("http://localhost:4000", "")
+	client := api.NewClient(c.String("url"))
 	opts := api.CreateFlowOptions{
 		Name: api.NewString("test"),
 	}

@@ -45,11 +45,21 @@ func runWeb(c *cli.Context) {
 	m.Use(web.Contexter())
 
 	group := func() {
-		m.Combo("/flows").Get(web.Flows).
-			Post(bindIgnErr(api.CreateFlowOptions{}), web.CreateFlow)
-		m.Combo("/flows/:uuid").Get(web.GetFlow).
-			Post(bindIgnErr(api.CreateFlowOptions{}), web.UpdateFlow).
-			Delete(web.DeleteFlow)
+		m.Group("/flows", func() {
+			m.Combo("").Get(web.Flows).
+				Post(bindIgnErr(api.CreateFlowOptions{}), web.CreateFlow)
+			m.Combo("/:uuid").Get(web.GetFlow).
+				Post(bindIgnErr(api.CreateFlowOptions{}), web.UpdateFlow).
+				Delete(web.DeleteFlow)
+		})
+
+		m.Group("/pipelines", func() {
+			m.Combo("").Get(web.Pipelines).
+				Post(bindIgnErr(api.CreatePipelineOptions{}), web.CreatePipeline)
+			m.Combo("/:uuid").Get(web.GetPipeline).
+				Post(bindIgnErr(api.CreatePipelineOptions{}), web.UpdatePipeline).
+				Delete(web.DeletePipeline)
+		})
 
 		m.Post("/build", web.Build)
 	}

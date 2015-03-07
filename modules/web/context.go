@@ -13,6 +13,7 @@ import (
 	"github.com/dockercn/vessel/models"
 	"github.com/dockercn/vessel/modules/log"
 	"github.com/dockercn/vessel/modules/setting"
+	"github.com/dockercn/vessel/modules/utils"
 )
 
 // Context represents context of a request.
@@ -41,12 +42,21 @@ func (ctx *Context) HasError(form Printable) bool {
 	return true
 }
 
-func (ctx *Context) Handle(status int, format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
+func (ctx *Context) Handle(status int, format interface{}, args ...interface{}) {
+	var message string
+	switch v := format.(type) {
+	case error:
+		message = v.Error()
+	case string:
+		message = fmt.Sprintf(v, args...)
+	default:
+		log.Error("Unknown type: %s", v)
+		return
+	}
 	log.Error("%d: %v", status, message)
 	if status == http.StatusInternalServerError && setting.ProdMode {
 		ctx.JSON(status, map[string]string{
-			"message": "Internal server error",
+			"message": "Internal Server Error",
 		})
 		return
 	}
@@ -59,14 +69,21 @@ func (ctx *Context) AutoJSON(status int, obj interface{}) {
 	switch v := obj.(type) {
 	case *models.Flow:
 		ctx.JSON(200, &api.Flow{
-			UUID:    v.UUID,
-			Name:    v.Name,
-			Created: v.Created,
+			UUID:      v.UUID,
+			Name:      v.Name,
+			Pipelines: utils.MapToStrings(v.Pipelines),
+			Created:   v.Created,
 		})
-		return
+	case *models.Pipeline:
+		ctx.JSON(200, &api.Pipeline{
+			UUID:     v.UUID,
+			Name:     v.Name,
+			Requires: utils.MapToStrings(v.Requires),
+			Created:  v.Created,
+		})
+	default:
+		ctx.JSON(status, obj)
 	}
-
-	ctx.JSON(status, obj)
 }
 
 // Contexter initializes a classic context for a request.

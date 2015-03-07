@@ -58,3 +58,12 @@ func (w *PrefixWriter) Write(p []byte) (int, error) {
 	n, err = w.writer.Write(p)
 	return n + w.length, err
 }
+
+// MapToStrings convert a string map to a string slice.
+func MapToStrings(m map[string]bool) []string {
+	strs := make([]string, 0, len(m))
+	for s := range m {
+		strs = append(strs, s)
+	}
+	return strs
+}

@@ -22,7 +22,8 @@ var (
 type SetType string
 
 const (
-	SET_TYPE_FLOW SetType = "GLOBAL_FLOW"
+	SET_TYPE_FLOW     SetType = "GLOBAL_FLOW"
+	SET_TYPE_PIPELINE SetType = "GLOBAL_PIPELINE"
 )
 
 func InitDb() error {
@@ -49,6 +50,8 @@ func getSetName(obj interface{}) (SetType, error) {
 	switch tp := obj.(type) {
 	case *Flow:
 		setName = SET_TYPE_FLOW
+	case *Pipeline:
+		setName = SET_TYPE_PIPELINE
 	default:
 		return "", fmt.Errorf("unknown type: %v", tp)
 	}
