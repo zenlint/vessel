@@ -24,6 +24,7 @@ type SetType string
 const (
 	SET_TYPE_FLOW     SetType = "GLOBAL_FLOW"
 	SET_TYPE_PIPELINE SetType = "GLOBAL_PIPELINE"
+	SET_TYPE_STAGE    SetType = "GLOBAL_STAGE"
 )
 
 func InitDb() error {
@@ -89,4 +90,13 @@ func Retrieve(uuid string, obj interface{}) error {
 	}
 
 	return json.Unmarshal(value, obj)
+}
+
+// Delete deletes an object with given UUID.
+func Delete(uuid string, setName SetType) (err error) {
+	if _, err = LedisDB.HDel([]byte(setName), []byte(uuid)); err != nil {
+		return err
+	}
+	_, err = LedisDB.Del([]byte(uuid))
+	return err
 }

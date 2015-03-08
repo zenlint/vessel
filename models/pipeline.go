@@ -40,12 +40,8 @@ func NewPipeline(uuid, name string) *Pipeline {
 	}
 }
 
-func DeletePipeline(uuid string) (err error) {
-	if _, err = LedisDB.HDel([]byte(SET_TYPE_PIPELINE), []byte(uuid)); err != nil {
-		return err
-	}
-	_, err = LedisDB.Del([]byte(uuid))
-	return err
+func DeletePipeline(uuid string) error {
+	return Delete(uuid, SET_TYPE_PIPELINE)
 }
 
 func (p *Pipeline) Save() error {
@@ -54,6 +50,33 @@ func (p *Pipeline) Save() error {
 
 func (p *Pipeline) Retrieve() error {
 	return Retrieve(p.UUID, p)
+}
+
+func (p *Pipeline) SetStages(uuids ...string) (err error) {
+	var (
+		marks  = make(map[string]bool)
+		stage  *Stage
+		stages = make([]string, 0, len(uuids))
+	)
+	for _, uuid := range uuids {
+		if marks[uuid] {
+			continue
+		}
+
+		stage = NewStage(uuid, "")
+		if err = stage.Retrieve(); err != nil {
+			if err == ErrObjectNotExist {
+				return ErrStageNotExist{uuid}
+			} else {
+				return err
+			}
+		}
+		marks[uuid] = true
+		stages = append(stages, uuid)
+	}
+
+	p.Stages = stages
+	return nil
 }
 
 func (p *Pipeline) SetPrerequisites(uuids ...string) (err error) {

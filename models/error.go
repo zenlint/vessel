@@ -29,3 +29,16 @@ func IsErrCircularDependencies(err error) bool {
 func (err ErrCircularDependencies) Error() string {
 	return fmt.Sprintf("circular dependencies between '%s' and '%s'", err.ObjA, err.ObjB)
 }
+
+type ErrStageNotExist struct {
+	UUID string
+}
+
+func IsErrStageNotExist(err error) bool {
+	_, ok := err.(ErrStageNotExist)
+	return ok
+}
+
+func (err ErrStageNotExist) Error() string {
+	return fmt.Sprintf("stage '%s' does not exist", err.UUID)
+}

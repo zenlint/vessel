@@ -36,12 +36,8 @@ func NewFlow(uuid, name string) *Flow {
 	}
 }
 
-func DeleteFlow(uuid string) (err error) {
-	if _, err = LedisDB.HDel([]byte(SET_TYPE_FLOW), []byte(uuid)); err != nil {
-		return err
-	}
-	_, err = LedisDB.Del([]byte(uuid))
-	return err
+func DeleteFlow(uuid string) error {
+	return Delete(uuid, SET_TYPE_FLOW)
 }
 
 func (f *Flow) Save() error {

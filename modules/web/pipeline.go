@@ -27,6 +27,18 @@ func Pipelines(ctx *Context) {
 	ctx.JSON(200, apiPipes)
 }
 
+func setStages(pipe *models.Pipeline, ctx *Context, stages []string) bool {
+	if err := pipe.SetStages(stages...); err != nil {
+		if models.IsErrStageNotExist(err) {
+			ctx.Handle(422, err)
+		} else {
+			ctx.Handle(500, "Fail to add stages to pipeline: '%s': %v", pipe.UUID, err)
+		}
+		return true
+	}
+	return false
+}
+
 func setPrerequisites(pipe *models.Pipeline, ctx *Context, requires []string) bool {
 	if err := pipe.SetPrerequisites(requires...); err != nil {
 		if models.IsErrPipelineNotExist(err) ||
@@ -48,6 +60,8 @@ func CreatePipeline(ctx *Context, form api.CreatePipelineOptions) {
 
 	pipe := models.NewPipeline("", *form.Name)
 	if setPrerequisites(pipe, ctx, form.Requires) {
+		return
+	} else if setStages(pipe, ctx, form.Stages) {
 		return
 	}
 
@@ -92,6 +106,8 @@ func UpdatePipeline(ctx *Context, form api.CreatePipelineOptions) {
 	pipe.Name = *form.Name
 
 	if setPrerequisites(pipe, ctx, form.Requires) {
+		return
+	} else if setStages(pipe, ctx, form.Stages) {
 		return
 	}
 
