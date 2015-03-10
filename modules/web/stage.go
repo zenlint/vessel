@@ -26,6 +26,21 @@ func Stages(ctx *Context) {
 	ctx.JSON(200, apiStages)
 }
 
+func setJob(stage *models.Stage, ctx *Context, job *string) bool {
+	if job == nil {
+		return false
+	}
+	if err := stage.SetJob(*job); err != nil {
+		if models.IsErrJobNotExist(err) {
+			ctx.Handle(422, err)
+		} else {
+			ctx.Handle(500, "Fail to add job to stage: '%s': %v", stage.UUID, err)
+		}
+		return true
+	}
+	return false
+}
+
 // POST /stges
 func CreateStage(ctx *Context, form api.CreateStageOptions) {
 	if ctx.HasError(form) {
@@ -33,6 +48,11 @@ func CreateStage(ctx *Context, form api.CreateStageOptions) {
 	}
 
 	stage := models.NewStage(*form.Name)
+
+	if setJob(stage, ctx, form.Job) {
+		return
+	}
+
 	if err := stage.Save(); err != nil {
 		ctx.Handle(500, "Fail to save stage '%s': %v", stage.UUID, err)
 		return
@@ -71,7 +91,13 @@ func UpdateStage(ctx *Context, form api.CreateStageOptions) {
 		}
 		return
 	}
-	stage.Name = *form.Name
+	if form.Name != nil {
+		stage.Name = *form.Name
+	}
+
+	if setJob(stage, ctx, form.Job) {
+		return
+	}
 
 	if err := stage.Save(); err != nil {
 		ctx.Handle(500, "Fail to save stage '%s': %v", stage.UUID, err)

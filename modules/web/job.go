@@ -1,6 +1,8 @@
 package web
 
 import (
+	"encoding/base64"
+
 	api "github.com/dockercn/anchor"
 
 	"github.com/dockercn/vessel/models"
@@ -32,6 +34,16 @@ func CreateJob(ctx *Context, form api.CreateJobOptions) {
 	}
 
 	job := models.NewJob(*form.Name)
+
+	if form.Content != nil {
+		data, err := base64.StdEncoding.DecodeString(job.Content)
+		if err != nil {
+			ctx.Handle(500, "Fail to decode content '%s': %v", job.UUID, err)
+			return
+		}
+		job.Content = string(data)
+	}
+
 	if err := job.Save(); err != nil {
 		ctx.Handle(500, "Fail to save job '%s': %v", job.UUID, err)
 		return
@@ -52,6 +64,8 @@ func GetJob(ctx *Context) {
 		return
 	}
 
+	job.Content = string(base64.StdEncoding.EncodeToString([]byte(job.Content)))
+
 	ctx.AutoJSON(200, job)
 }
 
@@ -70,7 +84,17 @@ func UpdateJob(ctx *Context, form api.CreateJobOptions) {
 		}
 		return
 	}
-	job.Name = *form.Name
+	if form.Name != nil {
+		job.Name = *form.Name
+	}
+	if form.Content != nil {
+		data, err := base64.StdEncoding.DecodeString(job.Content)
+		if err != nil {
+			ctx.Handle(500, "Fail to decode content '%s': %v", job.UUID, err)
+			return
+		}
+		job.Content = string(data)
+	}
 
 	if err := job.Save(); err != nil {
 		ctx.Handle(500, "Fail to save job '%s': %v", job.UUID, err)

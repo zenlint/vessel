@@ -67,3 +67,8 @@ func MapToStrings(m map[string]bool) []string {
 	}
 	return strs
 }
+
+// UUIDToFilePath generates a unique file path by given UUID.
+func UUIDToFilePath(uuid string) string {
+	return string(uuid[0]) + string(uuid[1]) + uuid
+}

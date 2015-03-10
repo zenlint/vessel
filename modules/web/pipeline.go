@@ -28,6 +28,9 @@ func Pipelines(ctx *Context) {
 }
 
 func setStages(pipe *models.Pipeline, ctx *Context, stages []string) bool {
+	if len(stages) == 0 {
+		return false
+	}
 	if err := pipe.SetStages(stages...); err != nil {
 		if models.IsErrStageNotExist(err) {
 			ctx.Handle(422, err)
@@ -40,6 +43,9 @@ func setStages(pipe *models.Pipeline, ctx *Context, stages []string) bool {
 }
 
 func setPrerequisites(pipe *models.Pipeline, ctx *Context, requires []string) bool {
+	if len(requires) == 0 {
+		return false
+	}
 	if err := pipe.SetPrerequisites(requires...); err != nil {
 		if models.IsErrPipelineNotExist(err) ||
 			models.IsErrCircularDependencies(err) {
@@ -103,7 +109,9 @@ func UpdatePipeline(ctx *Context, form api.CreatePipelineOptions) {
 		}
 		return
 	}
-	pipe.Name = *form.Name
+	if form.Name != nil {
+		pipe.Name = *form.Name
+	}
 
 	if setPrerequisites(pipe, ctx, form.Requires) {
 		return

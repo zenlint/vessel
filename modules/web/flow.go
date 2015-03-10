@@ -30,6 +30,9 @@ func Flows(ctx *Context) {
 }
 
 func setPipelines(flow *models.Flow, ctx *Context, pipelines []string) bool {
+	if len(pipelines) == 0 {
+		return false
+	}
 	if err := flow.SetPipelines(pipelines...); err != nil {
 		if models.IsErrPipelineNotExist(err) {
 			ctx.Handle(422, err)
@@ -90,7 +93,9 @@ func UpdateFlow(ctx *Context, form api.CreateFlowOptions) {
 		}
 		return
 	}
-	flow.Name = *form.Name
+	if form.Name != nil {
+		flow.Name = *form.Name
+	}
 
 	if setPipelines(flow, ctx, form.Pipelines) {
 		return
