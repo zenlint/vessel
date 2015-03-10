@@ -81,6 +81,20 @@ func (ctx *Context) AutoJSON(status int, obj interface{}) {
 			Requires: utils.MapToStrings(v.Requires),
 			Created:  v.Created,
 		})
+	case *models.Stage:
+		ctx.JSON(200, &api.Stage{
+			UUID:    v.UUID,
+			Name:    v.Name,
+			Job:     v.Job,
+			Created: v.Created,
+		})
+	case *models.Job:
+		ctx.JSON(200, &api.Job{
+			UUID:    v.UUID,
+			Name:    v.Name,
+			Content: v.Content,
+			Created: v.Created,
+		})
 	default:
 		ctx.JSON(status, obj)
 	}

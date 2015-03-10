@@ -5,6 +5,7 @@ var (
 	AppVer   string
 	ProdMode bool
 	HTTPPort int
+	DataDir  = "./data"
 )
 
 func init() {

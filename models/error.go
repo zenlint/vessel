@@ -42,3 +42,16 @@ func IsErrStageNotExist(err error) bool {
 func (err ErrStageNotExist) Error() string {
 	return fmt.Sprintf("stage '%s' does not exist", err.UUID)
 }
+
+type ErrJobNotExist struct {
+	UUID string
+}
+
+func IsErrJobNotExist(err error) bool {
+	_, ok := err.(ErrJobNotExist)
+	return ok
+}
+
+func (err ErrJobNotExist) Error() string {
+	return fmt.Sprintf("job '%s' does not exist", err.UUID)
+}

@@ -58,7 +58,7 @@ func CreatePipeline(ctx *Context, form api.CreatePipelineOptions) {
 		return
 	}
 
-	pipe := models.NewPipeline("", *form.Name)
+	pipe := models.NewPipeline(*form.Name)
 	if setPrerequisites(pipe, ctx, form.Requires) {
 		return
 	} else if setStages(pipe, ctx, form.Stages) {
@@ -75,7 +75,7 @@ func CreatePipeline(ctx *Context, form api.CreatePipelineOptions) {
 
 // GET /pipelines/:uuid
 func GetPipeline(ctx *Context) {
-	pipe := models.NewPipeline(ctx.Params(":uuid"), "")
+	pipe := &models.Pipeline{UUID: ctx.Params(":uuid")}
 	if err := pipe.Retrieve(); err != nil {
 		if models.IsErrPipelineNotExist(err) {
 			ctx.Handle(404, err)
@@ -94,7 +94,7 @@ func UpdatePipeline(ctx *Context, form api.CreatePipelineOptions) {
 		return
 	}
 
-	pipe := models.NewPipeline(ctx.Params(":uuid"), "")
+	pipe := &models.Pipeline{UUID: ctx.Params(":uuid")}
 	if err := pipe.Retrieve(); err != nil {
 		if models.IsErrPipelineNotExist(err) {
 			ctx.Handle(404, err)

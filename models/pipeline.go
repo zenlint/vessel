@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	gouuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/dockercn/vessel/modules/utils"
 )
@@ -26,14 +26,11 @@ type Pipeline struct {
 }
 
 // NewPipeline creates and returns a new pipeline.
-func NewPipeline(uuid, name string) *Pipeline {
-	if len(uuid) == 0 {
-		uuid = gouuid.NewV4().String()
-	}
+func NewPipeline(name string) *Pipeline {
 	return &Pipeline{
-		UUID:     uuid,
-		Name:     name,
+		UUID:     uuid.NewV4().String(),
 		Requires: make(map[string]bool),
+		Name:     name,
 		Created:  time.Now(),
 		// state:  STATE_WAITING,
 		// stages: make([]*Stage, 0, 3),
@@ -63,7 +60,7 @@ func (p *Pipeline) SetStages(uuids ...string) (err error) {
 			continue
 		}
 
-		stage = NewStage(uuid, "")
+		stage = &Stage{UUID: uuid}
 		if err = stage.Retrieve(); err != nil {
 			if err == ErrObjectNotExist {
 				return ErrStageNotExist{uuid}
@@ -89,7 +86,7 @@ func (p *Pipeline) SetPrerequisites(uuids ...string) (err error) {
 			continue
 		}
 
-		pipe = NewPipeline(uuid, "")
+		pipe = &Pipeline{UUID: uuid}
 		if err = pipe.Retrieve(); err != nil {
 			if err == ErrObjectNotExist {
 				return ErrPipelineNotExist{uuid}
@@ -114,7 +111,7 @@ func ListPipelines() ([]*Pipeline, error) {
 
 	pipes := make([]*Pipeline, len(keys))
 	for i := range keys {
-		pipes[i] = NewPipeline(string(keys[i]), "")
+		pipes[i] = &Pipeline{UUID: string(keys[i])}
 		if err = pipes[i].Retrieve(); err != nil {
 			return nil, fmt.Errorf("Retrieve '%s': %v", pipes[i].UUID, err)
 		}
@@ -161,7 +158,7 @@ type PipelineInstance struct {
 func (p *Pipeline) NewInstance() *PipelineInstance {
 	pi := &PipelineInstance{
 		Pipeline: Pipeline{
-			UUID:    gouuid.NewV4().String(),
+			UUID:    uuid.NewV4().String(),
 			Name:    p.Name,
 			Created: time.Now(),
 		},

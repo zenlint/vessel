@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path"
 
 	"github.com/siddontang/ledisdb/config"
 	"github.com/siddontang/ledisdb/ledis"
+
+	"github.com/dockercn/vessel/modules/setting"
 )
 
 var (
@@ -25,11 +28,12 @@ const (
 	SET_TYPE_FLOW     SetType = "GLOBAL_FLOW"
 	SET_TYPE_PIPELINE SetType = "GLOBAL_PIPELINE"
 	SET_TYPE_STAGE    SetType = "GLOBAL_STAGE"
+	SET_TYPE_JOB      SetType = "GLOBAL_JOB"
 )
 
 func InitDb() error {
 	opt := &config.Config{
-		DataDir: "./vessel.db",
+		DataDir: path.Join(setting.DataDir, "vessel.db"),
 	}
 
 	l, err := ledis.Open(opt)

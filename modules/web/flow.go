@@ -47,7 +47,7 @@ func CreateFlow(ctx *Context, form api.CreateFlowOptions) {
 		return
 	}
 
-	flow := models.NewFlow("", *form.Name)
+	flow := models.NewFlow(*form.Name)
 	if setPipelines(flow, ctx, form.Pipelines) {
 		return
 	}
@@ -62,7 +62,7 @@ func CreateFlow(ctx *Context, form api.CreateFlowOptions) {
 
 // GET /flows/:uuid
 func GetFlow(ctx *Context) {
-	flow := models.NewFlow(ctx.Params(":uuid"), "")
+	flow := &models.Flow{UUID: ctx.Params(":uuid")}
 	if err := flow.Retrieve(); err != nil {
 		if err == models.ErrObjectNotExist {
 			ctx.Handle(404, models.ErrFlowNotExist)
@@ -81,7 +81,7 @@ func UpdateFlow(ctx *Context, form api.CreateFlowOptions) {
 		return
 	}
 
-	flow := models.NewFlow(ctx.Params(":uuid"), "")
+	flow := &models.Flow{UUID: ctx.Params(":uuid")}
 	if err := flow.Retrieve(); err != nil {
 		if err == models.ErrObjectNotExist {
 			ctx.Handle(404, models.ErrFlowNotExist)

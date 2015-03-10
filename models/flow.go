@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	gouuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 )
 
 var (
@@ -24,12 +24,9 @@ type Flow struct {
 	Created time.Time
 }
 
-func NewFlow(uuid, name string) *Flow {
-	if len(uuid) == 0 {
-		uuid = gouuid.NewV4().String()
-	}
+func NewFlow(name string) *Flow {
 	return &Flow{
-		UUID:      uuid,
+		UUID:      uuid.NewV4().String(),
 		Name:      name,
 		Pipelines: make(map[string]bool),
 		Created:   time.Now(),
@@ -58,7 +55,7 @@ func (f *Flow) SetPipelines(uuids ...string) (err error) {
 			continue
 		}
 
-		pipe = NewPipeline(uuid, "")
+		pipe = &Pipeline{UUID: uuid}
 		if err = pipe.Retrieve(); err != nil {
 			if err == ErrObjectNotExist {
 				return ErrPipelineNotExist{uuid}
@@ -81,7 +78,7 @@ func ListFlows() ([]*Flow, error) {
 
 	flows := make([]*Flow, len(keys))
 	for i := range keys {
-		flows[i] = NewFlow(string(keys[i]), "")
+		flows[i] = &Flow{UUID: string(keys[i])}
 		if err = flows[i].Retrieve(); err != nil {
 			return nil, fmt.Errorf("Retrieve '%s': %v", flows[i].UUID, err)
 		}
@@ -112,7 +109,7 @@ type FlowInstance struct {
 func (f *Flow) NewInstance() *FlowInstance {
 	fi := &FlowInstance{
 		Flow: Flow{
-			UUID:    gouuid.NewV4().String(),
+			UUID:    uuid.NewV4().String(),
 			Name:    f.Name,
 			Created: time.Now(),
 		},

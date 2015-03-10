@@ -19,6 +19,7 @@ func Stages(ctx *Context) {
 		apiStages[i] = &api.Stage{
 			UUID:    stages[i].UUID,
 			Name:    stages[i].Name,
+			Job:     stages[i].Job,
 			Created: stages[i].Created,
 		}
 	}
@@ -31,7 +32,7 @@ func CreateStage(ctx *Context, form api.CreateStageOptions) {
 		return
 	}
 
-	stage := models.NewStage("", *form.Name)
+	stage := models.NewStage(*form.Name)
 	if err := stage.Save(); err != nil {
 		ctx.Handle(500, "Fail to save stage '%s': %v", stage.UUID, err)
 		return
@@ -40,13 +41,28 @@ func CreateStage(ctx *Context, form api.CreateStageOptions) {
 	ctx.AutoJSON(201, stage)
 }
 
+// GET /stages/:uuid
+func GetStage(ctx *Context) {
+	stage := &models.Stage{UUID: ctx.Params(":uuid")}
+	if err := stage.Retrieve(); err != nil {
+		if models.IsErrStageNotExist(err) {
+			ctx.Handle(404, err)
+		} else {
+			ctx.Handle(500, "Fail to retrieve stage '%s': %v", stage.UUID, err)
+		}
+		return
+	}
+
+	ctx.AutoJSON(200, stage)
+}
+
 // POST /stages/:uuid
 func UpdateStage(ctx *Context, form api.CreateStageOptions) {
 	if ctx.HasError(form) {
 		return
 	}
 
-	stage := models.NewStage(ctx.Params(":uuid"), "")
+	stage := &models.Stage{UUID: ctx.Params(":uuid")}
 	if err := stage.Retrieve(); err != nil {
 		if models.IsErrStageNotExist(err) {
 			ctx.Handle(404, err)
@@ -70,7 +86,7 @@ func DeleteStage(ctx *Context) {
 	uuid := ctx.Params(":uuid")
 	if err := models.DeleteStage(uuid); err != nil {
 		if err != models.ErrObjectNotExist {
-			ctx.Handle(500, "Fail to delete pipeline '%s': %v", uuid, err)
+			ctx.Handle(500, "Fail to delete stage '%s': %v", uuid, err)
 			return
 		}
 	}

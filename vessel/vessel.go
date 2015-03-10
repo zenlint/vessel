@@ -10,7 +10,7 @@ import (
 	"github.com/dockercn/vessel/modules/setting"
 )
 
-const APP_VER = "0.0.2.0306"
+const APP_VER = "0.0.3.0310"
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())

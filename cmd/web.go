@@ -61,6 +61,22 @@ func runWeb(c *cli.Context) {
 				Delete(web.DeletePipeline)
 		})
 
+		m.Group("/stages", func() {
+			m.Combo("").Get(web.Stages).
+				Post(bindIgnErr(api.CreateStageOptions{}), web.CreateStage)
+			m.Combo("/:uuid").Get(web.GetStage).
+				Post(bindIgnErr(api.CreateStageOptions{}), web.UpdateStage).
+				Delete(web.DeleteStage)
+		})
+
+		m.Group("/jobs", func() {
+			m.Combo("").Get(web.Jobs).
+				Post(bindIgnErr(api.CreateJobOptions{}), web.CreateJob)
+			m.Combo("/:uuid").Get(web.GetJob).
+				Post(bindIgnErr(api.CreateJobOptions{}), web.UpdateJob).
+				Delete(web.DeleteJob)
+		})
+
 		m.Post("/build", web.Build)
 	}
 	m.Group("", group)

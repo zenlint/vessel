@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	gouuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/dockercn/vessel/modules/utils"
 )
@@ -17,20 +17,19 @@ type Stage struct {
 
 	beforeActions []Action
 	afterActions  []Action
+	Job           string
 
 	Created time.Time
 }
 
 // NewStage creates and returns a new stage.
-func NewStage(uuid, name string) *Stage {
-	if len(uuid) == 0 {
-		uuid = gouuid.NewV4().String()
-	}
+func NewStage(name string) *Stage {
 	return &Stage{
-		UUID:          uuid,
+		UUID:          uuid.NewV4().String(),
 		Name:          name,
 		beforeActions: make([]Action, 0, 3),
 		afterActions:  make([]Action, 0, 3),
+		Created:       time.Now(),
 	}
 }
 
@@ -46,6 +45,20 @@ func (s *Stage) Retrieve() error {
 	return Retrieve(s.UUID, s)
 }
 
+func (s *Stage) SetJob(uuid string) error {
+	job := Job{UUID: uuid}
+	if err := job.Retrieve(); err != nil {
+		if err == ErrObjectNotExist {
+			return ErrJobNotExist{uuid}
+		} else {
+			return err
+		}
+	}
+
+	s.Job = uuid
+	return nil
+}
+
 func ListStages() ([]*Stage, error) {
 	keys, err := LedisDB.HKeys([]byte(SET_TYPE_STAGE))
 	if err != nil {
@@ -54,7 +67,7 @@ func ListStages() ([]*Stage, error) {
 
 	stages := make([]*Stage, len(keys))
 	for i := range keys {
-		stages[i] = NewStage(string(keys[i]), "")
+		stages[i] = &Stage{UUID: string(keys[i])}
 		if err = stages[i].Retrieve(); err != nil {
 			return nil, fmt.Errorf("Retrieve '%s': %v", stages[i].UUID, err)
 		}
@@ -96,10 +109,6 @@ func (s *Stage) RemoveBeforeAction(uuid string) {
 func (s *Stage) RemoveAfterAction(uuid string) {
 	s.afterActions = removeAction(s.afterActions, uuid)
 }
-
-// func (s *Stage) SetJob(job Job) {
-// 	s.job = job
-// }
 
 func doActions(acts []Action) (err error) {
 	for i := range acts {
@@ -143,11 +152,6 @@ type Action interface {
 	Do() error
 }
 
-// Job is the interface that can run as a function.
-type Job interface {
-	Run() error
-}
-
 // StageInstance represents a running stage.
 type StageInstance struct {
 	Stage
@@ -160,7 +164,7 @@ type StageInstance struct {
 func (s *Stage) NewInstance() *StageInstance {
 	si := &StageInstance{
 		Stage: Stage{
-			UUID:    gouuid.NewV4().String(),
+			UUID:    uuid.NewV4().String(),
 			Name:    s.Name,
 			Created: time.Now(),
 		},
