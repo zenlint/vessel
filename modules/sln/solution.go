@@ -14,10 +14,10 @@ import (
 	"strings"
 	"time"
 
-	api "github.com/dockercn/rudder"
+	api "github.com/containerops/rudder"
 	"gopkg.in/yaml.v2"
 
-	"github.com/dockercn/vessel/modules/utils"
+	"github.com/containerops/vessel/modules/utils"
 )
 
 // Git represents Git repository information.

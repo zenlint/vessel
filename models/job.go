@@ -10,7 +10,7 @@ import (
 	"github.com/Unknwon/com"
 	"github.com/satori/go.uuid"
 
-	"github.com/dockercn/vessel/modules/utils"
+	"github.com/containerops/vessel/modules/utils"
 )
 
 type Job struct {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/codegangsta/cli"
 
-	"github.com/dockercn/vessel/cmd"
-	"github.com/dockercn/vessel/modules/setting"
+	"github.com/containerops/vessel/cmd"
+	"github.com/containerops/vessel/modules/setting"
 )
 
 const APP_VER = "0.0.3.0310"

@@ -9,7 +9,7 @@ import (
 	"github.com/siddontang/ledisdb/config"
 	"github.com/siddontang/ledisdb/ledis"
 
-	"github.com/dockercn/vessel/modules/setting"
+	"github.com/containerops/vessel/modules/setting"
 )
 
 var (

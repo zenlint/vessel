@@ -3,9 +3,9 @@ package cmd
 import (
 	"github.com/codegangsta/cli"
 
-	api "github.com/dockercn/anchor"
+	api "github.com/containerops/anchor"
 
-	"github.com/dockercn/vessel/modules/log"
+	"github.com/containerops/vessel/modules/log"
 )
 
 var CmdBuild = cli.Command{

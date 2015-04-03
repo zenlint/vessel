@@ -8,12 +8,12 @@ import (
 	"github.com/Unknwon/macaron"
 	"github.com/macaron-contrib/binding"
 
-	api "github.com/dockercn/anchor"
+	api "github.com/containerops/anchor"
 
-	"github.com/dockercn/vessel/models"
-	"github.com/dockercn/vessel/modules/log"
-	"github.com/dockercn/vessel/modules/setting"
-	"github.com/dockercn/vessel/modules/utils"
+	"github.com/containerops/vessel/models"
+	"github.com/containerops/vessel/modules/log"
+	"github.com/containerops/vessel/modules/setting"
+	"github.com/containerops/vessel/modules/utils"
 )
 
 // Context represents context of a request.

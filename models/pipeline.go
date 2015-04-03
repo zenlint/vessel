@@ -8,7 +8,7 @@ import (
 
 	"github.com/satori/go.uuid"
 
-	"github.com/dockercn/vessel/modules/utils"
+	"github.com/containerops/vessel/modules/utils"
 )
 
 // Pipeline represents a list of stages in order.

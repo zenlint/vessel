@@ -7,7 +7,7 @@ import (
 
 	"github.com/satori/go.uuid"
 
-	"github.com/dockercn/vessel/modules/utils"
+	"github.com/containerops/vessel/modules/utils"
 )
 
 // Stage represents a build process.

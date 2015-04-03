@@ -1,9 +1,9 @@
 package web
 
 import (
-	api "github.com/dockercn/anchor"
+	api "github.com/containerops/anchor"
 
-	"github.com/dockercn/vessel/models"
+	"github.com/containerops/vessel/models"
 )
 
 // GET /stages
