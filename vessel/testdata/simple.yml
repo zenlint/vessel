@@ -1,7 +1,0 @@
-app:
-  image: unknwon/golang:1.4
-  git:
-    path: github.com/go-ini/ini
-  script: 
-    - go get -t -v
-    - go test -v
