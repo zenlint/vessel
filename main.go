@@ -3,17 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/codegangsta/cli"
+	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/containerops/vessel/cmd"
 	"github.com/containerops/wrench/setting"
 )
-
-func init() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-}
 
 func main() {
 	if err := setting.SetConfig("conf/containerops.conf"); err != nil {
