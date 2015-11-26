@@ -9,6 +9,7 @@ import (
 	_ "github.com/pingcap/tidb"
 )
 
+//Init Database
 func init() {
 	log.SetLevelByString("info")
 
@@ -16,9 +17,10 @@ func init() {
 	orm.RegisterDataBase("default", "tidb", "goleveldb:///tmp/tidb/vessel", 0, 0)
 }
 
+//Sync Database
 func Sync(force, verbose bool) error {
 	if err := orm.RunSyncdb("default", force, verbose); err != nil {
-		return fmt.Errorf("")
+		return fmt.Errorf("Sync Database Error, ", err.Error())
 	}
 
 	return nil
