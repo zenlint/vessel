@@ -13,6 +13,10 @@ func V1POSTParamHandler(ctx *macaron.Context, param ParamPOSTJSON) (int, []byte)
 	return http.StatusOK, []byte("")
 }
 
+func V1GETListParamsHandler(ctx *macaron.Context) (int, []byte) {
+	return http.StatusOK, []byte("")
+}
+
 func V1PUTParamHandler(ctx *macaron.Context) (int, []byte) {
 	return http.StatusOK, []byte("")
 }

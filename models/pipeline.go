@@ -15,6 +15,7 @@ const (
 type Pipeline struct {
 	Id          int64     `json:"id"`                                        //
 	ProjectId   int64     `json:"projectId"`                                 //
+	UUID        string    `json:"uuid" orm:"varchar(255)"`                   //
 	Name        string    `json:"name" orm:"varchar(255)"`                   //
 	Description string    `json:"description" orm:"null;type(text)"`         //
 	Actived     bool      `json:"actived" orm:"null;default(0)"`             //
