@@ -1,33 +1,28 @@
 package middleware
 
 import (
-	"fmt"
-
-	"github.com/astaxie/beego/logs"
+	"github.com/ngaut/log"
 	"gopkg.in/macaron.v1"
 )
 
-var Log *logs.BeeLogger
-
 func InitLog(runmode, path string) {
-	Log = logs.NewLogger(10000)
+	log.SetLevelByString("info")
 
 	if runmode == "dev" {
-		Log.SetLogger("console", "")
+		log.SetLevelByString("debug")
 	}
 
-	Log.SetLogger("file", fmt.Sprintf("{\"filename\":\"%s\"}", path))
-
+	log.SetOutputByName(path)
 }
 
 func logger(runmode string) macaron.Handler {
 	return func(ctx *macaron.Context) {
 		if runmode == "dev" {
-			Log.Trace("")
-			Log.Trace("----------------------------------------------------------------------------------")
+			log.Debug("")
+			log.Debug("----------------------------------------------------------------------------------")
 		}
 
-		Log.Trace("[%s] [%s]", ctx.Req.Method, ctx.Req.RequestURI)
-		Log.Trace("[Header] %v", ctx.Req.Header)
+		log.Infof("[%s] [%s]", ctx.Req.Method, ctx.Req.RequestURI)
+		log.Infof("[Header] %v", ctx.Req.Header)
 	}
 }
