@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
-	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/containerops/vessel/cmd"
 	"github.com/containerops/wrench/setting"
