@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/containerops/dockyard",
+	"ImportPath": "github.com/containerops/vessel",
 	"GoVersion": "go1.5.1",
 	"Deps": [
 		{
@@ -17,18 +17,14 @@
 			"Rev": "a89f14d80dab442927bdc11d641aa1250ab8ad71"
 		},
 		{
-			"ImportPath": "github.com/astaxie/beego/logs",
-			"Comment": "v1.5.0-3-ga89f14d",
-			"Rev": "a89f14d80dab442927bdc11d641aa1250ab8ad71"
+			"ImportPath": "github.com/boltdb/bolt",
+			"Comment": "v1.1.0-22-g6e1ca38",
+			"Rev": "6e1ca38c6a73025366cd8705553b404746ee6e63"
 		},
 		{
 			"ImportPath": "github.com/codegangsta/cli",
 			"Comment": "1.2.0-135-gf998261",
 			"Rev": "f9982619ccace7df963bb7f6d1de3a6f014ff709"
-		},
-		{
-			"ImportPath": "github.com/containerops/wrench/db",
-			"Rev": "bf6135fccc80ccead4a7cf775cdec5c14a2d3609"
 		},
 		{
 			"ImportPath": "github.com/containerops/wrench/setting",
@@ -88,61 +84,84 @@
 			"Rev": "9cbd2a1374f46905c68a4eb3694a130610adc62a"
 		},
 		{
+			"ImportPath": "github.com/go-macaron/binding",
+			"Rev": "864a5ce578777bb3529e1c2c9bec855e1bb2973c"
+		},
+		{
 			"ImportPath": "github.com/go-macaron/inject",
 			"Rev": "c5ab7bf3a307593cd44cb272d1a5beea473dd072"
 		},
 		{
-			"ImportPath": "github.com/qiniu/api.v6/auth/digest",
-			"Comment": "v6.0.9-7-g92e32b3",
-			"Rev": "92e32b3d85734d7b1e2f3f0765850ebd0d15eed2"
+			"ImportPath": "github.com/golang/protobuf/proto",
+			"Rev": "02ac84f19cf2febf53ac06e7fbc446c1ea0258e3"
 		},
 		{
-			"ImportPath": "github.com/qiniu/api.v6/conf",
-			"Comment": "v6.0.9-7-g92e32b3",
-			"Rev": "92e32b3d85734d7b1e2f3f0765850ebd0d15eed2"
+			"ImportPath": "github.com/golang/snappy",
+			"Rev": "723cc1e459b8eea2dea4583200fd60757d40097a"
 		},
 		{
-			"ImportPath": "github.com/qiniu/api.v6/io",
-			"Comment": "v6.0.9-7-g92e32b3",
-			"Rev": "92e32b3d85734d7b1e2f3f0765850ebd0d15eed2"
+			"ImportPath": "github.com/huawei-openlab/newdb/orm",
+			"Rev": "dc55bd66074182fc9799ba1c04120b23853b9794"
 		},
 		{
-			"ImportPath": "github.com/qiniu/api.v6/rs",
-			"Comment": "v6.0.9-7-g92e32b3",
-			"Rev": "92e32b3d85734d7b1e2f3f0765850ebd0d15eed2"
+			"ImportPath": "github.com/juju/errors",
+			"Rev": "4567a5e69fd3130ca0d89f69478e7ac025b67452"
 		},
 		{
-			"ImportPath": "github.com/qiniu/api.v6/url",
-			"Comment": "v6.0.9-7-g92e32b3",
-			"Rev": "92e32b3d85734d7b1e2f3f0765850ebd0d15eed2"
+			"ImportPath": "github.com/ngaut/deadline",
+			"Rev": "fae8f9dfd7048de16575b9d4c255278e38c28a4f"
 		},
 		{
-			"ImportPath": "github.com/qiniu/bytes",
-			"Comment": "v1.0.00-7-g9acc46d",
-			"Rev": "9acc46dc91fae3c20c09bb155050f1446d480c95"
+			"ImportPath": "github.com/ngaut/go-zookeeper/zk",
+			"Rev": "9c3719e318c7cfd072e41eb48cb71fcaa49d5e05"
 		},
 		{
-			"ImportPath": "github.com/qiniu/rpc",
-			"Comment": "v2.0.01-4-g4d24757",
-			"Rev": "4d247572a7992e118c40d3dd68f7e0576f1d1c6c"
+			"ImportPath": "github.com/ngaut/log",
+			"Rev": "5402b7f83e7a5eced8f2ced6d385a1129cce1ad4"
 		},
 		{
-			"ImportPath": "github.com/satori/go.uuid",
-			"Rev": "afe1e2ddf0f05b7c29d388a3f8e76cb15c2231ca"
+			"ImportPath": "github.com/ngaut/pool",
+			"Rev": "440660161f02291a5f955d3d92dd3dd56b9c47a9"
 		},
 		{
-			"ImportPath": "github.com/upyun/go-sdk/upyun",
-			"Comment": "v1.1.0",
-			"Rev": "53df861e646d255e461b31a7515e0cdaf171f8b6"
+			"ImportPath": "github.com/ngaut/tso/client",
+			"Rev": "f5282893711cf8be9bce62216af5186d86e8fd61"
 		},
 		{
-			"ImportPath": "gopkg.in/bsm/ratelimit.v1",
-			"Rev": "bda20d5067a03094fc6762f7ead53027afac5f28"
+			"ImportPath": "github.com/ngaut/tso/proto",
+			"Rev": "f5282893711cf8be9bce62216af5186d86e8fd61"
 		},
 		{
-			"ImportPath": "gopkg.in/bufio.v1",
-			"Comment": "v1",
-			"Rev": "567b2bfa514e796916c4747494d6ff5132a1dfce"
+			"ImportPath": "github.com/pingcap/check",
+			"Rev": "3b578b26a46c6fb956a62d9af319e14a0d30be4f"
+		},
+		{
+			"ImportPath": "github.com/pingcap/go-hbase",
+			"Rev": "8e85130c7de1bfb42184dd65d7e6a4d92589442a"
+		},
+		{
+			"ImportPath": "github.com/pingcap/go-themis",
+			"Rev": "a576b066c5dba2c16645c58717e94dc562314708"
+		},
+		{
+			"ImportPath": "github.com/pingcap/tidb",
+			"Rev": "58b04969f23ce793c41c18b095825840a9e198c2"
+		},
+		{
+			"ImportPath": "github.com/syndtr/goleveldb/leveldb",
+			"Rev": "1a9d62f03ea92815b46fcaab357cfd4df264b1a0"
+		},
+		{
+			"ImportPath": "github.com/twinj/uuid",
+			"Rev": "70cac2bcd273ef6a371bb96cde363d28b68734c3"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding",
+			"Rev": "e6847002810c51f892a128333573eac5e2a62024"
+		},
+		{
+			"ImportPath": "golang.org/x/text/transform",
+			"Rev": "e6847002810c51f892a128333573eac5e2a62024"
 		},
 		{
 			"ImportPath": "gopkg.in/ini.v1",
@@ -152,11 +171,6 @@
 		{
 			"ImportPath": "gopkg.in/macaron.v1",
 			"Rev": "1273543230048d67c2cfbbed0162256fd000ba3b"
-		},
-		{
-			"ImportPath": "gopkg.in/redis.v3",
-			"Comment": "v3.1.5",
-			"Rev": "2cfe5df7d2593e20161594e4c02ebb305c9ccd8e"
 		}
 	]
 }
