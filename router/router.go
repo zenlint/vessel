@@ -13,7 +13,7 @@ func SetRouters(m *macaron.Macaron) {
 		m.Group("/workspace", func() {
 
 			m.Post("/", binding.Bind(handler.WorkspacePOSTJSON{}), handler.V1POSTWorkspaceHandler)
-			m.Put("/:workspace", handler.V1PUTWorkspaceHandler)
+			m.Put("/:workspace", binding.Bind(handler.WorkspacePUTJSON{}), handler.V1PUTWorkspaceHandler)
 			m.Get("/:workspace", handler.V1GETWorkspaceHandler)
 			m.Delete("/:workspace", handler.V1DELETEWorkspaceHandler)
 
