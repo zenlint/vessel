@@ -19,10 +19,11 @@ type Workspace struct {
 
 func (ws *Workspace) Create(name, description string) (int64, error) {
 	o := orm.NewOrm()
-	w := Workspace{Name: name, Description: description}
+	w := Workspace{Name: name, Description: description, Actived: true}
 
 	if err := o.Begin(); err != nil {
 		log.Errorf("Transcation error: %s", err.Error())
+
 		return 0, err
 	} else {
 		if id, e := o.Insert(&w); e != nil {
