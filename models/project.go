@@ -28,12 +28,12 @@ func (project *Project) Create(wid int64, name, description string) (int64, erro
 		return 0, err
 	} else {
 		if id, e := o.Insert(&p); e != nil {
-			log.Errorf("Create project record error: %s", e.Error())
+			log.Errorf("Create project error: %s", e.Error())
 
 			o.Rollback()
 			return 0, err
 		} else {
-			log.Errorf("Create project record successfully, id is: %d", id)
+			log.Errorf("Create project successfully, id is: %d", id)
 
 			o.Commit()
 			return id, nil

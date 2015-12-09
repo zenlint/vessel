@@ -27,12 +27,12 @@ func (ws *Workspace) Create(name, description string) (int64, error) {
 		return 0, err
 	} else {
 		if id, e := o.Insert(&w); e != nil {
-			log.Errorf("Create workspace record error: %s", e.Error())
+			log.Errorf("Create workspace error: %s", e.Error())
 
 			o.Rollback()
 			return 0, e
 		} else {
-			log.Infof("Create worksapce record successfully, id is: %d", id)
+			log.Infof("Create worksapce successfully, id is: %d", id)
 
 			o.Commit()
 			return id, nil
@@ -47,7 +47,7 @@ func (ws *Workspace) Put(id int64, description string) error {
 	w := Workspace{Id: id, Actived: true}
 
 	if err := o.Read(&w, "Id", "Actived"); err != nil {
-		log.Errorf("Get workspace record %d error: &s", id, err.Error())
+		log.Errorf("Get workspace %d error: &s", id, err.Error())
 
 		return err
 	} else {
@@ -58,12 +58,12 @@ func (ws *Workspace) Put(id int64, description string) error {
 			w.Description = description
 
 			if _, err := o.Update(&w, "Description"); err != nil {
-				log.Errorf("Put workspace record %d error: %s", id, err.Error())
+				log.Errorf("Put workspace %d error: %s", id, err.Error())
 
 				o.Rollback()
 				return err
 			} else {
-				log.Infof("Put workspace record successfully: %d", id)
+				log.Infof("Put workspace successfully: %d", id)
 
 				o.Commit()
 				return nil
@@ -77,7 +77,7 @@ func (ws *Workspace) Get(id int64) (Workspace, error) {
 	w := Workspace{Id: id, Actived: true}
 
 	if err := o.Read(&w, "Id", "Actived"); err != nil {
-		log.Errorf("Get workspace record %d error: &s", id, err.Error())
+		log.Errorf("Get workspace %d error: &s", id, err.Error())
 
 		return w, err
 	} else {
@@ -90,7 +90,7 @@ func (ws *Workspace) Delete(id int64) error {
 	w := Workspace{Id: id}
 
 	if err := o.Read(&w, "Id"); err != nil {
-		log.Errorf("Get workspace record %d error: %s", id, err.Error())
+		log.Errorf("Get workspace %d error: %s", id, err.Error())
 
 		return err
 	} else {
@@ -99,12 +99,12 @@ func (ws *Workspace) Delete(id int64) error {
 			return err
 		} else {
 			if _, err := o.Delete(&w); err != nil {
-				log.Errorf("Delete workspace record %d error: %s", id, err.Error())
+				log.Errorf("Delete workspace %d error: %s", id, err.Error())
 
 				o.Rollback()
 				return err
 			} else {
-				log.Infof("Delete workspace record %d successfully", id)
+				log.Infof("Delete workspace %d successfully", id)
 
 				//TODO Delete relate projects.
 
