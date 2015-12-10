@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/containerops/vessel/models"
 	"github.com/ngaut/log"
 	"gopkg.in/macaron.v1"
+
+	"github.com/containerops/vessel/models"
 )
 
 type WorkspacePOSTJSON struct {

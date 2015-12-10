@@ -20,7 +20,7 @@ type Project struct {
 
 func (project *Project) Create(wid int64, name, description string) (int64, error) {
 	o := orm.NewOrm()
-	p := Project{WorkspaceId: wid, Name: name, Description: description}
+	p := Project{WorkspaceId: wid, Name: name, Description: description, Actived: true}
 
 	if err := o.Begin(); err != nil {
 		log.Errorf("Transcation error: %s", err.Error())
