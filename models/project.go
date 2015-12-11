@@ -18,7 +18,7 @@ type Project struct {
 	Memo        string    `json:"memo" orm:"null;type(text)"`
 }
 
-func (project *Project) Create(wid int64, name, description string) (int64, error) {
+func (pj *Project) Create(wid int64, name, description string) (int64, error) {
 	o := orm.NewOrm()
 	p := Project{WorkspaceId: wid, Name: name, Description: description, Actived: true}
 
@@ -41,6 +41,82 @@ func (project *Project) Create(wid int64, name, description string) (int64, erro
 	}
 }
 
-func (project *Project) Put(id int64, name, description string) error {
-	return nil
+func (pj *Project) Put(id int64, name, description string) error {
+	o := orm.NewOrm()
+	p := Project{Id: id, Actived: true}
+
+	if err := o.Read(&p, "Id", "Actived"); err != nil {
+		log.Errorf("Get project %d error: %s", id, err.Error())
+
+		return err
+	} else {
+		if err := o.Begin(); err != nil {
+			log.Errorf("Transcation error: %s", err.Error())
+
+			o.Rollback()
+			return err
+		} else {
+			p.Name = name
+			p.Description = description
+
+			if _, err := o.Update(&p, "Name", "Description"); err != nil {
+				log.Errorf("Put project %d error: %s", id, err.Error())
+
+				o.Rollback()
+				return err
+			} else {
+				log.Infof("Put project successfully: %d", id)
+
+				o.Commit()
+				return nil
+			}
+		}
+	}
+}
+
+func (pj *Project) Get(id int64) (Project, error) {
+	o := orm.NewOrm()
+	p := Project{Id: id, Actived: true}
+
+	if err := o.Read(&p, "Id", "Actived"); err != nil {
+		log.Errorf("Get project %d error: %s", id, err.Error())
+
+		return p, err
+	} else {
+		return p, nil
+	}
+}
+
+func (pj *Project) Delete(id int64) error {
+	o := orm.NewOrm()
+	p := Project{Id: id}
+
+	if err := o.Read(&p, "Id"); err != nil {
+		log.Errorf("Get project %d error: %s", id, err.Error())
+
+		o.Rollback()
+		return err
+	} else {
+		if err := o.Begin(); err != nil {
+			log.Errorf("Transcation error: %s", err.Error())
+
+			o.Rollback()
+			return err
+		} else {
+			if _, err := o.Delete(&p); err != nil {
+				log.Errorf("Delete workspace %d error: %s", id, err.Error())
+
+				o.Rollback()
+				return err
+			} else {
+				log.Infof("Delete workspace %d successfully", id)
+
+				//TODO Delete relate objetcts.
+
+				o.Commit()
+				return nil
+			}
+		}
+	}
+
 }

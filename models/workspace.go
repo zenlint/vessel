@@ -32,7 +32,7 @@ func (ws *Workspace) Create(name, description string) (int64, error) {
 			o.Rollback()
 			return 0, e
 		} else {
-			log.Infof("Create worksapce successfully, id is: %d", id)
+			log.Infof("Create workspace successfully, id is: %d", id)
 
 			o.Commit()
 			return id, nil
@@ -47,18 +47,20 @@ func (ws *Workspace) Put(id int64, name, description string) error {
 	w := Workspace{Id: id, Actived: true}
 
 	if err := o.Read(&w, "Id", "Actived"); err != nil {
-		log.Errorf("Get workspace %d error: &s", id, err.Error())
+		log.Errorf("Get workspace %d error: %s", id, err.Error())
 
 		return err
 	} else {
 		if err := o.Begin(); err != nil {
 			log.Errorf("Transcation error: %s", err.Error())
+
+			o.Rollback()
 			return err
 		} else {
 			w.Name = name
 			w.Description = description
 
-			if _, err := o.Update(&w, "Description"); err != nil {
+			if _, err := o.Update(&w, "Name", "Description"); err != nil {
 				log.Errorf("Put workspace %d error: %s", id, err.Error())
 
 				o.Rollback()
@@ -78,7 +80,7 @@ func (ws *Workspace) Get(id int64) (Workspace, error) {
 	w := Workspace{Id: id, Actived: true}
 
 	if err := o.Read(&w, "Id", "Actived"); err != nil {
-		log.Errorf("Get workspace %d error: &s", id, err.Error())
+		log.Errorf("Get workspace %d error: %s", id, err.Error())
 
 		return w, err
 	} else {
@@ -97,6 +99,8 @@ func (ws *Workspace) Delete(id int64) error {
 	} else {
 		if err := o.Begin(); err != nil {
 			log.Errorf("Transcation error: %s", err.Error())
+
+			o.Rollback()
 			return err
 		} else {
 			if _, err := o.Delete(&w); err != nil {
@@ -107,7 +111,23 @@ func (ws *Workspace) Delete(id int64) error {
 			} else {
 				log.Infof("Delete workspace %d successfully", id)
 
-				//TODO Delete relate projects.
+				pjs := []*Project{}
+
+				if _, err := o.QueryTable("project").Filter("workspace_id", id).All(&pjs); err != nil {
+					log.Errorf("Get all projects of workspace %d error: %s", id, err.Error())
+
+					o.Rollback()
+					return err
+				}
+
+				for _, p := range pjs {
+					project := Project{}
+
+					if err := project.Delete(p.Id); err != nil {
+						o.Rollback()
+						return err
+					}
+				}
 
 				o.Commit()
 				return nil
