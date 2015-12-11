@@ -40,3 +40,7 @@ func (project *Project) Create(wid int64, name, description string) (int64, erro
 		}
 	}
 }
+
+func (project *Project) Put(id int64, name, description string) error {
+	return nil
+}

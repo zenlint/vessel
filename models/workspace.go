@@ -42,7 +42,7 @@ func (ws *Workspace) Create(name, description string) (int64, error) {
 	return 0, nil
 }
 
-func (ws *Workspace) Put(id int64, description string) error {
+func (ws *Workspace) Put(id int64, name, description string) error {
 	o := orm.NewOrm()
 	w := Workspace{Id: id, Actived: true}
 
@@ -55,6 +55,7 @@ func (ws *Workspace) Put(id int64, description string) error {
 			log.Errorf("Transcation error: %s", err.Error())
 			return err
 		} else {
+			w.Name = name
 			w.Description = description
 
 			if _, err := o.Update(&w, "Description"); err != nil {

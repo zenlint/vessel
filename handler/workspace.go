@@ -33,6 +33,7 @@ func V1POSTWorkspaceHandler(ctx *macaron.Context, ws WorkspacePOSTJSON) (int, []
 }
 
 type WorkspacePUTJSON struct {
+	Name        string `from:"name" binding:"Required"`
 	Description string `from:"description" binding:"Required"`
 }
 
@@ -40,7 +41,7 @@ func V1PUTWorkspaceHandler(ctx *macaron.Context, ws WorkspacePUTJSON) (int, []by
 	w := models.Workspace{}
 	wid, _ := strconv.ParseInt(ctx.Params(":workspace"), 0, 64)
 
-	if err := w.Put(wid, ws.Description); err != nil {
+	if err := w.Put(wid, ws.Name, ws.Description); err != nil {
 		log.Errorf("[vessel] Update workspace error: %s", err.Error())
 
 		result, _ := json.Marshal(map[string]string{"status": "Error", "message": err.Error()})
