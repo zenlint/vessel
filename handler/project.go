@@ -34,11 +34,12 @@ func V1POSTProjectHandler(ctx *macaron.Context, pj ProjectPOSTJSON) (int, []byte
 	}
 }
 
-type ProjectPutJSON struct {
+type ProjectPUTJSON struct {
+	Name        string `from:"name" binding:"Required"`
 	Description string `from:"description" binding:"Required"`
 }
 
-func V1PUTProjectHandler(ctx *macaron.Context) (int, []byte) {
+func V1PUTProjectHandler(ctx *macaron.Context, pj ProjectPUTJSON) (int, []byte) {
 	return http.StatusOK, []byte("")
 }
 
