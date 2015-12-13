@@ -57,9 +57,35 @@ func V1PUTProjectHandler(ctx *macaron.Context, pj ProjectPUTJSON) (int, []byte) 
 }
 
 func V1GETProjectHandler(ctx *macaron.Context) (int, []byte) {
-	return http.StatusOK, []byte("")
+	p := models.Project{}
+	pid, _ := strconv.ParseInt(ctx.Params(":project"), 0, 64)
+
+	if pj, err := p.Get(pid); err != nil {
+		log.Errorf("[vessel] Get project error: %s", err.Error())
+
+		result, _ := json.Marshal(map[string]string{"status": "Error", "message": err.Error()})
+		return http.StatusBadRequest, result
+	} else {
+		log.Infof("[vessel] Get project data successfully: %d", pid)
+
+		result, _ := json.Marshal(pj)
+		return http.StatusOK, result
+	}
 }
 
 func V1DELETEProjectHandler(ctx *macaron.Context) (int, []byte) {
-	return http.StatusOK, []byte("")
+	p := models.Workspace{}
+	pid, _ := strconv.ParseInt(ctx.Params(":project"), 0, 64)
+
+	if err := p.Delete(pid); err != nil {
+		log.Errorf("[vessel] Delete project error: %s", err.Error())
+
+		result, _ := json.Marshal(map[string]string{"status": "Error", "message": err.Error()})
+		return http.StatusBadRequest, result
+	} else {
+		log.Infof("[vessel] Delete project data successfully: %d", pid)
+
+		result, _ := json.Marshal(map[string]int64{"id": pid})
+		return http.StatusOK, result
+	}
 }
