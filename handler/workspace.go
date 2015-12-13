@@ -47,7 +47,7 @@ func V1PUTWorkspaceHandler(ctx *macaron.Context, ws WorkspacePUTJSON) (int, []by
 		result, _ := json.Marshal(map[string]string{"status": "Error", "message": err.Error()})
 		return http.StatusBadRequest, result
 	} else {
-		log.Infof("[vessel] Put workspace successfully, id is: %d", wid)
+		log.Infof("[vessel] Put workspace %d successfully", wid)
 
 		result, _ := json.Marshal(map[string]int64{"id": wid})
 		return http.StatusOK, result

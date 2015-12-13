@@ -40,7 +40,20 @@ type ProjectPUTJSON struct {
 }
 
 func V1PUTProjectHandler(ctx *macaron.Context, pj ProjectPUTJSON) (int, []byte) {
-	return http.StatusOK, []byte("")
+	p := models.Project{}
+	pid, _ := strconv.ParseInt(ctx.Params(":project"), 0, 64)
+
+	if err := p.Put(pid, pj.Name, pj.Description); err != nil {
+		log.Errorf("[vessel] Put project %d error: %s", pid, err.Error())
+
+		result, _ := json.Marshal(map[string]string{"status": "Error", "message": err.Error()})
+		return http.StatusBadRequest, result
+	} else {
+		log.Infof("[vessel] Put project %d successfully.", pid)
+
+		result, _ := json.Marshal(map[string]int64{"id": pid})
+		return http.StatusOK, result
+	}
 }
 
 func V1GETProjectHandler(ctx *macaron.Context) (int, []byte) {
