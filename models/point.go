@@ -1,7 +1,13 @@
 package models
 
 import (
+	"strings"
 	"time"
+
+	underscore "github.com/ahl5esoft/golang-underscore"
+	"github.com/huawei-openlab/newdb/orm"
+	"github.com/ngaut/log"
+	"github.com/twinj/uuid"
 )
 
 const (
@@ -25,15 +31,92 @@ type Point struct {
 }
 
 func (point *Point) Create(pipelineId int64, pointType int, name string) (error, string) {
-	return nil, ""
+	o := orm.NewOrm()
+	p := Point{PipelineId: pipelineId, Type: pointType, UUID: uuid.NewV4().String(), Name: name, Actived: true}
+
+	if err := o.Begin(); err != nil {
+		log.Errorf("Transcation error: %s", err.Error())
+
+		return err, ""
+	} else {
+		if id, err := o.Insert(&p); err != nil {
+			log.Errorf("Create point error: %s", err.Error())
+
+			o.Rollback()
+			return err, ""
+		} else {
+			log.Infof("Create point successfully, id is: %d", id)
+
+			o.Commit()
+			return nil, p.UUID
+		}
+	}
 }
 
 func (point *Point) AddFrom(uuid string, from ...string) error {
-	return nil
+	o := orm.NewOrm()
+	p := Point{UUID: uuid, Actived: true}
+
+	if err := o.Read(&p, "UUID", "Actived"); err != nil {
+		log.Errorf("Get point %s error: %s", uuid, err.Error())
+
+		return err
+	} else {
+		if err := o.Begin(); err != nil {
+			log.Errorf("Transcation error: %s", err.Error())
+
+			o.Rollback()
+			return err
+		} else {
+			new_from, _ := underscore.Uniq(strings.Split(p.From+";"+strings.Join(from, ";"), ";"), nil)
+			p.From = strings.Join(new_from.([]string), ";")
+
+			if _, err := o.Update(&p, "From"); err != nil {
+				log.Errorf("Put point from %s error %s:", uuid, err.Error())
+
+				o.Rollback()
+				return err
+			} else {
+				log.Infof("Put point from %s successfully", uuid)
+
+				o.Commit()
+				return nil
+			}
+		}
+	}
 }
 
-func (point *Point) AddEnd(uuid string, end ...string) error {
-	return nil
+func (point *Point) AddTo(uuid string, to ...string) error {
+	o := orm.NewOrm()
+	p := Point{UUID: uuid, Actived: true}
+
+	if err := o.Read(&p, "UUID", "Actived"); err != nil {
+		log.Errorf("Get point %s error: %s", uuid, err.Error())
+
+		return err
+	} else {
+		if err := o.Begin(); err != nil {
+			log.Errorf("Transcation error: %s", err.Error())
+
+			o.Rollback()
+			return err
+		} else {
+			new_to, _ := underscore.Uniq(strings.Split(p.To+";"+strings.Join(to, ";"), ";"), nil)
+			p.To = strings.Join(new_to.([]string), ";")
+
+			if _, err := o.Update(&p, "To"); err != nil {
+				log.Errorf("Put point end %s error %s:", uuid, err.Error())
+
+				o.Rollback()
+				return err
+			} else {
+				log.Infof("Put point end %s successfully", uuid)
+
+				o.Commit()
+				return nil
+			}
+		}
+	}
 }
 
 func (point *Point) Run(uuid string) (error, string) {

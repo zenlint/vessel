@@ -65,7 +65,7 @@ func (pj *Project) Put(id int64, name, description string) error {
 				o.Rollback()
 				return err
 			} else {
-				log.Infof("Put project successfully: %d", id)
+				log.Infof("Put project %d successfully")
 
 				o.Commit()
 				return nil
@@ -104,12 +104,12 @@ func (pj *Project) Delete(id int64) error {
 			return err
 		} else {
 			if _, err := o.Delete(&p); err != nil {
-				log.Errorf("Delete workspace %d error: %s", id, err.Error())
+				log.Errorf("Delete project %d error: %s", id, err.Error())
 
 				o.Rollback()
 				return err
 			} else {
-				log.Infof("Delete workspace %d successfully", id)
+				log.Infof("Delete project %d successfully", id)
 
 				//TODO Delete relate objetcts.
 
