@@ -86,6 +86,10 @@ func (point *Point) AddFrom(uuid string, from ...string) error {
 	}
 }
 
+func (point *Point) RemoveFrom(uuid string, from string) error {
+	return nil
+}
+
 func (point *Point) AddTo(uuid string, to ...string) error {
 	o := orm.NewOrm()
 	p := Point{UUID: uuid, Actived: true}
@@ -117,6 +121,10 @@ func (point *Point) AddTo(uuid string, to ...string) error {
 			}
 		}
 	}
+}
+
+func (point *Point) RemoveTo(uuid string, to string) error {
+	return nil
 }
 
 func (point *Point) Run(uuid string) (error, string) {
