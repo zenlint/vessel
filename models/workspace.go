@@ -39,7 +39,7 @@ func (ws *Workspace) Create(name, description string) (int64, error) {
 		}
 	}
 
-	return 0, nil
+	// return 0, nil
 }
 
 func (ws *Workspace) Put(id int64, name, description string) error {
