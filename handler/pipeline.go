@@ -32,9 +32,9 @@ type PipelinePOSTJSON struct {
 }
 
 func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int, []byte) {
-	// 收json
+	// get json body
 	reqStr, _ := ctx.Req.Body().String()
-	// 生成新的pipeline
+	// create new pipeline
 	projectInfo := module.GetProjectInfoByName(ctx.Params(":project"))
 	pipeline := new(models.Pipeline)
 	pipeline.WorkspaceId = projectInfo.WorkspaceId
@@ -48,8 +48,8 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 	pipeline.Detail = reqStr
 
 	module.CreatePipeline(pipeline)
-	// 生成stage和point
-	// 根据json判断合法性,并返回stage 和 point的对应关系map
+	// gen new stage & point
+	// verification json format,return stage & point map
 	isLegal, reason, dependenceMap := utils.GenerateDependenceMap(reqStr)
 	if !isLegal {
 		return http.StatusOK, []byte(reason)
@@ -75,6 +75,10 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 
 		module.CreateStage(stage)
 	}
+
+	// pipeline json save db
+	// pipeline stage point & version save db
+	// pipeline stage point status to etcd
 
 	return http.StatusOK, []byte("ok")
 }
