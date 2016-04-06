@@ -2,136 +2,144 @@ package models
 
 import (
 	"time"
-
-	"github.com/huawei-openlab/newdb/orm"
-	"github.com/ngaut/log"
+	//	"github.com/huawei-openlab/newdb/orm"
+	//	"github.com/ngaut/log"
 )
 
 type Workspace struct {
 	Id          int64     `json:"id"`
-	Name        string    `json:"name" orm:"unique;varchar(255)"`
-	Description string    `json:"description" orm:"null;type(text)"`
-	Actived     bool      `json:"actived" orm:"null;default(0)"`
-	Created     time.Time `json:"created" orm:"auto_now_add;type(datetime)"`
-	Updated     time.Time `json:"updated" orm:"auto_now;type(datetime)"`
-	Memo        string    `json:"memo" orm:"null;type(text)"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Actived     bool      `json:"actived"`
+	Created     time.Time `json:"created"`
+	Updated     time.Time `json:"updated"`
+	Memo        string    `json:"memo"`
 }
 
 func (ws *Workspace) Create(name, description string) (int64, error) {
-	o := orm.NewOrm()
-	w := Workspace{Name: name, Description: description, Actived: true}
+	/*	o := orm.NewOrm()
+		w := Workspace{Name: name, Description: description, Actived: true}
 
-	if err := o.Begin(); err != nil {
-		log.Errorf("Transcation error: %s", err.Error())
+		if err := o.Begin(); err != nil {
+			log.Errorf("Transcation error: %s", err.Error())
 
-		return 0, err
-	} else {
-		if id, e := o.Insert(&w); e != nil {
-			log.Errorf("Create workspace error: %s", e.Error())
-
-			o.Rollback()
-			return 0, e
+			return 0, err
 		} else {
-			log.Infof("Create workspace successfully, id is: %d", id)
+			if id, e := o.Insert(&w); e != nil {
+				log.Errorf("Create workspace error: %s", e.Error())
 
-			o.Commit()
-			return id, nil
+				o.Rollback()
+				return 0, e
+			} else {
+				log.Infof("Create workspace successfully, id is: %d", id)
+
+				o.Commit()
+				return id, nil
+			}
 		}
-	}
-
-	// return 0, nil
+	*/
+	return 0, nil
 }
 
 func (ws *Workspace) Put(id int64, name, description string) error {
-	o := orm.NewOrm()
-	w := Workspace{Id: id, Actived: true}
+	/*
+		o := orm.NewOrm()
+		w := Workspace{Id: id, Actived: true}
 
-	if err := o.Read(&w, "Id", "Actived"); err != nil {
-		log.Errorf("Get workspace %d error: %s", id, err.Error())
+		if err := o.Read(&w, "Id", "Actived"); err != nil {
+			log.Errorf("Get workspace %d error: %s", id, err.Error())
 
-		return err
-	} else {
-		if err := o.Begin(); err != nil {
-			log.Errorf("Transcation error: %s", err.Error())
-
-			o.Rollback()
 			return err
 		} else {
-			w.Name = name
-			w.Description = description
-
-			if _, err := o.Update(&w, "Name", "Description"); err != nil {
-				log.Errorf("Put workspace %d error: %s", id, err.Error())
+			if err := o.Begin(); err != nil {
+				log.Errorf("Transcation error: %s", err.Error())
 
 				o.Rollback()
 				return err
 			} else {
-				log.Infof("Put workspace successfully: %d", id)
+				w.Name = name
+				w.Description = description
 
-				o.Commit()
-				return nil
-			}
-		}
-	}
-}
-
-func (ws *Workspace) Get(id int64) (Workspace, error) {
-	o := orm.NewOrm()
-	w := Workspace{Id: id, Actived: true}
-
-	if err := o.Read(&w, "Id", "Actived"); err != nil {
-		log.Errorf("Get workspace %d error: %s", id, err.Error())
-
-		return w, err
-	} else {
-		return w, nil
-	}
-}
-
-func (ws *Workspace) Delete(id int64) error {
-	o := orm.NewOrm()
-	w := Workspace{Id: id}
-
-	if err := o.Read(&w, "Id"); err != nil {
-		log.Errorf("Get workspace %d error: %s", id, err.Error())
-
-		return err
-	} else {
-		if err := o.Begin(); err != nil {
-			log.Errorf("Transcation error: %s", err.Error())
-
-			o.Rollback()
-			return err
-		} else {
-			if _, err := o.Delete(&w); err != nil {
-				log.Errorf("Delete workspace %d error: %s", id, err.Error())
-
-				o.Rollback()
-				return err
-			} else {
-				log.Infof("Delete workspace %d successfully", id)
-
-				pjs := []*Project{}
-
-				if _, err := o.QueryTable("project").Filter("workspace_id", id).All(&pjs); err != nil {
-					log.Errorf("Get all projects of workspace %d error: %s", id, err.Error())
+				if _, err := o.Update(&w, "Name", "Description"); err != nil {
+					log.Errorf("Put workspace %d error: %s", id, err.Error())
 
 					o.Rollback()
 					return err
+				} else {
+					log.Infof("Put workspace successfully: %d", id)
+
+					o.Commit()
+					return nil
 				}
+			}
+		}
+	*/
+	return nil
+}
 
-				for _, p := range pjs {
-					project := Project{}
+func (ws *Workspace) Get(id int64) (*Workspace, error) {
+	/*
+		o := orm.NewOrm()
+		w := Workspace{Id: id, Actived: true}
 
-					if err := project.Delete(p.Id); err != nil {
+		if err := o.Read(&w, "Id", "Actived"); err != nil {
+			log.Errorf("Get workspace %d error: %s", id, err.Error())
+
+			return w, err
+		} else {
+			return w, nil
+		}
+	*/
+	return nil, nil
+}
+
+func (ws *Workspace) Delete(id int64) error {
+	/*
+		o := orm.NewOrm()
+		w := Workspace{Id: id}
+
+		if err := o.Read(&w, "Id"); err != nil {
+			log.Errorf("Get workspace %d error: %s", id, err.Error())
+
+			return err
+		} else {
+			if err := o.Begin(); err != nil {
+				log.Errorf("Transcation error: %s", err.Error())
+
+				o.Rollback()
+				return err
+			} else {
+				if _, err := o.Delete(&w); err != nil {
+					log.Errorf("Delete workspace %d error: %s", id, err.Error())
+
+					o.Rollback()
+					return err
+				} else {
+					log.Infof("Delete workspace %d successfully", id)
+
+					pjs := []*Project{}
+
+					if _, err := o.QueryTable("project").Filter("workspace_id", id).All(&pjs); err != nil {
+						log.Errorf("Get all projects of workspace %d error: %s", id, err.Error())
+
 						o.Rollback()
 						return err
 					}
-				}
 
-				o.Commit()
-				return nil
+					for _, p := range pjs {
+						project := Project{}
+
+						if err := project.Delete(p.Id); err != nil {
+							o.Rollback()
+							return err
+						}
+					}
+
+					o.Commit()
+					return nil
+				}
 			}
 		}
-	}
+	*/
+	return nil
 }

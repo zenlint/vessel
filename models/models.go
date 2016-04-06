@@ -1,5 +1,6 @@
 package models
 
+/*
 import _ "github.com/pingcap/tidb"
 
 //Init Database
@@ -18,3 +19,4 @@ func Sync(force, verbose bool) error {
 	//
 	return nil
 }
+*/

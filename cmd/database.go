@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"fmt"
+	//"fmt"
 
 	"github.com/codegangsta/cli"
-
-	"github.com/containerops/vessel/models"
+	//"github.com/containerops/vessel/models"
 )
 
 var CmdDatabase = cli.Command{
@@ -30,17 +29,18 @@ var CmdDatabase = cli.Command{
 }
 
 func runDatabase(c *cli.Context) {
-	if len(c.String("action")) > 0 {
-		action := c.String("action")
+	/*	if len(c.String("action")) > 0 {
+			action := c.String("action")
 
-		switch action {
-		case "sync":
-			if err := models.Sync(c.Bool("force"), c.Bool("verbose")); err != nil {
-				fmt.Println("Init database struct error, ", err.Error())
+			switch action {
+			case "sync":
+				if err := models.Sync(c.Bool("force"), c.Bool("verbose")); err != nil {
+					fmt.Println("Init database struct error, ", err.Error())
+				}
+				break
+			default:
+				break
 			}
-			break
-		default:
-			break
 		}
-	}
+	*/
 }
