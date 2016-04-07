@@ -1,5 +1,6 @@
 package module
 
+/*
 import (
 	log "github.com/Sirupsen/logrus"
 )
@@ -12,3 +13,4 @@ func GetLog() *log.Logger {
 	}
 	return Log
 }
+*/
