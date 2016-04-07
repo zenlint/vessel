@@ -31,7 +31,7 @@ func main() {
 	}
 
 	if err := config.Set("conf/runtime.conf"); err != nil {
-		fmt.Printf("Read config error: %v", err.Error())
+		fmt.Printf("Read runtime config error: %v", err.Error())
 		return
 	}
 
