@@ -3,6 +3,7 @@ package module
 import (
 	"github.com/containerops/vessel/models"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/jinzhu/gorm"
 )
 
@@ -22,7 +23,7 @@ func init() {
 	//打开数据库获连接
 	db, err = gorm.Open("mysql", "root:root@tcp(127.0.0.1:3306)/k8sci?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
-		GetLog().Panic("erro when conn to db:", err)
+		log.Panic("erro when conn to db:", err)
 	}
 	//设置数据库名称单数
 	db.SingularTable(true)

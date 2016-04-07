@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ngaut/log"
+	//"github.com/ngaut/log"
 	"gopkg.in/macaron.v1"
 
 	"github.com/containerops/vessel/models"
@@ -21,12 +21,12 @@ func V1POSTProjectHandler(ctx *macaron.Context, pj ProjectPOSTJSON) (int, []byte
 	wid, _ := strconv.ParseInt(ctx.Params(""), 0, 64)
 
 	if id, err := p.Create(wid, pj.Name, pj.Description); err != nil {
-		log.Errorf("[vessel] Create project error: %s", err.Error())
+		//	log.Errorf("[vessel] Create project error: %s", err.Error())
 
 		result, _ := json.Marshal(map[string]string{"status": "Error", "message": err.Error()})
 		return http.StatusBadRequest, result
 	} else {
-		log.Infof("[vessel] Create workspace successfully, id is %d", id)
+		//	log.Infof("[vessel] Create workspace successfully, id is %d", id)
 
 		result, _ := json.Marshal(map[string]int64{"id": id})
 
@@ -44,12 +44,12 @@ func V1PUTProjectHandler(ctx *macaron.Context, pj ProjectPUTJSON) (int, []byte) 
 	pid, _ := strconv.ParseInt(ctx.Params(":project"), 0, 64)
 
 	if err := p.Put(pid, pj.Name, pj.Description); err != nil {
-		log.Errorf("[vessel] Put project %d error: %s", pid, err.Error())
+		//		log.Errorf("[vessel] Put project %d error: %s", pid, err.Error())
 
 		result, _ := json.Marshal(map[string]string{"status": "Error", "message": err.Error()})
 		return http.StatusBadRequest, result
 	} else {
-		log.Infof("[vessel] Put project %d successfully.", pid)
+		//		log.Infof("[vessel] Put project %d successfully.", pid)
 
 		result, _ := json.Marshal(map[string]int64{"id": pid})
 		return http.StatusOK, result
@@ -61,12 +61,12 @@ func V1GETProjectHandler(ctx *macaron.Context) (int, []byte) {
 	pid, _ := strconv.ParseInt(ctx.Params(":project"), 0, 64)
 
 	if pj, err := p.Get(pid); err != nil {
-		log.Errorf("[vessel] Get project error: %s", err.Error())
+		//		log.Errorf("[vessel] Get project error: %s", err.Error())
 
 		result, _ := json.Marshal(map[string]string{"status": "Error", "message": err.Error()})
 		return http.StatusBadRequest, result
 	} else {
-		log.Infof("[vessel] Get project data successfully: %d", pid)
+		//		log.Infof("[vessel] Get project data successfully: %d", pid)
 
 		result, _ := json.Marshal(pj)
 		return http.StatusOK, result
@@ -78,12 +78,12 @@ func V1DELETEProjectHandler(ctx *macaron.Context) (int, []byte) {
 	pid, _ := strconv.ParseInt(ctx.Params(":project"), 0, 64)
 
 	if err := p.Delete(pid); err != nil {
-		log.Errorf("[vessel] Delete project error: %s", err.Error())
+		//		log.Errorf("[vessel] Delete project error: %s", err.Error())
 
 		result, _ := json.Marshal(map[string]string{"status": "Error", "message": err.Error()})
 		return http.StatusBadRequest, result
 	} else {
-		log.Infof("[vessel] Delete project data successfully: %d", pid)
+		//		log.Infof("[vessel] Delete project data successfully: %d", pid)
 
 		result, _ := json.Marshal(map[string]int64{"id": pid})
 		return http.StatusOK, result
