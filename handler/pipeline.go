@@ -5,7 +5,7 @@ import (
 	//"time"
 
 	//"github.com/containerops/vessel/models"
-	//"github.com/containerops/vessel/module"
+	"github.com/containerops/vessel/module/etcd"
 	//"github.com/containerops/vessel/utils"
 
 	"gopkg.in/macaron.v1"
@@ -33,6 +33,7 @@ type PipelinePOSTJSON struct {
 
 func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int, []byte) {
 
+	etcd.Save()
 	// get json body
 
 	//ignore workspace & project
