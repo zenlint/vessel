@@ -33,9 +33,13 @@ type PipelinePOSTJSON struct {
 
 func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int, []byte) {
 
-	//create stage to etcd
-
 	// get json body
+
+	//ignore workspace & project
+
+	//create stage to etcd
+	//etcd path vessel/ws-xxx/pj-xxx/pl-xxx/plv-xxx/stage-xxx
+
 	//reqStr, _ := ctx.Req.Body().String()
 	// create new pipeline
 	//pipeline := new(models.Pipeline)
