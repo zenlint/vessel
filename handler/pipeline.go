@@ -107,7 +107,7 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 	sInfo1.Name = "BaseStage1"
 	sInfo1.Detail = "{}"
 	sInfo1.Dependences = []string{}
-	plInfo.Stages = append(plInfo.Stages,sInfo1)
+	plInfo.Stages = append(plInfo.Stages, sInfo1)
 
 	var sInfo2 *models.Stage = &models.Stage{}
 	sInfo2.Id = 31000
@@ -119,7 +119,7 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 	sInfo2.Name = "BaseStage2"
 	sInfo2.Detail = "{}"
 	sInfo2.Dependences = []string{}
-	plInfo.Stages = append(plInfo.Stages,sInfo2)
+	plInfo.Stages = append(plInfo.Stages, sInfo2)
 
 	var sInfo3 *models.Stage = &models.Stage{}
 	sInfo3.Id = 31000
@@ -131,8 +131,7 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 	sInfo3.Name = "BaseStage3"
 	sInfo3.Detail = "{}"
 	sInfo3.Dependences = []string{}
-	plInfo.Stages = append(plInfo.Stages,sInfo3)
-
+	plInfo.Stages = append(plInfo.Stages, sInfo3)
 
 	var sInfo4 *models.Stage = &models.Stage{}
 	sInfo4.Id = 31000
@@ -144,8 +143,7 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 	sInfo4.Name = "BaseStage4"
 	sInfo4.Detail = "{}"
 	sInfo4.Dependences = []string{"BaseStage1", "BaseStage2"}
-	plInfo.Stages = append(plInfo.Stages,sInfo4)
-
+	plInfo.Stages = append(plInfo.Stages, sInfo4)
 
 	var sInfo5 *models.Stage = &models.Stage{}
 	sInfo5.Id = 31000
@@ -157,8 +155,7 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 	sInfo5.Name = "BaseStage5"
 	sInfo5.Detail = "{}"
 	sInfo5.Dependences = []string{"BaseStage2", "BaseStage3"}
-	plInfo.Stages = append(plInfo.Stages,sInfo5)
-
+	plInfo.Stages = append(plInfo.Stages, sInfo5)
 
 	var sInfo6 *models.Stage = &models.Stage{}
 	sInfo6.Id = 31000
@@ -170,8 +167,7 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 	sInfo6.Name = "BaseStage6"
 	sInfo6.Detail = "{}"
 	sInfo6.Dependences = []string{"BaseStage4", "BaseStage5"}
-	plInfo.Stages = append(plInfo.Stages,sInfo6)
-
+	plInfo.Stages = append(plInfo.Stages, sInfo6)
 
 	var sInfo7 *models.Stage = &models.Stage{}
 	sInfo7.Id = 31000
@@ -183,7 +179,7 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 	sInfo7.Name = "BaseStage7"
 	sInfo7.Detail = "{}"
 	sInfo7.Dependences = []string{"BaseStage2", "BaseStage6"}
-	plInfo.Stages = append(plInfo.Stages,sInfo7)
+	plInfo.Stages = append(plInfo.Stages, sInfo7)
 
 	var sInfo8 *models.Stage = &models.Stage{}
 	sInfo8.Id = 31000
@@ -195,8 +191,7 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 	sInfo8.Name = "BaseStage8"
 	sInfo8.Detail = "{}"
 	sInfo8.Dependences = []string{"BaseStage4", "BaseStage7"}
-	plInfo.Stages = append(plInfo.Stages,sInfo8)
-
+	plInfo.Stages = append(plInfo.Stages, sInfo8)
 
 	// //error 9
 	// var sInfo9 *models.Stage = &models.Stage{}
@@ -277,6 +272,14 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 	//}
 
 	return http.StatusOK, []byte("ok")
+}
+
+func createPipeline(plJson *PipelinePOSTJSON) (*models.Pipeline, error) {
+	return nil, nil
+}
+
+func createStage(plJson *PipelinePOSTJSON) (*models.Stage, error) {
+	return nil, nil
 }
 
 func V1PUTPipelineHandler(ctx *macaron.Context) (int, []byte) {
