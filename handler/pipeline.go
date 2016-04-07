@@ -2,11 +2,11 @@ package handler
 
 import (
 	"net/http"
-	"time"
+	//"time"
 
-	"github.com/containerops/vessel/models"
-	"github.com/containerops/vessel/module"
-	"github.com/containerops/vessel/utils"
+	//"github.com/containerops/vessel/models"
+	//"github.com/containerops/vessel/module"
+	//"github.com/containerops/vessel/utils"
 
 	"gopkg.in/macaron.v1"
 )
@@ -32,30 +32,39 @@ type PipelinePOSTJSON struct {
 }
 
 func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int, []byte) {
-	// get json body
-	reqStr, _ := ctx.Req.Body().String()
-	// create new pipeline
-	projectInfo := module.GetProjectInfoByName(ctx.Params(":project"))
-	pipeline := new(models.Pipeline)
-	pipeline.WorkspaceId = projectInfo.WorkspaceId
-	pipeline.ProjectId = projectInfo.Id
-	pipeline.Name = reqData.MetaData.Name
-	pipeline.SelfLink = ""
-	pipeline.Labels = reqData.MetaData.Labels
-	pipeline.Annotations = reqData.MetaData.Annotations
-	pipeline.Created = time.Now().Unix()
-	pipeline.Updated = time.Now().Unix()
-	pipeline.Detail = reqStr
 
-	module.CreatePipeline(pipeline)
+	//create stage to etcd
+
+	// get json body
+	//reqStr, _ := ctx.Req.Body().String()
+	// create new pipeline
+	//pipeline := new(models.Pipeline)
+
+	//ignore workspace & project
+	//projectInfo := module.GetProjectInfoByName(ctx.Params(":project"))
+	//pipeline.WorkspaceId = projectInfo.WorkspaceId
+	//pipeline.ProjectId = projectInfo.Id
+	/*
+
+		pipeline.Name = reqData.MetaData.Name
+		pipeline.SelfLink = ""
+		pipeline.Labels = reqData.MetaData.Labels
+		pipeline.Annotations = reqData.MetaData.Annotations
+		pipeline.Created = time.Now().Unix()
+		pipeline.Updated = time.Now().Unix()
+		pipeline.Detail = reqStr
+
+		module.CreatePipeline(pipeline)
+	*/
 	// gen new stage & point
 	// verification json format,return stage & point map
-	isLegal, reason, dependenceMap := utils.GenerateDependenceMap(reqStr)
-	if !isLegal {
-		return http.StatusOK, []byte(reason)
-	}
+	//isLegal, reason, dependenceMap := utils.GenerateDependenceMap(reqStr)
+	//if !isLegal {
+	//	return http.StatusOK, []byte(reason)
+	//}
 
-	for name, define := range dependenceMap {
+	//for name, define := range dependenceMap {
+	/*
 		point := new(models.Point)
 		point.PipelineId = pipeline.Id
 		point.Created = time.Now().Unix()
@@ -74,7 +83,8 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 		stage.Detail = define[2]
 
 		module.CreateStage(stage)
-	}
+	*/
+	//}
 
 	// pipeline json save db
 	// pipeline stage point & version save db
