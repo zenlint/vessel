@@ -23,6 +23,7 @@ _testmain.go
 *.test
 *.prof
 
+.ftpconfig
 vessel
 conf/runtime.conf
 log/*
