@@ -28,7 +28,7 @@ var CmdWeb = cli.Command{
 		},
 		cli.IntFlag{
 			Name:  "port",
-			Value: 80,
+			Value: 8080,
 			Usage: "web service listen at port 80; if run with https will be 443.",
 		},
 	},
@@ -44,7 +44,7 @@ func runWeb(c *cli.Context) {
 	case "http":
 		listenaddr := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
 		if err := http.ListenAndServe(listenaddr, m); err != nil {
-			fmt.Printf("Start Dockyard http service error: %v", err.Error())
+			fmt.Printf("Start http service error: %v", err.Error())
 		}
 		break
 	case "https":
