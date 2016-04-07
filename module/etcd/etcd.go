@@ -12,7 +12,27 @@ import (
 	"github.com/containerops/vessel/module/config"
 )
 
-func Save() {
+/*
+	etcd path /vessel/ws-xxx/pj-xxx/pl-xxx/plv-xxx/stage-xxx/
+
+	plv-xxx  -> k8s namespace
+
+	demo:
+	/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/stage/stage1/…
+	/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/stage/stage2…
+	/containerops/vessel/ws-xxx/pj-xxx/pl-xxx2/stage/stage1/…
+	/containerops/vessel/ws-xxx/pj-xxx/pl-xxx2/stage/stage2…
+	/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/name
+	/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/dependence/Dependence1ServicesName <—need watch
+	/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/dependence/Dependence2ServicesName <—need watch
+	/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_url
+	/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_interval
+	/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_count
+*/
+
+var ETCDCLI client.Client
+
+func init() {
 	etcdEndPoint := fmt.Sprintf("http://%s:%s", config.EtcdHost, config.EtcdPort)
 	cfg := client.Config{
 		Endpoints: []string{etcdEndPoint},
@@ -20,39 +40,27 @@ func Save() {
 		// set timeout per request to fail fast when the target endpoint is unavailable
 		HeaderTimeoutPerRequest: time.Second,
 	}
-	c, err := client.New(cfg)
+	cli, err := client.New(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
-	kapi := client.NewKeysAPI(c)
-	/*
-		etcd path /vessel/ws-xxx/pj-xxx/pl-xxx/plv-xxx/stage-xxx/
+	ETCDCLI = cli
+}
 
-		plv-xxx  -> k8s namespace
+func Set(key, value string) error {
+	kapi := client.NewKeysAPI(ETCDCLI)
+	_, err := kapi.Set(context.Background(), key, value, nil)
+	return err
+}
 
-		demo:
+func Get(key string) (*client.Response, error) {
+	kapi := client.NewKeysAPI(ETCDCLI)
+	return kapi.Get(context.Background(), key, nil)
+}
 
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/stage/stage1/...
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/stage/stage2...
-		/vessel/ws-xxx/pj-xxx/pl-xxx2/stage/stage1/...
-		/vessel/ws-xxx/pj-xxx/pl-xxx2/stage/stage2...
-
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/name
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/dependence/Dependence1ServicesName <--need watch
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/dependence/Dependence2ServicesName <--need watch
-
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_url
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_interval
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_count
-
-	*/
-
-	log.Error("Setting /vessel/ws-xxx/pj-xxx/pl-xxx/plv-xxx/stage-xxx value")
-
-	resp, err := kapi.Set(context.Background(), "/vessel/ws-xxx/pj-xxx/pl-xxx/plv-xxx/stage-xxx/name", "stage-services-name-xxx", nil)
-	if err != nil {
-		log.Error(err)
-	} else {
-		log.Error("Set is done. Metadata is ", resp)
-	}
+func Watch(path string) client.Watcher {
+	kapi := client.NewKeysAPI(ETCDCLI)
+	return kapi.Watcher(path, &client.WatcherOptions{
+		Recursive: true,
+	})
 }
