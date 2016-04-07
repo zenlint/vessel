@@ -9,7 +9,6 @@ import (
 	"gopkg.in/macaron.v1"
 
 	"github.com/containerops/vessel/models"
-	// "github.com/containerops/vessel/module/etcd"
 )
 
 type PipelinePOSTJSON struct {
@@ -41,16 +40,16 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 		plv-xxx  -> k8s namespace
 
 		demo:
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/stage/stage1/...
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/stage/stage2...
-		/vessel/ws-xxx/pj-xxx/pl-xxx2/stage/stage1/...
-		/vessel/ws-xxx/pj-xxx/pl-xxx2/stage/stage2...
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/name
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/dependence/Dependence1ServicesName <--need watch
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/dependence/Dependence2ServicesName <--need watch
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_url
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_interval
-		/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_count
+		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/stage/stage1/...
+		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/stage/stage2...
+		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx2/stage/stage1/...
+		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx2/stage/stage2...
+		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/name
+		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/dependence/Dependence1ServicesName <--need watch
+		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/dependence/Dependence2ServicesName <--need watch
+		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_url
+		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_interval
+		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_count
 	*/
 	createPipelineAndStage(reqData)
 	return http.StatusOK, []byte("ok")
