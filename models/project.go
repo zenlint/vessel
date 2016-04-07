@@ -1,7 +1,7 @@
 package models
 
 import (
-	"time"
+	// "time"
 	//	"github.com/huawei-openlab/newdb/orm"
 	//	"github.com/ngaut/log"
 )
@@ -12,8 +12,8 @@ type Project struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	Actived     bool      `json:"actived"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
+	Created     int64 `json:"created"`
+	Updated     int64 `json:"updated"`
 	Memo        string    `json:"memo"`
 }
 
