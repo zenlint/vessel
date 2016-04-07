@@ -20,21 +20,22 @@ func init() {
 
 	var err error
 
-	//打开数据库获连接
+	//open database
 	db, err = gorm.Open("mysql", "root:root@tcp(127.0.0.1:3306)/k8sci?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		log.Panic("erro when conn to db:", err)
 	}
-	//设置数据库名称单数
+
 	db.SingularTable(true)
 
-	//设置池子大小
+	//set db pool
 	db.DB().SetMaxIdleConns(int(MaxIdleConnNum))
 	db.DB().SetMaxOpenConns(int(MaxOpenConnNum))
 
 	db.LogMode(false)
 }
 
+/*
 // GetProjectInfoByName :
 func GetProjectInfoByName(projectName string) (project *models.Project) {
 	project = new(models.Project)
@@ -56,3 +57,4 @@ func CreatePoint(point *models.Point) error {
 func CreateStage(stage *models.Stage) error {
 	return db.Model(&models.Stage{}).Save(stage).Error
 }
+*/
