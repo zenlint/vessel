@@ -32,7 +32,7 @@ import (
 
 var ETCDCLI client.Client
 
-func init() {
+func start() {
 	etcdEndPoint := fmt.Sprintf("http://%s:%s", config.EtcdHost, config.EtcdPort)
 	cfg := client.Config{
 		Endpoints: []string{etcdEndPoint},
@@ -48,17 +48,26 @@ func init() {
 }
 
 func Set(key, value string) error {
+	if ETCDCLI == nil {
+		start()
+	}
 	kapi := client.NewKeysAPI(ETCDCLI)
 	_, err := kapi.Set(context.Background(), key, value, nil)
 	return err
 }
 
 func Get(key string) (*client.Response, error) {
+	if ETCDCLI == nil {
+		start()
+	}
 	kapi := client.NewKeysAPI(ETCDCLI)
 	return kapi.Get(context.Background(), key, nil)
 }
 
 func Watch(path string) client.Watcher {
+	if ETCDCLI == nil {
+		start()
+	}
 	kapi := client.NewKeysAPI(ETCDCLI)
 	return kapi.Watcher(path, &client.WatcherOptions{
 		Recursive: true,
