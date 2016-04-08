@@ -51,7 +51,21 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_interval
 		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_count
 	*/
-	createPipelineAndStage(reqData)
+	pipeline, err := createPipelineAndStage(reqData)
+	if err != nil {
+		return http.StatusOK, []byte(err.Error())
+	}
+
+	pipelineVersion, err := pipeline.Run()
+	if err != nil {
+		return http.StatusOK, []byte(err.Error())
+	}
+
+	err = pipelineVersion.Boot()
+	if err != nil {
+		return http.StatusOK, []byte(err.Error())
+	}
+
 	return http.StatusOK, []byte("ok")
 }
 
@@ -83,7 +97,7 @@ func createPipelineAndStage(plJson PipelinePOSTJSON) (*models.Pipeline, error) {
 		//StatusCheckInterval to Detail
 		//StatusCheckCount to Detail
 		sInfo.Detail = ""
-		sInfo.Dependences = strings.Split(value.Dependence, ",")
+		sInfo.From = strings.Split(value.Dependence, ",")
 		plInfo.Stages = append(plInfo.Stages, sInfo)
 	}
 

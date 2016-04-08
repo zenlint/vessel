@@ -23,7 +23,8 @@ type Stage struct {
 	Updated     int64    `json:"updated"`
 	Name        string   `json:"name"`
 	Detail      string   `json:"detail"`
-	Dependences []string `json:"dependences"`
+	From        []string `josn:"from"`
+	To          []string `json:"to"`
 }
 
 type StageVersion struct {
@@ -35,8 +36,9 @@ type StageVersion struct {
 	Updated           int64    `json:"updated"`
 	Name              string   `json:"name"`
 	Detail            string   `json:"detail"`
-	Dependences       []string `json:"dependences"`
 	State             int64    `json:"state"` // 0 not start    1 working    2 success    3 failed
+	From              []string `josn:"from"`
+	To                []string `json:"to"`
 }
 
 func (stage *Stage) Create(pipelineId int64, name string) (error, string) {
