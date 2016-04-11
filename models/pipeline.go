@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -118,6 +119,7 @@ func (pipeline *Pipeline) Run() (*PipelineVersion, error) {
 	etcd.Set(pipelinePath+"/allstage", strings.Join(stageNames, ","))
 	for _, stage := range pipeline.Stages {
 		stagePath := pipelinePath + stage.Name
+		etcd.Set(stagePath+"/id", strconv.FormatInt(stage.Id, 10))
 		etcd.Set(stagePath+"/name", stage.Name)
 		etcd.Set(stagePath+"/detail", stage.Detail)
 		etcd.Set(stagePath+"/from", relationMap[stage.Name][0])
@@ -152,69 +154,101 @@ func isPipelineLegal(pipeline *Pipeline) (map[string][]string, error) {
 	dependenceCount := make(map[string]int, 0)
 	stageRelationMap := make(map[string][]string, 0)
 
+	// regist all stage,and check repeat/nil stage name
 	for _, stage := range pipeline.Stages {
-		if _, ok := stageMap[stage.Name]; !ok {
+		if stage.Name == "" {
+			return nil, errors.New("stage has a nil name")
+		}
+		if _, exist := stageMap[stage.Name]; !exist {
 			stageMap[stage.Name] = stage
-			dependenceCount[stage.Name] = 0
-
-			if _, exist := stageRelationMap[stage.Name]; !exist {
-				stageRelationMap[stage.Name] = make([]string, 2)
-				if len(stage.From) == 1 && stage.From[0] == "" {
-				} else {
-					stageRelationMap[stage.Name][0] = strings.Join(stage.From, ",")
-				}
-			}
-
-			for _, in := range stage.From {
-				if in != "" {
-					dependenceCount[in]++
-					if _, exist := stageRelationMap[in]; !exist {
-						stageRelationMap[in] = make([]string, 2)
-					}
-					stageRelationMap[in][1] = strings.Join(append(strings.Split(stageRelationMap[in][1], ","), stage.Name), ",")
-				}
-			}
 		} else {
 			// has a repeat stage name ,return
-			return nil, errors.New("stage has repeat name")
+			return nil, errors.New("stage has repeat name:" + stage.Name)
 		}
 	}
 
-	finish := 0
+	// init stage dependence count
+	for stageName, _ := range stageMap {
+		dependenceCount[stageName] = 0
+	}
+
+	// count stage dependence
+	for _, stage := range stageMap {
+		for _, from := range stage.From {
+			dependenceCount[from]++
+		}
+	}
+
+	// check DAG
+	//if AnnulusTag == nowReleaseStageCount or nowReleaseStageCount == len(dependenceCount) then exit for,if nowReleaseStageCount == len(dependenceCount) then isDAG,else isNotDAG
+	nowReleaseStageCount := 0
 	for true {
-		temp := 0
-		for _, stage := range stageMap {
-			if dependenceCount[stage.Name] == 0 {
-				finish++
-				for _, out := range stage.From {
-					if dependenceCount[out] > 0 {
-						dependenceCount[out]--
-					}
+
+		annulusTag := 0
+		for stageName, stage := range stageMap {
+			if dependenceCount[stageName] == 0 {
+				nowReleaseStageCount++
+				for _, from := range stage.From {
+					dependenceCount[from]--
 				}
 
 				dependenceCount[stage.Name] = -1
-			} else if dependenceCount[stage.Name] == -1 {
-				temp++
+			} else if dependenceCount[stageName] == -1 {
+				annulusTag++
 			}
-
 		}
-		if temp == finish || finish == len(dependenceCount) {
+
+		if annulusTag == nowReleaseStageCount || nowReleaseStageCount == len(dependenceCount) {
 			break
 		}
 	}
 
-	if finish != len(dependenceCount) {
+	if nowReleaseStageCount != len(dependenceCount) {
 		return nil, errors.New("given pipeline's stage can't create a DAG")
 	}
 
+	// generate stage relationMap
+	// stageRelationMap := map[stageName]{"stage.From","stage.To"}
+	for stageName, stage := range stageMap {
+		if _, exist := stageRelationMap[stageName]; !exist {
+			stageRelationMap[stageName] = make([]string, 2)
+		}
+		stageRelationMap[stageName][0] = strings.Join(stage.From, ",")
+
+		for _, from := range stage.From {
+			if _, exist := stageRelationMap[from]; !exist {
+				stageRelationMap[from] = make([]string, 2)
+			}
+			stageRelationMap[from][1] = strings.Join(append(strings.Split(stageRelationMap[from][1], ","), stageName), ",")
+		}
+	}
+
 	return stageRelationMap, nil
+
+}
+
+const (
+	StageStateNotStart = "not start"
+	StageStateStarting = "working"
+	StageStateSuccess  = "success"
+	StageStateFailed   = "failed"
+)
+
+type StageVersionState struct {
+	PipelineId        string `json:"pipelineId"`
+	PipelineVersionId string `json:"pipelineVersionId"`
+	StageId           string `json:"pipelineVersionId"`
+	StageVersionId    string `json:"stageVersionId"`
+	StageName         string `json:"stageName"`
+	RunResult         string `json:"runResult"`
+	Detail            string `json:"detail"`
 }
 
 // start a pipelineVersion,boot the stage and return the result
-func (pipelineVersion *PipelineVersion) Boot() error {
+func (pipelineVersion *PipelineVersion) Boot() string {
 	bootChan := make(chan string, 100)
-	finishChan := make(chan string, 100)
-	failedChan := make(chan string, 1)
+	finishChan := make(chan StageVersionState, 100)
+	stageVersionStateChan := make(chan string, 1)
 	notifyBootDone := make(chan bool, 1)
 	// get all stageName list and range all stage to start all stage
 	pipelinePath := fmt.Sprintf(DEFAULT_PIPELINE_ETCD_PATH, pipelineVersion.WorkspaceId, pipelineVersion.ProjectId, pipelineVersion.PipelineId)
@@ -224,9 +258,9 @@ func (pipelineVersion *PipelineVersion) Boot() error {
 	sumStage := len(stageNames)
 
 	go bootStage(bootChan, finishChan, notifyBootDone)
-	go isFinish(finishChan, failedChan, sumStage, notifyBootDone)
+	go isFinish(finishChan, stageVersionStateChan, sumStage, notifyBootDone)
 
-	// search all stage start stage which from is ""
+	// search all stage, start stage which from is ""
 	for _, stageName := range stageNames {
 		if stageName != "" {
 			stagePath := pipelinePath + stageName
@@ -239,17 +273,13 @@ func (pipelineVersion *PipelineVersion) Boot() error {
 		}
 	}
 
-	failedNames := <-failedChan
+	runResult := <-stageVersionStateChan
 	log.Println("all job is done!")
-	log.Println("failed stage names are: ", failedNames)
-	if failedNames != "" {
-		return errors.New("failed stage names are: " + failedNames)
-	}
-	return nil
+	return runResult
 }
 
 // receive bootChan's message start give stage by stage path in etcd
-func bootStage(bootChan chan string, finishChan chan string, notifyBootDone chan bool) {
+func bootStage(bootChan chan string, finishChan chan StageVersionState, notifyBootDone chan bool) {
 	bootMap := make(map[string]bool)
 	for {
 		select {
@@ -265,31 +295,27 @@ func bootStage(bootChan chan string, finishChan chan string, notifyBootDone chan
 }
 
 // count finish stage num,send single when all stage is start
-func isFinish(finishChan chan string, failedChan chan string, sumStage int, notifyBootDone chan bool) {
-	count := 0
-	failedList := make([]string, 0)
+func isFinish(finishChan chan StageVersionState, stageVersionStateChan chan string, sumStage int, notifyBootDone chan bool) {
+	finishStageNum := 0
+	stageVersionStateList := make([]StageVersionState, 0)
+
 	for {
-		if count == sumStage {
+		if finishStageNum == sumStage {
 			notifyBootDone <- false
-			failedChan <- strings.Join(failedList, ",")
+			// stageVersionStateChan <- strings.Join(failedList, ",")
+			stageVersionStateStr, _ := json.Marshal(stageVersionStateList)
+			stageVersionStateChan <- string(stageVersionStateStr)
 			return
 		}
 
-		stageNameAmdState := <-finishChan
-		count++
-		// log.Printf("stage %s is done!", stageName)
-		result := strings.Split(stageNameAmdState, ",")
-		log.Printf("stage %s is %s", result[0], result[1])
-
-		if result[1] == "failed" {
-			failedList = append(failedList, result[0])
-		}
+		stageVersionState := <-finishChan
+		finishStageNum++
+		stageVersionStateList = append(stageVersionStateList, stageVersionState)
 	}
 }
 
 // stage stage by given name,after start give single to finishChan
-func startStage(stageVersionStagePath string, bootChan, finishChan chan string) {
-
+func startStage(stageVersionStagePath string, bootChan chan string, finishChan chan StageVersionState) {
 	// get info from etcd
 	// stageName
 	stageName := stageVersionStagePath[strings.LastIndex(stageVersionStagePath, "/")+1:]
@@ -298,12 +324,15 @@ func startStage(stageVersionStagePath string, bootChan, finishChan chan string) 
 	// pipelineVersionPath
 	pipelineVersionPath := stageVersionPath[:strings.LastIndex(stageVersionPath, "/")]
 	// pipelineVersionId
-	// pipelineVersionId := pipelineVersionPath[strings.LastIndex(pipelineVersionPath, "-")+1:]
+	pipelineVersionId := pipelineVersionPath[strings.LastIndex(pipelineVersionPath, "-")+1:]
 	// pipelineId
 	pipelineIdInfo, _ := etcd.Get(pipelineVersionPath + "/pipelineId")
 	pipelineId := pipelineIdInfo.Node.Value
 	// stagePath
 	stagePath := pipelineVersionPath[:strings.LastIndex(pipelineVersionPath, "/")] + "/pl-" + pipelineId + "/stage"
+	// stageId
+	stageIdInfo, _ := etcd.Get(stagePath + "/" + stageName + "/id")
+	stageId := stageIdInfo.Node.Value
 	// pipelinePath
 	// pipelinePath := stagePath[:strings.LastIndex(stagePath, "/")]
 
@@ -327,36 +356,43 @@ func startStage(stageVersionStagePath string, bootChan, finishChan chan string) 
 
 	count := 0
 	sum := len(stageNameMap)
+	var stageVersionState StageVersionState
+	stageVersionState.PipelineId = pipelineId
+	stageVersionState.PipelineVersionId = pipelineVersionId
+	stageVersionState.StageId = stageId
+	stageVersionState.StageVersionId = pipelineVersionId
+	stageVersionState.StageName = stageName
 
 	// check is there is some stage finish start before this stage start
 	for _, fromStageName := range stageNameMap {
 		fromStageVersionStatePath := stageVersionPath + "/" + fromStageName + "/state"
 		fromStageVersionStateInfo, _ := etcd.Get(fromStageVersionStatePath)
 		if fromStageVersionStateInfo != nil {
-			if info := fromStageVersionStateInfo.Node.Value; info != "" {
-				if strings.Split(info, ",")[1] == "2" {
-					count++
-				} else if strings.Split(info, ",")[1] == "3" {
-					// if from stage is failed return
-					toStageInfos, _ := etcd.Get(stagePath + "/" + stageName + "/to")
-					if toStageInfos != nil {
-						for _, v := range strings.Split(toStageInfos.Node.Value, ",") {
-							if v != "" {
-								bootChan <- stageVersionPath + "/" + v
-							}
+			info := fromStageVersionStateInfo.Node.Value
+			if strings.Split(info, ",")[1] == StageStateSuccess {
+				count++
+			} else if strings.Split(info, ",")[1] == StageStateFailed {
+				// if from stage is failed return
+				toStageInfos, _ := etcd.Get(stagePath + "/" + stageName + "/to")
+				if toStageInfos != nil {
+					for _, v := range strings.Split(toStageInfos.Node.Value, ",") {
+						if v != "" {
+							bootChan <- stageVersionPath + "/" + v
 						}
 					}
-					finishChan <- stageName + ",failed"
-					etcd.Set(stageVersionStagePath+"/state", stageName+",3")
-					return
 				}
+				stageVersionState.RunResult = StageStateFailed
+				stageVersionState.Detail = "pre stage " + strings.Split(info, ",")[0] + " is failed"
+				finishChan <- stageVersionState
+				etcd.Set(stageVersionStagePath+"/state", stageName+","+StageStateFailed)
+				return
 			}
 		}
 	}
 
 	watcher := etcd.Watch(stageVersionPath + "/")
 	for {
-		// all stage dependence is start
+		// if all stage dependence is start,exit loop and start current stage
 		if count == sum {
 			break
 		}
@@ -368,9 +404,9 @@ func startStage(stageVersionStagePath string, bootChan, finishChan chan string) 
 		if res.Action == "set" || res.Action == "update" {
 			changeStageInfo := res.Node.Value
 			if _, ok := stageNameMap[strings.Split(changeStageInfo, ",")[0]]; ok {
-				if strings.Split(changeStageInfo, ",")[1] == "2" {
+				if strings.Split(changeStageInfo, ",")[1] == StageStateSuccess {
 					count++
-				} else if strings.Split(changeStageInfo, ",")[1] == "3" {
+				} else if strings.Split(changeStageInfo, ",")[1] == StageStateFailed {
 					// if from stage is failed return
 					toStageInfos, _ := etcd.Get(stagePath + "/" + stageName + "/to")
 					if toStageInfos != nil {
@@ -380,35 +416,70 @@ func startStage(stageVersionStagePath string, bootChan, finishChan chan string) 
 							}
 						}
 					}
-					finishChan <- stageName + ",failed"
-					etcd.Set(stageVersionStagePath+"/state", stageName+",3")
+					stageVersionState.RunResult = StageStateFailed
+					stageVersionState.Detail = "pre stage " + strings.Split(changeStageInfo, ",")[0] + " is failed"
+					finishChan <- stageVersionState
+					etcd.Set(stageVersionStagePath+"/state", stageName+","+StageStateFailed)
 					return
 				}
 			}
 		}
 	}
 
-	sec := rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(5) + 2
+	// start run stage
+	stageStartFinish := make(chan StageVersionState, 1)
+	timeout := make(chan bool, 1)
+	// stageStartFinish <- stageVersionState
+	go startStageInK8S(stageStartFinish, stageVersionState)
+	go func() {
+		d, _ := time.ParseDuration("5s")
+		time.Sleep(d)
+		timeout <- true
+	}()
 
-	timeStr := strconv.FormatInt(sec, 10) + "s"
-	timeDur, _ := time.ParseDuration(timeStr)
-	log.Info("stage :", stageName, " will start in ", timeStr)
-	time.Sleep(timeDur)
-
-	if rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(100) < 50 {
-		log.Info(stageName, " is set to failed")
-		etcd.Set(stageVersionStagePath+"/state", stageName+",3")
-	} else {
-		etcd.Set(stageVersionStagePath+"/state", stageName+",2")
+	// check is stage run timeout,and get run result
+	select {
+	case <-timeout:
+		stageVersionState.RunResult = StageStateFailed
+		stageVersionState.Detail = "time out"
+	case startResult := <-stageStartFinish:
+		stageVersionState = startResult
 	}
 
+	// check stage run result and set it to etcd
+	if stageVersionState.RunResult == StageStateSuccess {
+		etcd.Set(stageVersionStagePath+"/state", stageName+","+StageStateSuccess)
+	} else if stageVersionState.RunResult == StageStateFailed {
+		etcd.Set(stageVersionStagePath+"/state", stageName+","+StageStateFailed)
+	}
+
+	// notify stages dependence on current stage
 	toStageInfos, _ := etcd.Get(stagePath + "/" + stageName + "/to")
 	for _, v := range strings.Split(toStageInfos.Node.Value, ",") {
 		if v != "" {
 			bootChan <- stageVersionPath + "/" + v
 		}
 	}
-	finishChan <- stageName + ",success"
+	finishChan <- stageVersionState
+}
+
+func startStageInK8S(runResultChan chan StageVersionState, runResult StageVersionState) {
+	// runResult := <-runResultChan
+	sec := rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(5) + 3
+
+	timeStr := strconv.FormatInt(sec, 10) + "s"
+	timeDur, _ := time.ParseDuration(timeStr)
+	time.Sleep(timeDur)
+
+	if rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(100) < 50 {
+		runResult.RunResult = StageStateSuccess
+		runResult.Detail = "run success"
+	} else {
+		runResult.RunResult = StageStateFailed
+		runResult.Detail = "not luck"
+	}
+
+	runResultChan <- runResult
 }
 
 //List all run history with pipelineId
