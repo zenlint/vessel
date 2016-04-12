@@ -61,12 +61,9 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 		return http.StatusOK, []byte(err.Error())
 	}
 
-	err = pipelineVersion.Boot()
-	if err != nil {
-		return http.StatusOK, []byte(err.Error())
-	}
+	result := pipelineVersion.Boot()
 
-	return http.StatusOK, []byte("ok")
+	return http.StatusOK, []byte(result)
 }
 
 func createPipelineAndStage(plJson PipelinePOSTJSON) (*models.Pipeline, error) {
@@ -98,6 +95,9 @@ func createPipelineAndStage(plJson PipelinePOSTJSON) (*models.Pipeline, error) {
 		//StatusCheckCount to Detail
 		sInfo.Detail = ""
 		sInfo.From = strings.Split(value.Dependence, ",")
+		if len(sInfo.From) == 1 && sInfo.From[0] == "" {
+			sInfo.From = make([]string, 0)
+		}
 		plInfo.Stages = append(plInfo.Stages, sInfo)
 	}
 
