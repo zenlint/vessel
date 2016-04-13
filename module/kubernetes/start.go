@@ -2,15 +2,12 @@ package kubernetes
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"time"
 
-	"k8s.io/kubernetes/pkg/api/v1"
-	"k8s.io/kubernetes/pkg/client/unversioned"
-	"k8s.io/kubernetes/pkg/labels"
+	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/types"
-	"k8s.io/kubernetes/pkg/watch"
+	"k8s.io/kubernetes/pkg/util/intstr"
 )
 
 // pipelineMetadata struct for convert from pipelineVersion.MetaData
@@ -29,14 +26,14 @@ type piplineMetadata struct {
 // pipelineSpec struct for convert from pipelineVersion.Spec
 type piplineSpec struct {
 	name                string `json:"name, omitempty"`
-	replicas            string `json:"replicas, omitempty"`
+	replicas            int    `json:"replicas, omitempty"`
 	dependencies        string `json:"dependencies, omitempty"`
 	kind                string `json:"kind, omitempty"`
 	statusCheckLink     string `json:"statusCheckLink, omitempty"`
 	statusCheckInterval int64  `json:"statusCheckInterval, omitempty"`
 	statusCheckCount    int64  `json:"statusCheckCount, omitempty"`
 	imageName           string `json:"imagename, omitempty"`
-	port                string `json:"port, omitempty"`
+	port                int    `json:"port, omitempty"`
 }
 
 type PipelineVersion struct {
@@ -58,8 +55,8 @@ type PipelineVersion struct {
 	Spec          string   `json:"spec"`
 }
 
-// v1.ReplicationController.ObjectMeta
-// v1.ReplicationController.Spec
+// unversioned.ReplicationController.ObjectMeta
+// unversioned.ReplicationController.Spec
 
 /*
 api.ReplicationController{
@@ -71,9 +68,9 @@ api.ReplicationController{
 					},
 				},
 */
-func StartK8S(pv *PipelineVersion) error {
-	rc := &v1.ReplicationController{}
-	service := &v1.Service{}
+func StartK8SResource(pv *PipelineVersion) error {
+	rc := &api.ReplicationController{}
+	service := &api.Service{}
 
 	var pvm piplineMetadata
 	var pvs piplineSpec
@@ -82,43 +79,40 @@ func StartK8S(pv *PipelineVersion) error {
 		return err
 	}
 
-	if err := convert(pvm, pvs, &rc, &service); err != nil {
-		return err
-	}
+	namespace := convert(pvm, pvs, rc, service)
 
-	rcRes, err := CLIENT.ReplicationControllers(namespace).Create(rc)
-	if err != nil {
+	if _, err = CLIENT.ReplicationControllers(namespace).Create(rc); err != nil {
 		fmt.Errorf("Create rc err : %v\n", err)
 		return err
 	}
 
-	serviceRes, err := CLIENT.Services(namespace).Create(service)
-	if err != nil {
+	if _, err := CLIENT.Services(namespace).Create(service); err != nil {
 		fmt.Errorf("Create service err : %v\n", err)
 		return err
 	}
 	// writeBack(rcRes, serviceRes, &pvm, &pvs)
+	return nil
 }
 
 func split(pv *PipelineVersion, pvm *piplineMetadata, pvs *piplineSpec) error {
-	err := json.Unmarshal(pv.ObjectMeta, pvm)
+	err := json.Unmarshal([]byte(pv.MetaData), pvm)
 	if err != nil {
 		fmt.Errorf("Unmarshal PipelineVersion.ObjectMeta err : %v\n", err)
-		return "", err
+		return err
 	}
 
-	err = json.Unmarshal(pv.Spec, pvs)
+	err = json.Unmarshal([]byte(pv.Spec), pvs)
 	if err != nil {
 		fmt.Errorf("Unmarshal PipelineVersion.Spec err : %v\n", err)
-		return "", err
+		return err
 	}
 	return nil
 }
 
-func convert(piplineMetadata *piplineMetadata, piplineSpec *piplineSpec,
-	rc *v1.ReplicationController, service *v1.Service) (string, error) {
+func convert(piplineMetadata piplineMetadata, piplineSpec piplineSpec,
+	rcRes *api.ReplicationController, serviceRes *api.Service) string {
 	rcRes.Name = piplineSpec.name
-	rcRes.Namespace = plMetadata.namespace
+	rcRes.Namespace = piplineMetadata.namespace
 	//Use map["rc"] = Spec.name for temprory
 	rcRes.Labels["rc"] = piplineSpec.name
 	rcRes.Spec.Replicas = piplineSpec.replicas
@@ -132,11 +126,11 @@ func convert(piplineMetadata *piplineMetadata, piplineSpec *piplineSpec,
 	rcRes.Spec.Selector["app"] = piplineSpec.name
 
 	serviceRes.ObjectMeta.Name = piplineSpec.name
-	serviceRes.ObjectMeta.Namespace = plMetadata.namespace
+	serviceRes.ObjectMeta.Namespace = piplineMetadata.namespace
 	serviceRes.ObjectMeta.Labels["service"] = piplineSpec.name
-	serviceRes.Spec.Ports[0].Name = piplineSpec.name
-	serviceRes.Spec.Ports[0].TargetPort = piplineSpec.port
+	serviceRes.Spec.Ports[0].Port = piplineSpec.port
+	serviceRes.Spec.Ports[0].TargetPort = intstr.FromString(piplineSpec.name)
 	serviceRes.Spec.Selector["app"] = piplineSpec.name
 
-	return piplineMetadata.namespace, nil
+	return piplineMetadata.namespace
 }
