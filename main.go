@@ -7,32 +7,26 @@ import (
 	"github.com/codegangsta/cli"
 
 	"github.com/containerops/vessel/cmd"
-	"github.com/containerops/vessel/module/config"
-	"github.com/containerops/wrench/setting"
+	"github.com/containerops/vessel/setting"
 )
 
 func main() {
 
-	if err := setting.SetConfig("conf/containerops.conf"); err != nil {
+	if err := setting.InitConf("./conf/global.yaml", "./conf/runtime.yaml"); err != nil {
 		fmt.Printf("Read config error: %v", err.Error())
 		return
 	}
 
 	app := cli.NewApp()
 
-	app.Name = setting.AppName
-	app.Usage = setting.Usage
-	app.Version = setting.Version
-	app.Author = setting.Author
-	app.Email = setting.Email
+	app.Name = setting.Global.AppName
+	app.Usage = setting.Global.Usage
+	app.Version = setting.Global.Version
+	app.Author = setting.Global.Author
+	app.Email = setting.Global.Email
 	app.Commands = []cli.Command{
 		cmd.CmdWeb,
-		cmd.CmdDatabase,
-	}
-
-	if err := config.Set("conf/runtime.conf"); err != nil {
-		fmt.Printf("Read runtime config error: %v", err.Error())
-		return
+		// cmd.CmdDatabase,
 	}
 
 	app.Flags = append(app.Flags, []cli.Flag{}...)

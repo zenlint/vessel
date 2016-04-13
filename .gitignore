@@ -25,6 +25,6 @@ _testmain.go
 
 .ftpconfig
 vessel
-conf/runtime.conf
+conf/runtime.yaml
 log/*
 data/*

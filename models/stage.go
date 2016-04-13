@@ -25,6 +25,8 @@ type Stage struct {
 	Detail      string   `json:"detail"`
 	From        []string `josn:"from"`
 	To          []string `json:"to"`
+	MetaData    string   `json:"metadata"`
+	Spec        string   `json:"spec"`
 }
 
 type StageVersion struct {
@@ -39,6 +41,8 @@ type StageVersion struct {
 	State             int64    `json:"state"` // 0 not start    1 working    2 success    3 failed
 	From              []string `josn:"from"`
 	To                []string `json:"to"`
+	MetaData          string   `json:"metadata"`
+	Spec              string   `json:"spec"`
 }
 
 func (stage *Stage) Create(pipelineId int64, name string) (error, string) {

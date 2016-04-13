@@ -3,16 +3,13 @@ package cmd
 import (
 	"crypto/tls"
 	"fmt"
-	"net"
 	"net/http"
-	"os"
 
 	"github.com/codegangsta/cli"
 	"gopkg.in/macaron.v1"
 
+	"github.com/containerops/vessel/setting"
 	"github.com/containerops/vessel/web"
-	"github.com/containerops/wrench/setting"
-	"github.com/containerops/wrench/utils"
 )
 
 var CmdWeb = cli.Command{
@@ -23,50 +20,36 @@ var CmdWeb = cli.Command{
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "address",
-			Value: "0.0.0.0",
+			Value: setting.RunTime.Http.Host,
 			Usage: "web service listen ip, default is 0.0.0.0; if listen with Unix Socket, the value is sock file path.",
 		},
-		cli.IntFlag{
+		cli.StringFlag{
 			Name:  "port",
-			Value: 8080,
+			Value: setting.RunTime.Http.Port,
 			Usage: "web service listen at port 80; if run with https will be 443.",
 		},
 	},
 }
 
 func runWeb(c *cli.Context) {
+
 	m := macaron.New()
 
 	//Set Macaron Web Middleware And Routers
 	web.SetVesselMacaron(m)
 
-	switch setting.ListenMode {
+	switch setting.RunTime.Http.ListenMode {
 	case "http":
-		listenaddr := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
+		listenaddr := fmt.Sprintf("%s:%s", c.String("address"), c.String("port"))
 		if err := http.ListenAndServe(listenaddr, m); err != nil {
 			fmt.Printf("Start http service error: %v", err.Error())
 		}
 		break
 	case "https":
-		listenaddr := fmt.Sprintf("%s:443", c.String("address"))
+		listenaddr := fmt.Sprintf("%s:%s", c.String("address"), c.String("port"))
 		server := &http.Server{Addr: listenaddr, TLSConfig: &tls.Config{MinVersion: tls.VersionTLS10}, Handler: m}
-		if err := server.ListenAndServeTLS(setting.HttpsCertFile, setting.HttpsKeyFile); err != nil {
+		if err := server.ListenAndServeTLS(setting.RunTime.Http.HttpsCertFile, setting.RunTime.Http.HttpsKeyFile); err != nil {
 			fmt.Printf("Start Dockyard https service error: %v", err.Error())
-		}
-		break
-	case "unix":
-		listenaddr := fmt.Sprintf("%s", c.String("address"))
-		if utils.IsFileExist(listenaddr) {
-			os.Remove(listenaddr)
-		}
-
-		if listener, err := net.Listen("unix", listenaddr); err != nil {
-			fmt.Printf("Start Dockyard unix socket error: %v", err.Error())
-		} else {
-			server := &http.Server{Handler: m}
-			if err := server.Serve(listener); err != nil {
-				fmt.Printf("Start Dockyard unix socket error: %v", err.Error())
-			}
 		}
 		break
 	default:

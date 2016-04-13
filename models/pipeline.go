@@ -12,8 +12,6 @@ import (
 	"golang.org/x/net/context"
 
 	log "github.com/Sirupsen/logrus"
-
-	"github.com/containerops/vessel/module/etcd"
 )
 
 const (
@@ -56,6 +54,8 @@ type Pipeline struct {
 	Annotations string `json:"annotations"`
 	Detail      string `json:"detail" gorm:"type:text"`
 	Stages      []*Stage
+	MetaData    string `json:"metadata"`
+	Spec        string `json:"spec"`
 }
 
 type PipelineVersion struct {
@@ -73,6 +73,8 @@ type PipelineVersion struct {
 	StageVersions []string `json:"stageVersions"`
 	Log           string   `json:"log" gorm:"type:text"`
 	Status        int64    `json:"state"` // 0 not start    1 working    2 success     3 failed
+	MetaData      string   `json:"metadata"`
+	Spec          string   `json:"spec"`
 }
 
 // type Status struct {
@@ -116,14 +118,14 @@ func (pipeline *Pipeline) Run() (*PipelineVersion, error) {
 
 	pipelinePath := fmt.Sprintf(DEFAULT_PIPELINE_ETCD_PATH, pipeline.WorkspaceId, pipeline.ProjectId, pipeline.Id)
 	// create ETCD dir
-	etcd.Set(pipelinePath+"/allstage", strings.Join(stageNames, ","))
+	EtcdSet(pipelinePath+"/allstage", strings.Join(stageNames, ","))
 	for _, stage := range pipeline.Stages {
 		stagePath := pipelinePath + stage.Name
-		etcd.Set(stagePath+"/id", strconv.FormatInt(stage.Id, 10))
-		etcd.Set(stagePath+"/name", stage.Name)
-		etcd.Set(stagePath+"/detail", stage.Detail)
-		etcd.Set(stagePath+"/from", relationMap[stage.Name][0])
-		etcd.Set(stagePath+"/to", relationMap[stage.Name][1])
+		EtcdSet(stagePath+"/id", strconv.FormatInt(stage.Id, 10))
+		EtcdSet(stagePath+"/name", stage.Name)
+		EtcdSet(stagePath+"/detail", stage.Detail)
+		EtcdSet(stagePath+"/from", relationMap[stage.Name][0])
+		EtcdSet(stagePath+"/to", relationMap[stage.Name][1])
 	}
 
 	pipelineVersion := new(PipelineVersion)
@@ -143,7 +145,7 @@ func (pipeline *Pipeline) Run() (*PipelineVersion, error) {
 
 	stageVersionPath := fmt.Sprintf(DEFAULT_PIPELINEVERSION_ETCD_PATH, pipelineVersion.WorkspaceId, pipelineVersion.ProjectId, pipelineVersion.Id, pipelineVersion.Id)
 	stageVersionPath = stageVersionPath[:len(stageVersionPath)-1]
-	etcd.Set(stageVersionPath[:strings.LastIndex(stageVersionPath, "/")]+"/pipelineId", strconv.FormatInt(pipeline.Id, 10))
+	EtcdSet(stageVersionPath[:strings.LastIndex(stageVersionPath, "/")]+"/pipelineId", strconv.FormatInt(pipeline.Id, 10))
 
 	return pipelineVersion, nil
 }
@@ -253,7 +255,7 @@ func (pipelineVersion *PipelineVersion) Boot() string {
 	// get all stageName list and range all stage to start all stage
 	pipelinePath := fmt.Sprintf(DEFAULT_PIPELINE_ETCD_PATH, pipelineVersion.WorkspaceId, pipelineVersion.ProjectId, pipelineVersion.PipelineId)
 	pipelineVersionPath := fmt.Sprintf(DEFAULT_PIPELINEVERSION_ETCD_PATH, pipelineVersion.WorkspaceId, pipelineVersion.ProjectId, pipelineVersion.Id, pipelineVersion.Id)
-	stageList, _ := etcd.Get(pipelinePath + "/allstage")
+	stageList, _ := EtcdGet(pipelinePath + "/allstage")
 	stageNames := strings.Split(stageList.Node.Value, ",")
 	sumStage := len(stageNames)
 
@@ -265,7 +267,7 @@ func (pipelineVersion *PipelineVersion) Boot() string {
 		if stageName != "" {
 			stagePath := pipelinePath + stageName
 			stageVersionPath := pipelineVersionPath + stageName
-			fromInfo, _ := etcd.Get(stagePath + "/from")
+			fromInfo, _ := EtcdGet(stagePath + "/from")
 			from := fromInfo.Node.Value
 			if from == "" {
 				bootChan <- stageVersionPath
@@ -326,25 +328,25 @@ func startStage(stageVersionStagePath string, bootChan chan string, finishChan c
 	// pipelineVersionId
 	pipelineVersionId := pipelineVersionPath[strings.LastIndex(pipelineVersionPath, "-")+1:]
 	// pipelineId
-	pipelineIdInfo, _ := etcd.Get(pipelineVersionPath + "/pipelineId")
+	pipelineIdInfo, _ := EtcdGet(pipelineVersionPath + "/pipelineId")
 	pipelineId := pipelineIdInfo.Node.Value
 	// stagePath
 	stagePath := pipelineVersionPath[:strings.LastIndex(pipelineVersionPath, "/")] + "/pl-" + pipelineId + "/stage"
 	// stageId
-	stageIdInfo, _ := etcd.Get(stagePath + "/" + stageName + "/id")
+	stageIdInfo, _ := EtcdGet(stagePath + "/" + stageName + "/id")
 	stageId := stageIdInfo.Node.Value
 	// pipelinePath
 	// pipelinePath := stagePath[:strings.LastIndex(stagePath, "/")]
 
 	// check if the dir is exist
-	stateInfo, _ := etcd.Get(stageVersionPath + "/" + stageName + "/state")
+	stateInfo, _ := EtcdGet(stageVersionPath + "/" + stageName + "/state")
 	if stateInfo != nil && stateInfo.Node.Value != "" {
 		return
 	}
 
-	etcd.Set(stageVersionPath+"/state", stageName+",1")
+	EtcdSet(stageVersionPath+"/state", stageName+",1")
 	// get current stage from info
-	fromStageNamesInfo, _ := etcd.Get(stagePath + "/" + stageName + "/from")
+	fromStageNamesInfo, _ := EtcdGet(stagePath + "/" + stageName + "/from")
 
 	fromStageNames := fromStageNamesInfo.Node.Value
 	stageNameMap := make(map[string]string)
@@ -366,14 +368,14 @@ func startStage(stageVersionStagePath string, bootChan chan string, finishChan c
 	// check is there is some stage finish start before this stage start
 	for _, fromStageName := range stageNameMap {
 		fromStageVersionStatePath := stageVersionPath + "/" + fromStageName + "/state"
-		fromStageVersionStateInfo, _ := etcd.Get(fromStageVersionStatePath)
+		fromStageVersionStateInfo, _ := EtcdGet(fromStageVersionStatePath)
 		if fromStageVersionStateInfo != nil {
 			info := fromStageVersionStateInfo.Node.Value
 			if strings.Split(info, ",")[1] == StageStateSuccess {
 				count++
 			} else if strings.Split(info, ",")[1] == StageStateFailed {
 				// if from stage is failed return
-				toStageInfos, _ := etcd.Get(stagePath + "/" + stageName + "/to")
+				toStageInfos, _ := EtcdGet(stagePath + "/" + stageName + "/to")
 				if toStageInfos != nil {
 					for _, v := range strings.Split(toStageInfos.Node.Value, ",") {
 						if v != "" {
@@ -384,13 +386,13 @@ func startStage(stageVersionStagePath string, bootChan chan string, finishChan c
 				stageVersionState.RunResult = StageStateFailed
 				stageVersionState.Detail = "pre stage " + strings.Split(info, ",")[0] + " is failed"
 				finishChan <- stageVersionState
-				etcd.Set(stageVersionStagePath+"/state", stageName+","+StageStateFailed)
+				EtcdSet(stageVersionStagePath+"/state", stageName+","+StageStateFailed)
 				return
 			}
 		}
 	}
 
-	watcher := etcd.Watch(stageVersionPath + "/")
+	watcher := EtcdWatch(stageVersionPath + "/")
 	for {
 		// if all stage dependence is start,exit loop and start current stage
 		if count == sum {
@@ -408,7 +410,7 @@ func startStage(stageVersionStagePath string, bootChan chan string, finishChan c
 					count++
 				} else if strings.Split(changeStageInfo, ",")[1] == StageStateFailed {
 					// if from stage is failed return
-					toStageInfos, _ := etcd.Get(stagePath + "/" + stageName + "/to")
+					toStageInfos, _ := EtcdGet(stagePath + "/" + stageName + "/to")
 					if toStageInfos != nil {
 						for _, v := range strings.Split(toStageInfos.Node.Value, ",") {
 							if v != "" {
@@ -419,7 +421,7 @@ func startStage(stageVersionStagePath string, bootChan chan string, finishChan c
 					stageVersionState.RunResult = StageStateFailed
 					stageVersionState.Detail = "pre stage " + strings.Split(changeStageInfo, ",")[0] + " is failed"
 					finishChan <- stageVersionState
-					etcd.Set(stageVersionStagePath+"/state", stageName+","+StageStateFailed)
+					EtcdSet(stageVersionStagePath+"/state", stageName+","+StageStateFailed)
 					return
 				}
 			}
@@ -448,13 +450,13 @@ func startStage(stageVersionStagePath string, bootChan chan string, finishChan c
 
 	// check stage run result and set it to etcd
 	if stageVersionState.RunResult == StageStateSuccess {
-		etcd.Set(stageVersionStagePath+"/state", stageName+","+StageStateSuccess)
+		EtcdSet(stageVersionStagePath+"/state", stageName+","+StageStateSuccess)
 	} else if stageVersionState.RunResult == StageStateFailed {
-		etcd.Set(stageVersionStagePath+"/state", stageName+","+StageStateFailed)
+		EtcdSet(stageVersionStagePath+"/state", stageName+","+StageStateFailed)
 	}
 
 	// notify stages dependence on current stage
-	toStageInfos, _ := etcd.Get(stagePath + "/" + stageName + "/to")
+	toStageInfos, _ := EtcdGet(stagePath + "/" + stageName + "/to")
 	for _, v := range strings.Split(toStageInfos.Node.Value, ",") {
 		if v != "" {
 			bootChan <- stageVersionPath + "/" + v
