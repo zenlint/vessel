@@ -12,36 +12,36 @@ import (
 	"github.com/containerops/vessel/module/pipeline"
 )
 
-type PipelinePOSTJSON struct {
-	Kind       string `json:"kind"`
-	ApiVersion string `json:"apiVersion"`
-	MetaData   struct {
-		Name              string `json:"name"`
-		Workspace         string `json:"workspace"`
-		Project           string `json:"project"`
-		Namespace         string `json:"namespace"`
-		SelfLink          string `json:"selfLink"`
-		Uid               string `json:"uid"`
-		CreateonTimestamp string `json:"createonTimestamp"`
-		DeletionTimestamp string `json:"deletionTimestamp"`
-		TimeoutDuration   string `json:"timeoutDuration"`
-		Labels            string `json:"labels"`
-		Annotations       string `json:"annotations"`
-	} `json:"metadata"`
-	Spec []struct {
-		Name                string `json:"name"`
-		Replicsa            int64  `json:"replicsa"`
-		Dependence          string `json:"dependence"`
-		Kind                string `json:"kind"`
-		StatusCheckUrl      string `json:"statusCheckUrl"`
-		StatusCheckInterval int64  `json:"statusCheckInterval"`
-		StatusCheckCount    int64  `json:"statusCheckCount"`
-		Image               string `json:"image"`
-		Port                string `json:"port"`
-	} `json:"spec"`
-}
+// type PipelinePOSTJSON struct {
+// 	Kind       string `json:"kind"`
+// 	ApiVersion string `json:"apiVersion"`
+// 	MetaData   struct {
+// 		Name              string `json:"name"`
+// 		Workspace         string `json:"workspace"`
+// 		Project           string `json:"project"`
+// 		Namespace         string `json:"namespace"`
+// 		SelfLink          string `json:"selfLink"`
+// 		Uid               string `json:"uid"`
+// 		CreateonTimestamp string `json:"createonTimestamp"`
+// 		DeletionTimestamp string `json:"deletionTimestamp"`
+// 		TimeoutDuration   string `json:"timeoutDuration"`
+// 		Labels            string `json:"labels"`
+// 		Annotations       string `json:"annotations"`
+// 	} `json:"metadata"`
+// 	Spec []struct {
+// 		Name                string `json:"name"`
+// 		Replicsa            int64  `json:"replicsa"`
+// 		Dependence          string `json:"dependence"`
+// 		Kind                string `json:"kind"`
+// 		StatusCheckUrl      string `json:"statusCheckUrl"`
+// 		StatusCheckInterval int64  `json:"statusCheckInterval"`
+// 		StatusCheckCount    int64  `json:"statusCheckCount"`
+// 		Image               string `json:"image"`
+// 		Port                string `json:"port"`
+// 	} `json:"spec"`
+// }
 
-func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int, []byte) {
+func V1POSTPipelineHandler(ctx *macaron.Context, reqData models.PipelineSpecTemplate) (int, []byte) {
 	/*
 		etcd path /vessel/ws-xxx/pj-xxx/pl-xxx/plv-xxx/stage-xxx/
 
@@ -59,6 +59,7 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_interval
 		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_count
 	*/
+
 	pl, err := createPipelineAndStage(reqData)
 	if err != nil {
 		return http.StatusOK, []byte(err.Error())
@@ -74,21 +75,21 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 	return http.StatusOK, []byte(result)
 }
 
-func createPipelineAndStage(plJson PipelinePOSTJSON) (*models.Pipeline, error) {
+func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, error) {
 	var plInfo *models.Pipeline = &models.Pipeline{}
 	plInfo.Id = time.Now().UnixNano()
 	//ignore workspace & project
 	plInfo.WorkspaceId = 10000
 	plInfo.ProjectId = 20000
-	plInfo.Name = plJson.MetaData.Name
+	plInfo.Name = pst.MetaData.Name
 	plInfo.Created = time.Now().Unix()
 	plInfo.Updated = time.Now().Unix()
-	plInfo.Labels = plJson.MetaData.Labels
-	plInfo.Annotations = plJson.MetaData.Annotations
+	plInfo.Labels = pst.MetaData.Labels
+	plInfo.Annotations = pst.MetaData.Annotations
 	//ignore plJson Detail
 	plInfo.Detail = ""
 
-	for _, value := range plJson.Spec {
+	for _, value := range pst.Spec {
 		var sInfo *models.Stage = &models.Stage{}
 		sInfo.Id = time.Now().Unix()
 		sInfo.WorkspaceId = plInfo.WorkspaceId

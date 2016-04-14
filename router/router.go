@@ -6,13 +6,14 @@ import (
 	"github.com/go-macaron/binding"
 
 	"github.com/containerops/vessel/handler"
+	"github.com/containerops/vessel/models"
 )
 
 func SetRouters(m *macaron.Macaron) {
 	m.Group("/v1", func() {
 		m.Group("/workspace", func() {
 
-			m.Post("/", binding.Bind(handler.WorkspacePOSTJSON{}), handler.V1POSTWorkspaceHandler)
+			m.Post("/", binding.Bind(models.PipelineSpecTemplate{}), handler.V1POSTWorkspaceHandler)
 			m.Put("/:workspace", binding.Bind(handler.WorkspacePUTJSON{}), handler.V1PUTWorkspaceHandler)
 			m.Get("/:workspace", handler.V1GETWorkspaceHandler)
 			m.Delete("/:workspace", handler.V1DELETEWorkspaceHandler)
@@ -30,7 +31,7 @@ func SetRouters(m *macaron.Macaron) {
 
 		m.Group("/pipeline/:project", func() {
 
-			m.Post("/", binding.Bind(handler.PipelinePOSTJSON{}), handler.V1POSTPipelineHandler)
+			m.Post("/", binding.Bind(models.PipelineSpecTemplate{}), handler.V1POSTPipelineHandler)
 			m.Put("/:pipeline", handler.V1PUTPipelineHandler)
 			m.Get("/:pipeline", handler.V1GETPipelineHandler)
 			m.Delete("/:pipeline", handler.V1DELETEPipelineHandler)

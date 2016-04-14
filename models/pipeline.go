@@ -13,21 +13,6 @@ var (
 	DEFAULT_PIPELINEVERSION_ETCD_PATH = "/containerops/vessel/ws-%d/pj-%d/plv-%d/stagev-%d/"
 )
 
-// type Pipeline struct {
-// 	Id          int64     `json:"id"`                                        //
-// 	ProjectId   int64     `json:"projectId"`                                 //
-// 	UUID        string    `json:"uuid" orm:"varchar(255)"`                   //
-// 	Name        string    `json:"name" orm:"varchar(255)"`                   //
-// 	Description string    `json:"description" orm:"null;type(text)"`         //
-// 	Actived     bool      `json:"actived" orm:"null;default(0)"`             //
-// 	RootId      int64     `json:"rootId" orm:"default(0)"`                   //
-// 	ParentId    int64     `json:"parentId" orm:"default(0)"`                 //
-// 	Version     bool      `json:"version" orm:"default(0)"`                  //
-// 	Created     time.Time `json:"created" orm:"auto_now_add;type(datetime)"` //
-// 	Updated     time.Time `json:"updated" orm:"auto_now;type(datetime)"`     //
-// 	Memo        string    `json:"memo" orm:"null;type(text)"`                //
-// }
-
 type Pipeline struct {
 	Id          int64  `json:"id"`
 	WorkspaceId int64  `json:"workspaceId"`
@@ -40,8 +25,8 @@ type Pipeline struct {
 	Annotations string `json:"annotations"`
 	Detail      string `json:"detail" gorm:"type:text"`
 	Stages      []*Stage
-	MetaData    string `json:"metadata"`
-	Spec        string `json:"spec"`
+	MetaData    PipelineMetaData
+	Spec        []StageSpec
 }
 
 type PipelineVersion struct {

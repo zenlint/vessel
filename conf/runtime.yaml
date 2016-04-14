@@ -21,9 +21,11 @@ database:
     loc: Local
 etcd:
   endpoints:
-    -host: localhost
-    port: 2379
-    -host: 127.0.0.1
-    port: 2379
+    -
+      -host: localhost
+      port: 2379
+    -
+      -host: 127.0.0.1
+      port: 2379
   username: etcd
   password: etcd

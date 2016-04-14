@@ -48,7 +48,6 @@ func runWeb(c *cli.Context) {
 
 	//Set Macaron Web Middleware And Routers
 	web.SetVesselMacaron(m)
-
 	switch setting.RunTime.Http.ListenMode {
 	case "http":
 		listenaddr := fmt.Sprintf("%s:%s", c.String("address"), c.String("port"))
