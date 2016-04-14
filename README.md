@@ -12,9 +12,11 @@ test json
       "uid":"CI Key",
       "creationTimestamp":"backup",
       "deletionTimestamp":"backup",
+      "timeoutDuration":7200
       "labels":"backup",
       "annotations":"backup"
    },
+
    "spec":[
       {
          "name":"TestMasterServices",
@@ -23,6 +25,9 @@ test json
          "status_check_url":"",
          "status_check_interval":30,
          "status_check_count":3
+         "replicsa":1
+         "image":"redis-master"
+         "port":6379
       },
       {
          "name":"TestSlaveServices1",
@@ -31,6 +36,9 @@ test json
          "status_check_url":"",
          "status_check_interval":30,
          "status_check_count":3
+         "replicsa":2
+         "image":"redis-slave"
+         "port":6379
       },
       {
          "name":"TestSlaveServices2",
@@ -39,6 +47,9 @@ test json
          "status_check_url":"",
          "status_check_interval":30,
          "status_check_count":3
+         "replicsa":1
+         "image":"mysql"
+         "port":3306
       },
       {
          "name":"BaseServices0",
@@ -47,6 +58,9 @@ test json
          "status_check_url":"",
          "status_check_interval":30,
          "status_check_count":3
+         "replicsa":1
+         "image":"restapi"
+         "port":8080
       },
       {
          "name":"BaseServices1",
@@ -55,6 +69,9 @@ test json
          "status_check_url":"",
          "status_check_interval":30,
          "status_check_count":3
+         "replicsa":1
+         "image":"xmlapi"
+         "port":9090
       },
       {
          "name":"BaseServices2",
@@ -63,6 +80,9 @@ test json
          "status_check_url":"",
          "status_check_interval":30,
          "status_check_count":3
+         "replicsa":1
+         "image":"yamlapi"
+         "port":9090
       },
       {
          "name":"BaseServices3",
@@ -71,6 +91,9 @@ test json
          "status_check_url":"",
          "status_check_interval":30,
          "status_check_count":3
+         "replicsa":1
+         "image":"haproxy"
+         "port":10000
       },
       {
          "name":"BaseServices4",
@@ -79,6 +102,9 @@ test json
          "status_check_url":"",
          "status_check_interval":30,
          "status_check_count":3
+         "replicsa":1
+         "image":"oos"
+         "port":20000
       },
       {
          "name":"TestServices4",
@@ -87,8 +113,12 @@ test json
          "status_check_url":"",
          "status_check_interval":30,
          "status_check_count":3
+         "replicsa":1
+         "image":"unittest"
+         "port":30000
       }
    ]
 }
+
 
 ```
