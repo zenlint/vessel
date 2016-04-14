@@ -26,7 +26,7 @@ type Pipeline struct {
 	Detail      string `json:"detail" gorm:"type:text"`
 	Stages      []*Stage
 	MetaData    PipelineMetaData
-	Spec        []StageSpec
+	StageSpecs  []StageSpec
 }
 
 type PipelineVersion struct {
@@ -44,16 +44,16 @@ type PipelineVersion struct {
 	StageVersions []string `json:"stageVersions"`
 	Log           string   `json:"log" gorm:"type:text"`
 	Status        int64    `json:"state"` // 0 not start    1 working    2 success     3 failed
-	MetaData      string   `json:"metadata"`
-	Spec          string   `json:"spec"`
+	MetaData      PipelineMetaData
+	StageSpecs    []StageSpec
 }
 
-func (pv *PipelineVersion) GetMetadata() string {
+func (pv *PipelineVersion) GetMetadata() PipelineMetaData {
 	return pv.MetaData
 }
 
-func (pv *PipelineVersion) GetSpec() string {
-	return pv.Spec
+func (pv *PipelineVersion) GetSpec() []StageSpec {
+	return pv.StageSpecs
 }
 
 // type Status struct {
