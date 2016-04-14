@@ -77,6 +77,14 @@ type PipelineVersion struct {
 	Spec          string   `json:"spec"`
 }
 
+func (pv *PipelineVersion) GetMetadata() string {
+	return pv.MetaData
+}
+
+func (pv *PipelineVersion) GetSpec() string {
+	return pv.Spec
+}
+
 // type Status struct {
 // 	Id         int64     `json:"id"`                                        //
 // 	PipelineId int64     `json:"pipelineId"`                                //
