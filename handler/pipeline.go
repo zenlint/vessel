@@ -88,6 +88,8 @@ func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, 
 	plInfo.Annotations = pst.MetaData.Annotations
 	//ignore plJson Detail
 	plInfo.Detail = ""
+	plInfo.MetaData = pst.MetaData
+	plInfo.StageSpecs = pst.Spec
 
 	for _, value := range pst.Spec {
 		var sInfo *models.Stage = &models.Stage{}
@@ -107,6 +109,9 @@ func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, 
 		if len(sInfo.From) == 1 && sInfo.From[0] == "" {
 			sInfo.From = make([]string, 0)
 		}
+		sInfo.MetaData = plInfo.MetaData
+		sInfo.StageSpec = value
+
 		plInfo.Stages = append(plInfo.Stages, sInfo)
 	}
 
