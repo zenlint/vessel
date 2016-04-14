@@ -68,6 +68,7 @@ api.ReplicationController{
 					},
 				},
 */
+/*
 func StartK8SResource(pv *PipelineVersion) error {
 	rc := &api.ReplicationController{}
 	service := &api.Service{}
@@ -93,7 +94,40 @@ func StartK8SResource(pv *PipelineVersion) error {
 	// writeBack(rcRes, serviceRes, &pvm, &pvs)
 	return nil
 }
+*/
 
+type PiplelineInterface interface {
+	GetMetadata() string
+	GetSpec() string
+}
+
+func StartK8SResource(pipeline PiplelineInterface) error {
+	rc := &api.ReplicationController{}
+	service := &api.Service{}
+
+	var pvm piplineMetadata
+	var pvs piplineSpec
+	err := split(pipeline, &pvm, &pvs)
+	if err != nil {
+		return err
+	}
+
+	namespace := convert(pvm, pvs, rc, service)
+
+	if _, err = CLIENT.ReplicationControllers(namespace).Create(rc); err != nil {
+		fmt.Errorf("Create rc err : %v\n", err)
+		return err
+	}
+
+	if _, err := CLIENT.Services(namespace).Create(service); err != nil {
+		fmt.Errorf("Create service err : %v\n", err)
+		return err
+	}
+	// writeBack(rcRes, serviceRes, &pvm, &pvs)
+	return nil
+}
+
+/*
 func split(pv *PipelineVersion, pvm *piplineMetadata, pvs *piplineSpec) error {
 	err := json.Unmarshal([]byte(pv.MetaData), pvm)
 	if err != nil {
@@ -104,6 +138,22 @@ func split(pv *PipelineVersion, pvm *piplineMetadata, pvs *piplineSpec) error {
 	err = json.Unmarshal([]byte(pv.Spec), pvs)
 	if err != nil {
 		fmt.Errorf("Unmarshal PipelineVersion.Spec err : %v\n", err)
+		return err
+	}
+	return nil
+}
+*/
+
+func split(pipeline PiplelineInterface, pvm *piplineMetadata, pvs *piplineSpec) error {
+	err := json.Unmarshal([]byte(pipeline.GetMetadata()), pvm)
+	if err != nil {
+		fmt.Errorf("Unmarshal pipeline.GetMetadata() err : %v\n", err)
+		return err
+	}
+
+	err = json.Unmarshal([]byte(pipeline.GetSpec()), pvs)
+	if err != nil {
+		fmt.Errorf("Unmarshal pipeline.GetSpec() err : %v\n", err)
 		return err
 	}
 	return nil
