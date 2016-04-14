@@ -45,6 +45,16 @@ type StageVersion struct {
 	Spec              string   `json:"spec"`
 }
 
+type StageVersionState struct {
+	PipelineId        string `json:"pipelineId"`
+	PipelineVersionId string `json:"pipelineVersionId"`
+	StageId           string `json:"pipelineVersionId"`
+	StageVersionId    string `json:"stageVersionId"`
+	StageName         string `json:"stageName"`
+	RunResult         string `json:"runResult"`
+	Detail            string `json:"detail"`
+}
+
 func (stage *Stage) Create(pipelineId int64, name string) (error, string) {
 	return nil, ""
 }

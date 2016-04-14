@@ -75,10 +75,11 @@ func InitEtcd() error {
 
 }
 
-//Sync ETCD
-func SyncETCD() error {
-	return nil
-}
+//
+// //Sync ETCD
+// func SyncETCD() error {
+// 	return nil
+// }
 
 func EtcdSet(key, value string) error {
 	if EtcdClient == nil {
