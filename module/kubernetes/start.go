@@ -36,7 +36,6 @@ type piplineSpec struct {
 	port                int    `json:"port, omitempty"`
 }
 
-/*
 type PipelineVersion struct {
 	Id            int64    `json:"id"`
 	WorkspaceId   int64    `json:"workspaceId"`
@@ -55,7 +54,7 @@ type PipelineVersion struct {
 	MetaData      string   `json:"metadata"`
 	Spec          string   `json:"spec"`
 }
-*/
+
 // unversioned.ReplicationController.ObjectMeta
 // unversioned.ReplicationController.Spec
 
