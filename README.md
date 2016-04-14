@@ -2,6 +2,7 @@
 
 test json
 ```
+
 {
    "kind":"TestGroupServices",
    "apiVersion":"1",
@@ -12,7 +13,7 @@ test json
       "uid":"CI Key",
       "creationTimestamp":"backup",
       "deletionTimestamp":"backup",
-      "timeoutDuration":7200
+      "timeoutDuration":7200,
       "labels":"backup",
       "annotations":"backup"
    },
@@ -24,9 +25,9 @@ test json
          "kind":"backup",
          "status_check_url":"",
          "status_check_interval":30,
-         "status_check_count":3
-         "replicsa":1
-         "image":"redis-master"
+         "status_check_count":3,
+         "replicsa":1,
+         "image":"redis-master",
          "port":6379
       },
       {
@@ -35,9 +36,9 @@ test json
          "kind":"backup",
          "status_check_url":"",
          "status_check_interval":30,
-         "status_check_count":3
-         "replicsa":2
-         "image":"redis-slave"
+         "status_check_count":3,
+         "replicsa":2,
+         "image":"redis-slave",
          "port":6379
       },
       {
@@ -46,9 +47,9 @@ test json
          "kind":"backup",
          "status_check_url":"",
          "status_check_interval":30,
-         "status_check_count":3
-         "replicsa":1
-         "image":"mysql"
+         "status_check_count":3,
+         "replicsa":1,
+         "image":"mysql",
          "port":3306
       },
       {
@@ -57,9 +58,9 @@ test json
          "kind":"backup",
          "status_check_url":"",
          "status_check_interval":30,
-         "status_check_count":3
-         "replicsa":1
-         "image":"restapi"
+         "status_check_count":3,
+         "replicsa":1,
+         "image":"restapi",
          "port":8080
       },
       {
@@ -68,9 +69,9 @@ test json
          "kind":"backup",
          "status_check_url":"",
          "status_check_interval":30,
-         "status_check_count":3
-         "replicsa":1
-         "image":"xmlapi"
+         "status_check_count":3,
+         "replicsa":1,
+         "image":"xmlapi",
          "port":9090
       },
       {
@@ -79,9 +80,9 @@ test json
          "kind":"backup",
          "status_check_url":"",
          "status_check_interval":30,
-         "status_check_count":3
-         "replicsa":1
-         "image":"yamlapi"
+         "status_check_count":3,
+         "replicsa":1,
+         "image":"yamlapi",
          "port":9090
       },
       {
@@ -90,9 +91,9 @@ test json
          "kind":"backup",
          "status_check_url":"",
          "status_check_interval":30,
-         "status_check_count":3
-         "replicsa":1
-         "image":"haproxy"
+         "status_check_count":3,
+         "replicsa":1,
+         "image":"haproxy",
          "port":10000
       },
       {
@@ -101,9 +102,9 @@ test json
          "kind":"backup",
          "status_check_url":"",
          "status_check_interval":30,
-         "status_check_count":3
-         "replicsa":1
-         "image":"oos"
+         "status_check_count":3,
+         "replicsa":1,
+         "image":"oos",
          "port":20000
       },
       {
@@ -112,9 +113,9 @@ test json
          "kind":"backup",
          "status_check_url":"",
          "status_check_interval":30,
-         "status_check_count":3
-         "replicsa":1
-         "image":"unittest"
+         "status_check_count":3,
+         "replicsa":1,
+         "image":"unittest",
          "port":30000
       }
    ]
