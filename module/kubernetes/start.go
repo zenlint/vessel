@@ -1,16 +1,17 @@
 package kubernetes
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
 
+	"github.com/containerops/vessel/models"
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/types"
+	// "k8s.io/kubernetes/pkg/api/unversioned"
+	// "k8s.io/kubernetes/pkg/types"
 	"k8s.io/kubernetes/pkg/util/intstr"
 )
 
-// pipelineMetadata struct for convert from pipelineVersion.MetaData
+/*// pipelineMetadata struct for convert from pipelineVersion.MetaData
 type piplineMetadata struct {
 	name            string            `json:"name, omitempty"`
 	namespace       string            `json:"namespace, omitempty"`
@@ -34,7 +35,7 @@ type piplineSpec struct {
 	statusCheckCount    int64  `json:"statusCheckCount, omitempty"`
 	imageName           string `json:"imagename, omitempty"`
 	port                int    `json:"port, omitempty"`
-}
+}*/
 
 /*
 type PipelineVersion struct {
@@ -97,36 +98,233 @@ func StartK8SResource(pv *PipelineVersion) error {
 }
 */
 
-type PiplelineInterface interface {
-	GetMetadata() string
-	GetSpec() string
-}
+/*
+rcRes = &api.ReplicationController{
+		ObjectMeta: api.ObjectMeta{
+			Name:      piplineSpec.Name,
+			Namespace: piplineMetadata.Namespace,
+			Labels: map[string]string{
+				"app": piplineSpec.Name,
+			},
+		},
+		Spec: api.ReplicationControllerSpec{
+			Replicas: piplineSpec.Replicas,
+			Template: &api.PodTemplateSpec{
+				ObjectMeta: api.ObjectMeta{
+					Name: piplineSpec.Name,
+					Labels: map[string]string{
+						"app": piplineSpec.Name,
+					},
+					Namespace: piplineMetadata.Namespace,
+				},
+				Spec: api.PodSpec{
+					Containers: []api.Container{
+						api.Container{
+							Name:  piplineSpec.Name,
+							Image: piplineSpec.ImageName,
+							Ports: []api.ContainerPort{
+								api.ContainerPort{
+									Name:          piplineSpec.Name,
+									ContainerPort: piplineSpec.Port,
+								},
+							},
+						},
+					},
+				},
+			},
+			Selector: map[string]string{
+				"app": piplineSpec.Name,
+			},
+		},
+	}
+*/
 
-func StartK8SResource(pipeline PiplelineInterface) error {
-	rc := &api.ReplicationController{}
-	service := &api.Service{}
+/*
+	serviceRes = &api.Service{
+		ObjectMeta: api.ObjectMeta{
+			Name:      piplineSpec.Name,
+			Namespace: piplineMetadata.Namespace,
+			Labels: map[string]string{
+				"app": piplineSpec.Name,
+			},
+		},
+		Spec: api.ServiceSpec{
+			Ports: []api.ServicePort{
+				api.ServicePort{
+					Port:       piplineSpec.Port,
+					TargetPort: intstr.FromString(piplineSpec.Name),
+				},
+			},
+			Selector: map[string]string{
+				"app": piplineSpec.Name,
+			},
+		},
+	}
+*/
 
-	var pvm piplineMetadata
-	var pvs piplineSpec
-	err := split(pipeline, &pvm, &pvs)
-	if err != nil {
-		return err
+/*
+namespace := &api.Namespace{
+		ObjectMeta: api.ObjectMeta{Name: "foo"},
+	}
+	c := &simple.Client{
+		Request: simple.Request{
+			Method: "POST",
+			Path:   testapi.Default.ResourcePath("namespaces", "", ""),
+			Body:   namespace,
+		},
+		Response: simple.Response{StatusCode: 200, Body: namespace},
 	}
 
-	namespace := convert(pvm, pvs, rc, service)
+	// from the source ns, provision a new global namespace "foo"
+	response, err := c.Setup(t).Namespaces().Create(namespace)
+*/
+func StartK8SResource(pipelineversion *models.PipelineVersion) error {
 
-	if _, err = CLIENT.ReplicationControllers(namespace).Create(rc); err != nil {
-		fmt.Errorf("Create rc err : %v\n", err)
-		return err
+	rc := &api.ReplicationController{
+		ObjectMeta: api.ObjectMeta{
+			Labels: map[string]string{},
+		},
+		Spec: api.ReplicationControllerSpec{
+			Template: &api.PodTemplateSpec{
+				ObjectMeta: api.ObjectMeta{
+					Labels: map[string]string{},
+				},
+				Spec: api.PodSpec{
+					Containers: []api.Container{
+						api.Container{
+							Ports: []api.ContainerPort{},
+						},
+					},
+				},
+			},
+		},
 	}
 
-	if _, err := CLIENT.Services(namespace).Create(service); err != nil {
-		fmt.Errorf("Create service err : %v\n", err)
-		return err
+	service := &api.Service{
+		ObjectMeta: api.ObjectMeta{
+			Labels: map[string]string{},
+		},
+		Spec: api.ServiceSpec{
+			Ports:    []api.ServicePort{},
+			Selector: map[string]string{},
+		},
 	}
+
+	piplineMetadata := pipelineversion.MetaData
+	stagespecs := pipelineversion.StageSpecs
+
+	for _, stagespec := range stagespecs {
+		// rc := api.ReplicationController{}
+		// service := api.Service{}
+		container := api.Container{}
+
+		rc.SetName(stagespec.Name)
+		rc.SetNamespace(piplineMetadata.Namespace)
+		rc.Labels["app"] = stagespec.Name
+		rc.Spec.Replicas = stagespec.Replicas
+		rc.Spec.Template.SetName(stagespec.Name)
+		rc.Spec.Template.Labels["app"] = stagespec.Name
+		container.Ports = append(container.Ports, api.ContainerPort{Name: stagespec.Name, ContainerPort: stagespec.Port})
+		container.Name = stagespec.Name
+		container.Image = stagespec.Image
+		rc.Spec.Template.Spec.Containers = append(rc.Spec.Template.Spec.Containers, container)
+		rc.Spec.Selector["app"] = stagespec.Name
+
+		service.ObjectMeta.SetName(stagespec.Name)
+		service.ObjectMeta.SetNamespace(piplineMetadata.Namespace)
+		service.ObjectMeta.Labels["app"] = stagespec.Name
+		service.Spec.Ports = append(service.Spec.Ports, api.ServicePort{Port: stagespec.Port, TargetPort: intstr.FromString(stagespec.Name)})
+		service.Spec.Selector["app"] = stagespec.Name
+
+		namespace := &api.Namespace{
+			ObjectMeta: api.ObjectMeta{Name: piplineMetadata.Namespace},
+		}
+		_, err := CLIENT.Namespaces().Create(namespace)
+		if err != nil {
+			fmt.Errorf("Create namespace err : %v\n", err)
+		}
+
+		if _, err = CLIENT.ReplicationControllers(piplineMetadata.Namespace).Create(rc); err != nil {
+			fmt.Errorf("Create rc err : %v\n", err)
+			return err
+		}
+		// CLIENT.ReplicationControllers(namespace)
+
+		if _, err := CLIENT.Services(piplineMetadata.Namespace).Create(service); err != nil {
+			fmt.Errorf("Create service err : %v\n", err)
+			return err
+		}
+		// namespaces = append(namespaces, piplineMetadata.Namespace)
+	}
+
+	// namespaces := convert(pm, pss, rc, service)
+	/*
+		if _, err = CLIENT.ReplicationControllers(namespace).Create(rc); err != nil {
+			fmt.Errorf("Create rc err : %v\n", err)
+			return err
+		}
+
+		if _, err := CLIENT.Services(namespace).Create(service); err != nil {
+			fmt.Errorf("Create service err : %v\n", err)
+			return err
+		}*/
 	// writeBack(rcRes, serviceRes, &pvm, &pvs)
 	return nil
 }
+
+/*func convert(piplineMetadata models.PipelineMetaData, stagespecs []models.StageSpec,
+rcRes *[]api.ReplicationController, serviceRes *[]api.Service) []string {
+namespaces := make([]string)
+
+for i, stagespec := range stagespecs {
+	rc := api.ReplicationController{}
+	service := api.Service{}
+	container := api.Container{}
+
+	rc.SetName(stagespec.Name)
+	rc.SetNamespace(piplineMetadata.Namespace)
+	rc.Labels["app"] = stagespec.Name
+	rc.Spec.Replicas = stagespec.Replicsas
+	rc.Spec.Template.SetName(stagespec.Name)
+	rc.Spec.Template.Labels["app"] = stagespec.Name
+	container.Ports = append(container.Ports, api.ContainerPort{Name: stagespec.Name, ContainerPort: stagespec.Port})
+	container.Name = stagespec.Name
+	container.Image = stagespec.Image
+	rc.Spec.Template.Spec.Containers[i] = append(rc.Spec.Template.Spec.Containers[i], container)
+	rc.Spec.Selector["app"] = stagespec.Name
+
+	service.ObjectMeta.SetName(stagespec.Name)
+	service.ObjectMeta.SetNamespace(piplineMetadata.Namespace)
+	service.ObjectMeta.Labels["app"] = stagespec.Name
+	service.Spec.Ports = append(service.Spec.Ports, api.ServicePort{Port: stagespec.Port, TargetPort: intstr.FromString(stagespec.Name)})
+	service.Spec.Selector["app"] = stagespec.Name
+
+	*rcRes = append(*rcRes, rc)
+	*serviceRes = append(*serviceRes, service)
+	namespaces = append(namespaces, piplineMetadata.Namespace)
+}
+*/
+/*rcRes.Name = piplineSpec.name
+
+rcRes.Namespace = piplineMetadata.namespace
+//Use map["rc"] = Spec.name for temprory`
+rcRes.Labels["rc"] = piplineSpec.name
+rcRes.Spec.Replicas = piplineSpec.replicas
+rcRes.Spec.Template.Name = piplineSpec.name
+rcRes.Spec.Template.Labels["pod"] = piplineSpec.name
+rcRes.Spec.Template.Namespace = piplineMetadata.namespace
+rcRes.Spec.Template.Spec.Containers[0].Name = piplineSpec.name
+rcRes.Spec.Template.Spec.Containers[0].Image = piplineSpec.imageName
+rcRes.Spec.Template.Spec.Containers[0].Ports[0].Name = piplineSpec.name
+rcRes.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = piplineSpec.port
+rcRes.Spec.Selector["app"] = piplineSpec.name
+
+serviceRes.ObjectMeta.Name = piplineSpec.name
+serviceRes.ObjectMeta.Namespace = piplineMetadata.namespace
+serviceRes.ObjectMeta.Labels["service"] = piplineSpec.name
+serviceRes.Spec.Ports[0].Port = piplineSpec.port
+serviceRes.Spec.Ports[0].TargetPort = intstr.FromString(piplineSpec.name)
+serviceRes.Spec.Selector["app"] = piplineSpec.name*/
 
 /*
 func split(pv *PipelineVersion, pvm *piplineMetadata, pvs *piplineSpec) error {
@@ -145,7 +343,7 @@ func split(pv *PipelineVersion, pvm *piplineMetadata, pvs *piplineSpec) error {
 }
 */
 
-func split(pipeline PiplelineInterface, pvm *piplineMetadata, pvs *piplineSpec) error {
+/*func split(pipeline PiplelineInterface, pvm *piplineMetadata, pvs *piplineSpec) error {
 	err := json.Unmarshal([]byte(pipeline.GetMetadata()), pvm)
 	if err != nil {
 		fmt.Errorf("Unmarshal pipeline.GetMetadata() err : %v\n", err)
@@ -158,30 +356,45 @@ func split(pipeline PiplelineInterface, pvm *piplineMetadata, pvs *piplineSpec) 
 		return err
 	}
 	return nil
-}
+}*/
 
-func convert(piplineMetadata piplineMetadata, piplineSpec piplineSpec,
-	rcRes *api.ReplicationController, serviceRes *api.Service) string {
-	rcRes.Name = piplineSpec.name
-	rcRes.Namespace = piplineMetadata.namespace
-	//Use map["rc"] = Spec.name for temprory
-	rcRes.Labels["rc"] = piplineSpec.name
-	rcRes.Spec.Replicas = piplineSpec.replicas
-	rcRes.Spec.Template.Name = piplineSpec.name
-	rcRes.Spec.Template.Labels["pod"] = piplineSpec.name
-	rcRes.Spec.Template.Namespace = piplineMetadata.namespace
-	rcRes.Spec.Template.Spec.Containers[0].Name = piplineSpec.name
-	rcRes.Spec.Template.Spec.Containers[0].Image = piplineSpec.imageName
-	rcRes.Spec.Template.Spec.Containers[0].Ports[0].Name = piplineSpec.name
-	rcRes.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = piplineSpec.port
-	rcRes.Spec.Selector["app"] = piplineSpec.name
-
-	serviceRes.ObjectMeta.Name = piplineSpec.name
-	serviceRes.ObjectMeta.Namespace = piplineMetadata.namespace
-	serviceRes.ObjectMeta.Labels["service"] = piplineSpec.name
-	serviceRes.Spec.Ports[0].Port = piplineSpec.port
-	serviceRes.Spec.Ports[0].TargetPort = intstr.FromString(piplineSpec.name)
-	serviceRes.Spec.Selector["app"] = piplineSpec.name
-
-	return piplineMetadata.namespace
-}
+/*
+rcRes = &api.ReplicationController{
+		ObjectMeta: api.ObjectMeta{
+			Name:      piplineSpec.Name,
+			Namespace: piplineMetadata.Namespace,
+			Labels: map[string]string{
+				"app": piplineSpec.Name,
+			},
+		},
+		Spec: api.ReplicationControllerSpec{
+			Replicas: piplineSpec.Replicas,
+			Template: &api.PodTemplateSpec{
+				ObjectMeta: api.ObjectMeta{
+					Name: piplineSpec.Name,
+					Labels: map[string]string{
+						"app": piplineSpec.Name,
+					},
+					Namespace: piplineMetadata.Namespace,
+				},
+				Spec: api.PodSpec{
+					Containers: []api.Container{
+						api.Container{
+							Name:  piplineSpec.Name,
+							Image: piplineSpec.ImageName,
+							Ports: []api.ContainerPort{
+								api.ContainerPort{
+									Name:          piplineSpec.Name,
+									ContainerPort: piplineSpec.Port,
+								},
+							},
+						},
+					},
+				},
+			},
+			Selector: map[string]string{
+				"app": piplineSpec.Name,
+			},
+		},
+	}
+*/
