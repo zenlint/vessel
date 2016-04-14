@@ -17,6 +17,8 @@ func main() {
 		return
 	}
 
+	cmdWeb := cmd.GetCmdWeb()
+
 	app := cli.NewApp()
 
 	app.Name = setting.Global.AppName
@@ -25,7 +27,8 @@ func main() {
 	app.Author = setting.Global.Author
 	app.Email = setting.Global.Email
 	app.Commands = []cli.Command{
-		cmd.CmdWeb,
+		// cmd.CmdWeb,
+		cmdWeb,
 		// cmd.CmdDatabase,
 	}
 

@@ -13,23 +13,26 @@ import (
 	"github.com/containerops/vessel/web"
 )
 
-var CmdWeb = cli.Command{
-	Name:        "web",
-	Usage:       "start vessel web service",
-	Description: "vessel is a CI module.",
-	Action:      runWeb,
-	Flags: []cli.Flag{
-		cli.StringFlag{
-			Name:  "address",
-			Value: setting.RunTime.Http.Host,
-			Usage: "web service listen ip, default is 0.0.0.0; if listen with Unix Socket, the value is sock file path.",
+func GetCmdWeb() cli.Command {
+	var CmdWeb = cli.Command{
+		Name:        "web",
+		Usage:       "start vessel web service",
+		Description: "vessel is a CI module.",
+		Action:      runWeb,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "address",
+				Value: setting.RunTime.Http.Host,
+				Usage: "web service listen ip, default is 0.0.0.0; if listen with Unix Socket, the value is sock file path.",
+			},
+			cli.StringFlag{
+				Name:  "port",
+				Value: setting.RunTime.Http.Port,
+				Usage: "web service listen at port 80; if run with https will be 443.",
+			},
 		},
-		cli.StringFlag{
-			Name:  "port",
-			Value: setting.RunTime.Http.Port,
-			Usage: "web service listen at port 80; if run with https will be 443.",
-		},
-	},
+	}
+	return CmdWeb
 }
 
 func runWeb(c *cli.Context) {
