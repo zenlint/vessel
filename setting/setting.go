@@ -54,7 +54,7 @@ func InitConf(globalFilePath string, runtimeFilePath string) error {
 	if err != nil {
 		return err
 	}
-	Global := GlobalConf{}
+	Global = &GlobalConf{}
 	err = yaml.Unmarshal([]byte(globalFile), &Global)
 	if err != nil {
 		return err
@@ -64,7 +64,8 @@ func InitConf(globalFilePath string, runtimeFilePath string) error {
 	if err != nil {
 		return err
 	}
-	RunTime := RunTimeConf{}
+	// RunTime := RunTimeConf{}
+	RunTime = &RunTimeConf{}
 	err = yaml.Unmarshal([]byte(runtimeFile), &RunTime)
 	if err != nil {
 		return err
