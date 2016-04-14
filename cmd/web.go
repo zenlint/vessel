@@ -8,9 +8,9 @@ import (
 	"github.com/codegangsta/cli"
 	"gopkg.in/macaron.v1"
 
+	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/setting"
 	"github.com/containerops/vessel/web"
-	"github.com/containerops/vessel/models"
 )
 
 var CmdWeb = cli.Command{
@@ -33,14 +33,14 @@ var CmdWeb = cli.Command{
 }
 
 func runWeb(c *cli.Context) {
-if err :=models.InitDatabase(); err != null{
-	fmt.Println(err)
-	return
-}
-if err :=models.InitEtcd(); err != null{
-	fmt.Println(err)
-	return
-}
+	if err := models.InitDatabase(); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err := models.InitEtcd(); err != nil {
+		fmt.Println(err)
+		return
+	}
 	m := macaron.New()
 
 	//Set Macaron Web Middleware And Routers

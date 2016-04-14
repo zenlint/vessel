@@ -9,6 +9,7 @@ import (
 	"gopkg.in/macaron.v1"
 
 	"github.com/containerops/vessel/models"
+	"github.com/containerops/vessel/module/pipeline"
 )
 
 type PipelinePOSTJSON struct {
@@ -51,17 +52,17 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData PipelinePOSTJSON) (int,
 		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_interval
 		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_count
 	*/
-	pipeline, err := createPipelineAndStage(reqData)
+	pl, err := createPipelineAndStage(reqData)
 	if err != nil {
 		return http.StatusOK, []byte(err.Error())
 	}
 
-	pipelineVersion, err := pipeline.Run()
+	plv, err := pipeline.RunPipeline(pl)
 	if err != nil {
 		return http.StatusOK, []byte(err.Error())
 	}
 
-	result := pipelineVersion.Boot()
+	result := pipeline.BootPipelineVersion(plv)
 
 	return http.StatusOK, []byte(result)
 }
