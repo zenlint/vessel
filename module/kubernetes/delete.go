@@ -8,7 +8,7 @@ func (c *pods) Delete(name string, options *api.DeleteOptions) error {
 
 */
 
-func DeleteK8SResource(pipeline PiplelineInterface) error {
+/*func DeleteK8SResource(pipeline PiplelineInterface) error {
 	var pvm piplineMetadata
 	var pvs piplineSpec
 	err := split(pipeline, &pvm, &pvs)
@@ -33,3 +33,4 @@ func DeleteK8SResource(pipeline PiplelineInterface) error {
 func getNamespaceAndName(plm piplineMetadata, pls piplineSpec) (string, string) {
 	return plm.namespace, pls.name
 }
+*/
