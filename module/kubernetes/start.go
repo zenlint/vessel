@@ -148,19 +148,18 @@ func StartK8SResource(pipelineversion *models.PipelineVersion) error {
 			fmt.Println(string(a))
 		}*/
 
-		/*
-			Going to support create namespace after we have namespace watch lib
-			_, err := CLIENT.Namespaces().Get(piplineMetadata.Namespace)
-			if err != nil {
-				namespaceObj := &api.Namespace{
-					ObjectMeta: api.ObjectMeta{Name: piplineMetadata.Namespace},
-				}
-				if _, err := CLIENT.Namespaces().Create(namespaceObj); err != nil {
-					fmt.Errorf("Create namespace err : %v\n", err)
-					return err
-				}
-				fmt.Println("dddddd")
-			}*/
+		/*// Going to support create namespace after we have namespace watch lib
+		_, err := CLIENT.Namespaces().Get(piplineMetadata.Namespace)
+		if err != nil {
+			namespaceObj := &api.Namespace{
+				ObjectMeta: api.ObjectMeta{Name: piplineMetadata.Namespace},
+			}
+			if _, err := CLIENT.Namespaces().Create(namespaceObj); err != nil {
+				fmt.Errorf("Create namespace err : %v\n", err)
+				return err
+			}
+			fmt.Println("dddddd")
+		}*/
 
 		if _, err := CLIENT.ReplicationControllers(piplineMetadata.Namespace).Create(rc); err != nil {
 			fmt.Errorf("Create rc err : %v\n", err)
