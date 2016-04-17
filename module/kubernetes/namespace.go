@@ -2,7 +2,7 @@ package kubernetes
 
 import (
 	// "encoding/json"
-	"errors"
+	// "errors"
 	"fmt"
 	"time"
 
@@ -36,7 +36,7 @@ func CreateNamespace(pipelineVersion *models.PipelineVersion) error {
 }
 
 // WatchPodStatus return status of the operation(specified by checkOp) of the pod, OK, TIMEOUT.
-func WatchNamespaceStatus(labelKey string, labelValue string, timeout int, checkOp string) (string, error) {
+func WatchNamespaceStatus(labelKey string, labelValue string, timeout int64, checkOp string, ch chan string) {
 	if checkOp != string(watch.Deleted) && checkOp != string(watch.Added) {
 		fmt.Errorf("Params checkOp err, checkOp: %v", checkOp)
 	}
@@ -45,8 +45,10 @@ func WatchNamespaceStatus(labelKey string, labelValue string, timeout int, check
 	opts := api.ListOptions{LabelSelector: labels.Set{labelKey: labelValue}.AsSelector()}
 	w, err := CLIENT.Namespaces().Watch(opts)
 	if err != nil {
-		fmt.Errorf("Get watch interface err")
-		return "", err
+		ch <- Error
+		return
+		// fmt.Errorf("Get watch interface err")
+		// return "", err
 	}
 
 	t := time.NewTimer(time.Second * time.Duration(timeout))
@@ -55,8 +57,10 @@ func WatchNamespaceStatus(labelKey string, labelValue string, timeout int, check
 		case event, ok := <-w.ResultChan():
 			//fmt.Println(event.Type)
 			if !ok {
-				fmt.Errorf("Watch err\n")
-				return "", errors.New("error occours from watch chanle")
+				ch <- Error
+				return
+				// fmt.Errorf("Watch err\n")
+				// return "", errors.New("error occours from watch chanle")
 			}
 			//fmt.Println(event.Type)
 			// Pod have phase, so we have to wait for the phase change to the right status when added
@@ -65,12 +69,16 @@ func WatchNamespaceStatus(labelKey string, labelValue string, timeout int, check
 
 				if (checkOp == string(watch.Deleted)) || ((checkOp != string(watch.Deleted)) &&
 					(event.Object.(*api.Namespace).Status.Phase == "Active")) {
-					return "OK", nil
+					ch <- OK
+					return
+					// return "OK", nil
 				}
 			}
 
 		case <-t.C:
-			return "TIMEOUT", nil
+			ch <- Timeout
+			return
+			// return "TIMEOUT", nil
 		}
 	}
 }

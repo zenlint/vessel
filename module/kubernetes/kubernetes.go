@@ -13,7 +13,12 @@ import (
 const (
 	Added   = "ADDED"
 	Deleted = "DELETED"
+)
+
+const (
 	Error   = "ERROR"
+	Timeout = "TIMEOUT"
+	OK      = "OK"
 )
 
 var CLIENT *unversioned.Client

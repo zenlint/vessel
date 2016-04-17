@@ -2,7 +2,7 @@ package kubernetes
 
 import (
 	// "encoding/json"
-	"errors"
+	// "errors"
 	"fmt"
 	"time"
 
@@ -61,7 +61,7 @@ func DeleteRC(pipelineVersion *models.PipelineVersion) error {
 }
 
 // WatchServiceStatus return status of the operation(specified by checkOp) of the pod, OK, TIMEOUT.
-func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout int, checkOp string) (string, error) {
+func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout int64, checkOp string, ch chan string) {
 	if checkOp != string(watch.Deleted) && checkOp != string(watch.Added) {
 		fmt.Errorf("Params checkOp err, checkOp: %v", checkOp)
 	}
@@ -71,8 +71,9 @@ func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout
 
 	w, err := CLIENT.ReplicationControllers(Namespace).Watch(opts)
 	if err != nil {
-		return "", err
-		fmt.Errorf("Get watch interface err")
+		ch <- Error
+		// return "", err
+		// fmt.Errorf("Get watch interface err")
 	}
 
 	t := time.NewTimer(time.Second * time.Duration(timeout))
@@ -82,16 +83,22 @@ func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout
 		case event, ok := <-w.ResultChan():
 			//fmt.Println(event.Type)
 			if !ok {
-				fmt.Errorf("Watch err\n")
-				return "", errors.New("error occours from watch chanle")
+				ch <- Error
+				return
+				// fmt.Errorf("Watch err\n")
+				// return "", errors.New("error occours from watch chanle")
 			}
 			//fmt.Println(event.Type)
 			if string(event.Type) == checkOp {
-				return "OK", nil
+				ch <- OK
+				return
+				// return "OK", nil
 			}
 
 		case <-t.C:
-			return "TIMEOUT", nil
+			ch <- Timeout
+			return
+			// return "TIMEOUT", nil
 		}
 	}
 }
