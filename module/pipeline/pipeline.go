@@ -26,7 +26,6 @@ func RunPipeline(pl *models.Pipeline) (*models.Pipeline, error) {
 		return nil, err
 	}
 	pl.Id = id
-	// etcd.SavePipelineInfo(pl)
 
 	// save stage infos to db
 	for _, stage := range pl.Stages {
@@ -36,56 +35,11 @@ func RunPipeline(pl *models.Pipeline) (*models.Pipeline, error) {
 		if relationMap[stage.Name][1] != "" {
 			stage.To = strings.Split(relationMap[stage.Name][1], ",")
 		}
-		// etcd.SaveStageInfo(stage)
 		stage.Save()
 	}
 
 	return pl, nil
 }
-
-// // RunPipeline : run pipeline generate pipelineVersion
-// func RunPipeline(pl *models.Pipeline) (*models.PipelineVersion, error) {
-// 	// first test is pipeline legal if not return err
-// 	relationMap, err := isPipelineLegal(pl)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-//
-// 	etcd.SavePipelineInfo(pl)
-// 	for _, stage := range pl.Stages {
-// 		if relationMap[stage.Name][0] != "" {
-// 			stage.From = strings.Split(relationMap[stage.Name][0], ",")
-// 		}
-// 		if relationMap[stage.Name][1] != "" {
-// 			stage.To = strings.Split(relationMap[stage.Name][1], ",")
-// 		}
-// 		pipelinePath := fmt.Sprintf(DEFAULT_PIPELINE_ETCD_PATH, pl.WorkspaceId, pl.ProjectId, pl.Id)
-// 		stagePath := pipelinePath + stage.Name
-// 		etcd.SaveStageInfo(stage, stagePath)
-// 	}
-//
-// 	pipelineVersion := new(models.PipelineVersion)
-// 	pipelineVersion.Id = time.Now().UnixNano()
-// 	pipelineVersion.WorkspaceId = pl.WorkspaceId
-// 	pipelineVersion.ProjectId = pl.ProjectId
-// 	pipelineVersion.PipelineId = pl.Id
-// 	pipelineVersion.Namespace = "plv" + "-" + strconv.FormatInt(pipelineVersion.Id, 10)
-// 	pipelineVersion.SelfLink = ""
-// 	pipelineVersion.Created = time.Now().Unix()
-// 	pipelineVersion.Updated = time.Now().Unix()
-// 	pipelineVersion.Labels = pl.Labels
-// 	pipelineVersion.Annotations = pl.Annotations
-// 	pipelineVersion.Detail = pl.Detail
-// 	pipelineVersion.StageVersions = []string{strconv.FormatInt(pipelineVersion.Id, 10)}
-// 	pipelineVersion.Status = 0
-//
-// 	stageVersionPath := fmt.Sprintf(DEFAULT_PIPELINEVERSION_ETCD_PATH, pipelineVersion.WorkspaceId, pipelineVersion.ProjectId, pipelineVersion.Id, pipelineVersion.Id)
-// 	stageVersionPath = stageVersionPath[:len(stageVersionPath)-1]
-// 	stageVersionPath = stageVersionPath[:strings.LastIndex(stageVersionPath, "/")] + "/pipelineId"
-// 	etcd.SavePipelineId(stageVersionPath, strconv.FormatInt(pl.Id, 10))
-//
-// 	return pipelineVersion, nil
-// }
 
 // test is the given pipeline is legal ,if legal return pipeline's stage relationMap if not return error
 func isPipelineLegal(pipeline *models.Pipeline) (map[string][]string, error) {
