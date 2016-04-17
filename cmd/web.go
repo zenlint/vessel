@@ -44,6 +44,8 @@ func runWeb(c *cli.Context) {
 		fmt.Println(err)
 		return
 	}
+	models.SyncDatabase()
+
 	m := macaron.New()
 
 	//Set Macaron Web Middleware And Routers

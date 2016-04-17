@@ -1,5 +1,16 @@
 package models
 
+import (
+	// "fmt"
+	// "strconv"
+	"time"
+)
+
+const (
+	FromStageType = 1000
+	ToStageType   = 2000
+)
+
 // type Stage struct {
 // 	Id         int64     `json:"id"`                                        //
 // 	PipelineId int64     `json:"pipelineId"`                                //
@@ -15,44 +26,168 @@ package models
 // }
 
 type Stage struct {
-	Id          int64    `json:"id"`
-	WorkspaceId int64    `json:"workspaceId"`
-	ProjectId   int64    `json:"projectId"`
-	PipelineId  int64    `json:"pipelineId"`
-	Created     int64    `json:"created"`
-	Updated     int64    `json:"updated"`
-	Name        string   `json:"name"`
-	Detail      string   `json:"detail"`
-	From        []string `josn:"from"`
-	To          []string `json:"to"`
-	MetaData    PipelineMetaData
-	StageSpec   StageSpec
+	// gorm.Model
+	Id          int64
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time       `sql:"index"`
+	WorkspaceId int64            `json:"workspaceId"`
+	ProjectId   int64            `json:"projectId"`
+	PipelineId  int64            `json:"pipelineId"`
+	Name        string           `json:"name"`
+	Detail      string           `json:"detail"`
+	From        []string         `sql:"-"`
+	To          []string         `sql:"-"`
+	MetaData    PipelineMetaData `sql:"-"`
+	StageSpec   StageSpec        `sql:"-"`
 }
 
 type StageVersion struct {
-	Id                int64    `json:"id"`
-	PipelineId        int64    `json:"pipelineId"`
-	PipelineVersionId int64    `json:"pipelineVersionId"`
-	StageId           int64    `json:"stageId"`
-	Created           int64    `json:"created"`
-	Updated           int64    `json:"updated"`
-	Name              string   `json:"name"`
-	Detail            string   `json:"detail"`
-	State             int64    `json:"state"` // 0 not start    1 working    2 success    3 failed
-	From              []string `josn:"from"`
-	To                []string `json:"to"`
-	MetaData          PipelineMetaData
-	StageSpec         StageSpec
+	// gorm.Model
+	Id                int64
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	DeletedAt         *time.Time         `sql:"index"`
+	WorkspaceId       int64              `json:"workspaceId"`
+	ProjectId         int64              `json:"projectId"`
+	PipelineId        int64              `json:"pipelineId"`
+	PipelineVersionId int64              `json:"pipelineVersionId"`
+	StageId           int64              `json:"stageId"`
+	Name              string             `json:"name"`
+	Detail            string             `json:"detail"`
+	State             *StageVersionState `json:"state" sql:"-"`
+	MetaData          PipelineMetaData   `sql:"-"`
+	StageSpec         StageSpec          `sql:"-"`
+}
+
+type StageRelation struct {
+	// gorm.Model
+	Id                int64
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	DeletedAt         *time.Time `sql:"index"`
+	WorkspaceId       int64
+	ProjectId         int64
+	PipelineId        int64
+	StageId           int64
+	RelationType      uint
+	RelationStageName string
 }
 
 type StageVersionState struct {
-	PipelineId        string `json:"pipelineId"`
-	PipelineVersionId string `json:"pipelineVersionId"`
-	StageId           string `json:"pipelineVersionId"`
-	StageVersionId    string `json:"stageVersionId"`
+	WorkspaceId       int64
+	ProjectId         int64
+	PipelineId        int64  `json:"pipelineId"`
+	PipelineVersionId int64  `json:"pipelineVersionId"`
+	StageId           int64  `json:"pipelineVersionId"`
+	StageVersionId    int64  `json:"stageVersionId"`
 	StageName         string `json:"stageName"`
 	RunResult         string `json:"runResult"`
 	Detail            string `json:"detail"`
+}
+
+func (stage *Stage) Save() error {
+	db, err := GetDb()
+	if err != nil {
+		return err
+	}
+
+	err = db.Create(stage).Error
+	if err != nil {
+		return err
+	}
+
+	// store stage relation
+	for _, fromName := range stage.From {
+		tempRelation := new(StageRelation)
+		tempRelation.StageId = stage.Id
+		tempRelation.WorkspaceId = stage.WorkspaceId
+		tempRelation.ProjectId = stage.ProjectId
+		tempRelation.PipelineId = stage.PipelineId
+		tempRelation.RelationType = FromStageType
+		tempRelation.RelationStageName = fromName
+
+		err = db.Create(tempRelation).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, toName := range stage.To {
+		tempRelation := new(StageRelation)
+		tempRelation.StageId = stage.Id
+		tempRelation.WorkspaceId = stage.WorkspaceId
+		tempRelation.ProjectId = stage.ProjectId
+		tempRelation.PipelineId = stage.PipelineId
+		tempRelation.RelationType = ToStageType
+		tempRelation.RelationStageName = toName
+
+		err = db.Create(tempRelation).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (stageVersion *StageVersion) Save() error {
+	db, err := GetDb()
+	if err != nil {
+		return err
+	}
+
+	err = db.Create(stageVersion).Error
+	if err != nil {
+		return err
+	}
+
+	err = db.Create(stageVersion.State).Error
+	return err
+}
+
+func (stageVersionState StageVersionState) ChangeStageVersionState() error {
+	db, err := GetDb()
+	if err != nil {
+		return err
+	}
+
+	err = db.Model(&StageVersionState{}).Where("pipeline_id = ?", stageVersionState.PipelineId).Where("pipeline_version_id = ?", stageVersionState.PipelineVersionId).Where("stage_name = ?", stageVersionState.StageName).Updates(map[string]interface{}{"run_result": stageVersionState.RunResult, "detail": stageVersionState.Detail}).Error
+	return err
+}
+
+func (stage *Stage) GetStagesByPipelineInfo(pipeline *Pipeline) ([]*Stage, error) {
+	db, err := GetDb()
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*Stage, 0)
+	err = db.Where("workspace_id = ?", pipeline.WorkspaceId).Where("project_id = ?", pipeline.ProjectId).Where("pipeline_id = ?", pipeline.Id).Find(&result).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// get stage relation
+	for k, stage := range result {
+		// get all  relation of current stage
+		relations := make([]StageRelation, 0)
+		from := make([]string, 0)
+		to := make([]string, 0)
+		db.Where("workspace_id = ?", stage.WorkspaceId).Where("project_id = ?", stage.ProjectId).Where("pipeline_id = ?", stage.PipelineId).Where("stage_id = ?", stage.Id).Find(&relations)
+		for _, relation := range relations {
+			if relation.RelationType == FromStageType {
+				from = append(from, relation.RelationStageName)
+			} else if relation.RelationType == ToStageType {
+				to = append(to, relation.RelationStageName)
+			}
+		}
+		result[k].From = from
+		result[k].To = to
+
+	}
+
+	return result, nil
 }
 
 func (stage *Stage) Create(pipelineId int64, name string) (error, string) {

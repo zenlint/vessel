@@ -44,12 +44,74 @@ func InitDatabase() error {
 		return err
 	}
 
+	DbClient.SingularTable(true)
+	// DbClient.LogMode(true)
+
 	return nil
 }
 
 //Sync Database
 func SyncDatabase() error {
+	db, err := GetDb()
+	if err != nil {
+		return err
+	}
+
+	// sync table
+	if !db.HasTable(&Pipeline{}) {
+		err = db.CreateTable(&Pipeline{}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	if !db.HasTable(&PipelineVersion{}) {
+		err = db.CreateTable(&PipelineVersion{}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	if !db.HasTable(&Stage{}) {
+		err = db.CreateTable(&Stage{}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	if !db.HasTable(&StageVersion{}) {
+		err = db.CreateTable(&StageVersion{}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	if !db.HasTable(&StageRelation{}) {
+		err = db.CreateTable(&StageRelation{}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	if !db.HasTable(&StageVersionState{}) {
+		err = db.CreateTable(&StageVersionState{}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	fmt.Println("sync DB done !")
 	return nil
+}
+
+func GetDb() (*gorm.DB, error) {
+	if DbClient == nil {
+		if err := InitDatabase(); err != nil {
+			return nil, err
+		}
+	}
+
+	return DbClient, nil
 }
 
 func InitEtcd() error {
