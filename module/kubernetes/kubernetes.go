@@ -3,11 +3,11 @@ package kubernetes
 import (
 	"fmt"
 
-	"github.com/containerops/vessel/models"
-	"k8s.io/kubernetes/pkg/api"
+	// "github.com/containerops/vessel/models"
+	// "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/restclient"
 	"k8s.io/kubernetes/pkg/client/unversioned"
-	"k8s.io/kubernetes/pkg/util/intstr"
+	// "k8s.io/kubernetes/pkg/util/intstr"
 )
 
 const (
@@ -29,6 +29,8 @@ func New(hostIp string) {
 	CLIENT = client
 }
 
+/*
+// Lay here for back up,the func have been moved to pipeline.go, as StartPipelin
 func CreateK8SResource(pipelineversion *models.PipelineVersion) error {
 	piplineMetadata := pipelineversion.MetaData
 	stagespecs := pipelineversion.StageSpecs
@@ -112,4 +114,4 @@ func CreateK8SResource(pipelineversion *models.PipelineVersion) error {
 		}
 	}
 	return nil
-}
+}*/

@@ -2,7 +2,7 @@ package kubernetes
 
 import (
 	// "encoding/json"
-	"fmt"
+	// "fmt"
 
 	"github.com/containerops/vessel/models"
 	// "k8s.io/kubernetes/pkg/api"
@@ -12,12 +12,12 @@ import (
 func StartPipeline(pipelineVersion *models.PipelineVersion) error {
 	piplineMetadata := pipelineVersion.MetaData
 	if _, err := CLIENT.Namespaces().Get(piplineMetadata.Namespace); err != nil {
-		fmt.Println("111111111111111")
+		// fmt.Println("111111111111111")
 		if err := CreateNamespace(pipelineVersion); err != nil {
 			return err
 		}
 	}
-	fmt.Println("222222222222222222222222")
+	// fmt.Println("222222222222222222222222")
 
 	/*if status, err := WatchNamespaceStatus("app", piplineMetadata.Name, 30, Added); err != nil || status != "OK" {
 		// if status != "OK" {
@@ -34,4 +34,12 @@ func StartPipeline(pipelineVersion *models.PipelineVersion) error {
 	}
 	//createrc && createservice
 	return nil
+}
+
+func DeletePipeline(pipelineVersion *models.PipelineVersion) error {
+	return nil
+}
+
+func WatchPipelineStatus(pipelineVersion *models.PipelineVersion) (string, error) {
+	return "OK", nil
 }

@@ -43,6 +43,10 @@ func CreateService(pipelineVersion *models.PipelineVersion) error {
 	return nil
 }
 
+func DeleteService(pipelineVersion *models.PipelineVersion) error {
+	return nil
+}
+
 // WatchServiceStatus return status of the operation(specified by checkOp) of the pod, OK, TIMEOUT.
 func WatchServiceStatus(Namespace string, labelKey string, labelValue string, timeout int, checkOp string) (string, error) {
 	if checkOp != string(watch.Deleted) && checkOp != string(watch.Added) {

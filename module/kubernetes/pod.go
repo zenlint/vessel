@@ -46,6 +46,8 @@ func GetPodStatus(namespace string, podName string) string {
 	return ""
 }
 
+// func DeletePod(pipelineVersion )
+
 // WatchPodStatus return status of the operation(specified by checkOp) of the pod, OK, TIMEOUT.
 func WatchPodStatus(podNamespace string, labelKey string, labelValue string, timeout int, checkOp string) (string, error) {
 	if checkOp != string(watch.Deleted) && checkOp != string(watch.Added) {
