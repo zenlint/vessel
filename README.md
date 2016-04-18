@@ -123,3 +123,39 @@ test json
 
 
 ```
+
+runtime.yaml
+
+```
+
+---
+run:
+  runMode: dev
+  logPath: log/vessel
+http:
+  listenMode: http
+  httpsCertFile: cert/containerops/containerops.crt
+  httpsKeyFile: cert/containerops/containerops.key
+  host: 0.0.0.0
+  port: 8080
+database:
+  username: vessel
+  password: vessel
+  protocol: tcp
+  host: localhost
+  port: 3306
+  schema: vessel
+  param:
+    charset: utf8
+    parseTime: True
+    loc: Local
+etcd:
+  endpoints:
+    - host: localhost
+      port: 2379
+    - host: 127.0.0.1
+      port: 2379
+  username: etcd
+  password: etcd
+
+```
