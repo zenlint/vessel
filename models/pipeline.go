@@ -1,5 +1,9 @@
 package models
 
+import (
+	"time"
+)
+
 const (
 	PIPESUCCESS = iota
 	PIPEERROR
@@ -10,42 +14,46 @@ const (
 
 var (
 	DEFAULT_PIPELINE_ETCD_PATH        = "/containerops/vessel/ws-%d/pj-%d/pl-%d/stage/"
-	DEFAULT_PIPELINEVERSION_ETCD_PATH = "/containerops/vessel/ws-%d/pj-%d/plv-%d/stagev-%d/"
+	DEFAULT_PIPELINEVERSION_ETCD_PATH = "/containerops/vessel/ws-%d/pj-%d/pl-%d/version/plv-%d"
 )
 
 type Pipeline struct {
-	Id          int64  `json:"id"`
-	WorkspaceId int64  `json:"workspaceId"`
-	ProjectId   int64  `json:"projectId"`
-	Name        string `json:"name" gorm:"type:varchar(255)"`
-	SelfLink    string `json:"selfLink" gorm:"type:varchar(255)"`
-	Created     int64  `json:"created"`
-	Updated     int64  `json:"updated"`
-	Labels      string `json:"labels"`
-	Annotations string `json:"annotations"`
-	Detail      string `json:"detail" gorm:"type:text"`
-	Stages      []*Stage
-	MetaData    PipelineMetaData
-	StageSpecs  []StageSpec
+	// gorm.Model
+	Id          int64
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time       `sql:"index"`
+	WorkspaceId int64            `json:"workspaceId"`
+	ProjectId   int64            `json:"projectId"`
+	Name        string           `json:"name" gorm:"type:varchar(255)"`
+	SelfLink    string           `json:"selfLink" gorm:"type:varchar(255)"`
+	Labels      string           `json:"labels"`
+	Annotations string           `json:"annotations"`
+	Detail      string           `json:"detail" gorm:"type:text"`
+	Stages      []*Stage         `sql:"-"`
+	MetaData    PipelineMetaData `sql:"-"`
+	StageSpecs  []StageSpec      `sql:"-"`
 }
 
 type PipelineVersion struct {
-	Id            int64    `json:"id"`
-	WorkspaceId   int64    `json:"workspaceId"`
-	ProjectId     int64    `json:"projectId"`
-	PipelineId    int64    `json:"pipelineId"`
-	Namespace     string   `json:"namespace"`
-	SelfLink      string   `json:"selfLink" gorm:"type:varchar(255)"`
-	Created       int64    `json:"created"`
-	Updated       int64    `json:"updated"`
-	Labels        string   `json:"labels"`
-	Annotations   string   `json:"annotations"`
-	Detail        string   `json:"detail" gorm:"type:text"`
-	StageVersions []string `json:"stageVersions"`
-	Log           string   `json:"log" gorm:"type:text"`
-	Status        int64    `json:"state"` // 0 not start    1 working    2 success     3 failed
-	MetaData      PipelineMetaData
-	StageSpecs    []StageSpec
+	// gorm.Model
+	Id            int64
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     *time.Time       `sql:"index"`
+	WorkspaceId   int64            `json:"workspaceId"`
+	ProjectId     int64            `json:"projectId"`
+	PipelineId    int64            `json:"pipelineId"`
+	Namespace     string           `json:"namespace"`
+	SelfLink      string           `json:"selfLink" gorm:"type:varchar(255)"`
+	Labels        string           `json:"labels"`
+	Annotations   string           `json:"annotations"`
+	Detail        string           `json:"detail" gorm:"type:text"`
+	StageVersions string           `json:"stageVersions"`
+	Log           string           `json:"log" gorm:"type:text"`
+	Status        string           `json:"state"`
+	MetaData      PipelineMetaData `sql:"-"`
+	StageSpecs    []StageSpec      `sql:"-"`
 }
 
 func (pv *PipelineVersion) GetMetadata() PipelineMetaData {
@@ -71,6 +79,48 @@ func (pv *PipelineVersion) GetSpec() []StageSpec {
 // 	Updated    time.Time `json:"updated" orm:"auto_now;type(datetime)"`     //
 // 	Memo       string    `json:"memo" orm:"null;type(text)"`                //
 // }
+
+// save pipeline info
+func (pipe *Pipeline) Save() (int64, error) {
+	db, err := GetDb()
+	if err != nil {
+		return 0, err
+	}
+
+	err = db.Create(pipe).Error
+	return pipe.Id, err
+}
+
+// save pipelineVersion info
+func (plv *PipelineVersion) Save() error {
+	db, err := GetDb()
+	if err != nil {
+		return err
+	}
+
+	err = db.Create(plv).Error
+	return err
+}
+
+// get pipeline info by pipeline id
+func (pipe *Pipeline) GetPipelineInfoByPipelineId(id int64) (*Pipeline, error) {
+	db, err := GetDb()
+	if err != nil {
+		return nil, err
+	}
+	result := new(Pipeline)
+	err = db.Where("id = ?", id).First(result).Error
+
+	return result, err
+}
+
+func (plv *PipelineVersion) Done() error {
+	db, err := GetDb()
+	if err != nil {
+		return err
+	}
+	return db.Model(plv).Updates(map[string]interface{}{"Status": "Done"}).Error
+}
 
 //Create Pipeline
 func (pipe *Pipeline) Create(projectId int64, name string) (error, int64) {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/module/pipeline"
+	"github.com/containerops/vessel/utils"
 )
 
 // type PipelinePOSTJSON struct {
@@ -65,12 +66,16 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData models.PipelineSpecTemp
 		return http.StatusOK, []byte(err.Error())
 	}
 
-	plv, err := pipeline.RunPipeline(pl)
+	pl, err = pipeline.RunPipeline(pl)
 	if err != nil {
 		return http.StatusOK, []byte(err.Error())
 	}
 
-	result := pipeline.BootPipelineVersion(plv)
+	result, err := pipeline.BootPipelineVersion(pl.Id)
+
+	if err != nil {
+		return http.StatusOK, []byte(err.Error())
+	}
 
 	return http.StatusOK, []byte(result)
 }
@@ -82,10 +87,10 @@ func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, 
 	plInfo.WorkspaceId = 10000
 	plInfo.ProjectId = 20000
 	plInfo.Name = pst.MetaData.Name
-	plInfo.Created = time.Now().Unix()
-	plInfo.Updated = time.Now().Unix()
-	plInfo.Labels = pst.MetaData.Labels
-	plInfo.Annotations = pst.MetaData.Annotations
+	// plInfo.Created = time.Now().Unix()
+	// plInfo.Updated = time.Now().Unix()
+	plInfo.Labels = utils.TransMapToStr(pst.MetaData.Labels)
+	plInfo.Annotations = utils.TransMapToStr(pst.MetaData.Annotations)
 	//ignore plJson Detail
 	plInfo.Detail = ""
 	plInfo.MetaData = pst.MetaData
@@ -93,12 +98,12 @@ func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, 
 
 	for _, value := range pst.Spec {
 		var sInfo *models.Stage = &models.Stage{}
-		sInfo.Id = time.Now().Unix()
+		sInfo.Id = time.Now().UnixNano()
 		sInfo.WorkspaceId = plInfo.WorkspaceId
 		sInfo.ProjectId = plInfo.ProjectId
 		sInfo.PipelineId = plInfo.Id
-		sInfo.Created = time.Now().Unix()
-		sInfo.Updated = time.Now().Unix()
+		// sInfo.Created = time.Now().Unix()
+		// sInfo.Updated = time.Now().Unix()
 		sInfo.Name = value.Name
 		//ignore Stage Detail
 		//StatusCheckUrl to Detail

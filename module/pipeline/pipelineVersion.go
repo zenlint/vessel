@@ -10,54 +10,139 @@ import (
 
 	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/module/etcd"
-
 	"golang.org/x/net/context"
+
+	"github.com/coreos/etcd/client"
 )
 
 const (
-	StageStateNotStart = "not start"
-	StageStateStarting = "working"
-	StageStateSuccess  = "success"
-	StageStateFailed   = "failed"
+	StateNotStart = "not start"
+	StateStarting = "working"
+	StateSuccess  = "success"
+	StateFailed   = "failed"
 )
 
 // BootPipelineVersion : start a pipelineVersion,boot the stage and return the result
-func BootPipelineVersion(pipelineVersion *models.PipelineVersion) string {
-	bootChan := make(chan string, 100)
+func BootPipelineVersion(pipelineId int64) (string, error) {
+	// get pipeline info by pipelineId
+	pipelineInfo, err := new(models.Pipeline).GetPipelineInfoByPipelineId(pipelineId)
+	if err != nil {
+		return "", err
+	}
+	// storage pipeline info to etcd
+	etcd.SavePipelineInfo(pipelineInfo)
+
+	// get stage infos by pipeline info
+	stages, err := new(models.Stage).GetStagesByPipelineInfo(pipelineInfo)
+	if err != nil {
+		return "", err
+	}
+	// storage stage infos to etcd
+	for _, stage := range stages {
+		etcd.SaveStageInfo(stage)
+	}
+
+	// generate new pipelineVersion and save it to db and set state to running
+	pipelineVersion := new(models.PipelineVersion)
+	pipelineVersion.Id = time.Now().UnixNano()
+	pipelineVersion.WorkspaceId = pipelineInfo.WorkspaceId
+	pipelineVersion.ProjectId = pipelineInfo.ProjectId
+	pipelineVersion.PipelineId = pipelineInfo.Id
+	pipelineVersion.Namespace = "plv" + "-" + strconv.FormatInt(pipelineVersion.Id, 10)
+	pipelineVersion.SelfLink = ""
+	pipelineVersion.Labels = pipelineInfo.Labels
+	pipelineVersion.Annotations = pipelineInfo.Annotations
+	pipelineVersion.Detail = pipelineInfo.Detail
+	pipelineVersion.StageVersions = strconv.FormatInt(pipelineVersion.Id, 10)
+	pipelineVersion.Status = StateStarting
+
+	err = pipelineVersion.Save()
+	if err != nil {
+		return "", err
+	}
+	// save pipelineVersion info to etcd
+	etcd.SavePipelineVersionInfo(pipelineVersion)
+
+	// generate stageVersion info and save it to db and etcd
+	// and record to a slice
+	stageVersions := make([]*models.StageVersion, 0)
+	for _, stage := range stages {
+		stageVersion := new(models.StageVersion)
+		stageVersion.Id = time.Now().UnixNano()
+		stageVersion.WorkspaceId = stage.WorkspaceId
+		stageVersion.ProjectId = stage.ProjectId
+		stageVersion.PipelineId = stage.PipelineId
+		stageVersion.PipelineVersionId = pipelineVersion.Id
+		stageVersion.StageId = stage.Id
+		stageVersion.Name = stage.Name
+		stageVersion.Detail = stage.Detail
+
+		runState := new(models.StageVersionState)
+		runState.WorkspaceId = stageVersion.WorkspaceId
+		runState.ProjectId = stageVersion.ProjectId
+		runState.PipelineId = stageVersion.PipelineId
+		runState.PipelineVersionId = stageVersion.PipelineVersionId
+		runState.StageId = stageVersion.StageId
+		runState.StageVersionId = stageVersion.Id
+		runState.StageName = stageVersion.Name
+		runState.RunResult = stageVersion.Name + "," + StateNotStart
+		runState.Detail = stageVersion.Detail
+
+		stageVersion.State = runState
+
+		err = stageVersion.Save()
+		if err != nil {
+			return "", err
+		}
+
+		etcd.SaveStageVersionInfo(stageVersion)
+
+		stageVersions = append(stageVersions, stageVersion)
+	}
+
+	// start to boot stage
+	bootChan := make(chan *models.StageVersion, 100)
 	finishChan := make(chan models.StageVersionState, 100)
 	stageVersionStateChan := make(chan string, 1)
 	notifyBootDone := make(chan bool, 1)
 
-	stageNames := etcd.GetStageNamesByPipelineVersion(pipelineVersion)
-	sumStage := len(stageNames)
-
 	go bootStage(bootChan, finishChan, notifyBootDone)
-	go isFinish(finishChan, stageVersionStateChan, sumStage, notifyBootDone)
+	go isFinish(finishChan, stageVersionStateChan, len(stageVersions), notifyBootDone)
 
 	// search all stage, start stage which from is ""
-	for _, stageName := range stageNames {
-		if stageName != "" {
-			stageVersionPath, from := etcd.GetStageFromInfoByPipelineVersionAndStageName(pipelineVersion, stageName)
-			if from == "" {
-				bootChan <- stageVersionPath
+	for _, stageVersion := range stageVersions {
+		if stageVersion.Name != "" {
+			from, err := etcd.GetCurrentStageVersionFromRelation(stageVersion)
+			if err != nil {
+				// error when get from relation from etcd ,all stage should stop and return err
+				stageVersionStateChan <- err.Error()
+				notifyBootDone <- true
+				continue
+			} else if from == "" {
+				bootChan <- stageVersion
 			}
 		}
 	}
 
 	runResult := <-stageVersionStateChan
+	err = pipelineVersion.Done()
+	if err != nil {
+		log.Println("error when update pipelineVersion state", err)
+	}
 	log.Println("all job is done!")
-	return runResult
+	return runResult, nil
 }
 
 // receive bootChan's message start give stage by stage path in etcd
-func bootStage(bootChan chan string, finishChan chan models.StageVersionState, notifyBootDone chan bool) {
+func bootStage(bootChan chan *models.StageVersion, finishChan chan models.StageVersionState, notifyBootDone chan bool) {
 	bootMap := make(map[string]bool)
 	for {
 		select {
-		case stagePath := <-bootChan:
-			if _, ok := bootMap[stagePath]; !ok {
-				bootMap[stagePath] = true
-				go startStage(stagePath, bootChan, finishChan)
+		case stageVersion := <-bootChan:
+			if _, ok := bootMap[stageVersion.Name]; !ok {
+				log.Println("start boot :", stageVersion.Name)
+				bootMap[stageVersion.Name] = true
+				go startStage(stageVersion, bootChan, finishChan)
 			}
 		case <-notifyBootDone:
 			return
@@ -72,7 +157,7 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 
 	for {
 		if finishStageNum == sumStage {
-			notifyBootDone <- false
+			notifyBootDone <- true
 			// stageVersionStateChan <- strings.Join(failedList, ",")
 			stageVersionStateStr, _ := json.Marshal(stageVersionStateList)
 			stageVersionStateChan <- string(stageVersionStateStr)
@@ -80,22 +165,23 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 		}
 
 		stageVersionState := <-finishChan
+		stageVersionState.ChangeStageVersionState()
 		finishStageNum++
 		stageVersionStateList = append(stageVersionStateList, stageVersionState)
 	}
 }
 
 // stage stage by given name,after start give single to finishChan
-func startStage(stageVersionStagePath string, bootChan chan string, finishChan chan models.StageVersionState) {
-	stateInfo, stageVersionInfo := etcd.GetStageVersionInfoByPath(stageVersionStagePath)
-	if stateInfo != "" {
+func startStage(stageVersion *models.StageVersion, bootChan chan *models.StageVersion, finishChan chan models.StageVersionState) {
+	// try to start current stageVersion if start success ,return true,else return false
+	if !etcd.StartCurrentStageVersion(stageVersion) {
 		return
 	}
 
-	etcd.EtcdSet(stageVersionStagePath[:strings.LastIndex(stageVersionStagePath, "/")]+"/state", stageVersionInfo.Name+","+StageStateNotStart)
-
+	// get all stage name that current stageVersion rely
 	stageNameMap := make(map[string]string)
-	for _, stageName := range stageVersionInfo.From {
+	fromStageRelation, _ := etcd.GetCurrentStageVersionFromRelation(stageVersion)
+	for _, stageName := range strings.Split(fromStageRelation, ",") {
 		if stageName != "" {
 			stageNameMap[stageName] = stageName
 		}
@@ -103,64 +189,63 @@ func startStage(stageVersionStagePath string, bootChan chan string, finishChan c
 
 	count := 0
 	sum := len(stageNameMap)
-	var stageVersionState models.StageVersionState
-	stageVersionState.PipelineId = strconv.FormatInt(stageVersionInfo.PipelineId, 10)
-	stageVersionState.PipelineVersionId = strconv.FormatInt(stageVersionInfo.PipelineVersionId, 10)
-	stageVersionState.StageId = strconv.FormatInt(stageVersionInfo.StageId, 10)
-	stageVersionState.StageVersionId = strconv.FormatInt(stageVersionInfo.PipelineVersionId, 10)
-	stageVersionState.StageName = stageVersionInfo.Name
 
-	// check is there is some stage finish start before this stage start
-	for _, fromStageName := range stageNameMap {
-		fromStageVersionStatePath := stageVersionStagePath[:strings.LastIndex(stageVersionStagePath, "/")] + "/" + fromStageName + "/state"
-		fromStageVersionStateInfo, _ := etcd.EtcdGet(fromStageVersionStatePath)
-		if fromStageVersionStateInfo != nil {
-			info := fromStageVersionStateInfo.Node.Value
-			if strings.Split(info, ",")[1] == StageStateSuccess {
-				count++
-			} else if strings.Split(info, ",")[1] == StageStateFailed {
-				for _, v := range stageVersionInfo.To {
-					if v != "" {
-						bootChan <- stageVersionStagePath[:strings.LastIndex(stageVersionStagePath, "/")] + "/" + v
-					}
-				}
-				stageVersionState.RunResult = StageStateFailed
-				stageVersionState.Detail = "pre stage " + strings.Split(info, ",")[0] + " is failed"
-				finishChan <- stageVersionState
-				etcd.EtcdSet(stageVersionStagePath+"/state", stageVersionInfo.Name+","+StageStateFailed)
-				return
-			}
-		}
+	// pre declare current stageVersion's runState
+	var stageVersionState models.StageVersionState
+	stageVersionState.PipelineId = stageVersion.PipelineId
+	stageVersionState.PipelineVersionId = stageVersion.PipelineVersionId
+	stageVersionState.StageId = stageVersion.StageId
+	stageVersionState.StageVersionId = stageVersion.PipelineVersionId
+	stageVersionState.StageName = stageVersion.Name
+
+	// start watch current stageVersion from stageVersion's state and check thoes stageVersion's running state
+	// just in case a stageVersion change after check it's state and before watch it's state
+	fromStageVersionStateChan := make(chan string, 255)
+	fromStageVersionChan := make(chan *models.StageVersion, 255)
+	fromStageVersionStartDoneMap := make(map[string]string)
+
+	for _, fromStageVersionName := range stageNameMap {
+		var tempFromStageVersion models.StageVersion
+		tempFromStageVersion = *stageVersion
+		fromStageVersion := &tempFromStageVersion
+		fromStageVersion.Name = fromStageVersionName
+		fromStageVersionChan <- fromStageVersion
 	}
 
-	watcher := etcd.EtcdWatch(stageVersionStagePath[:strings.LastIndex(stageVersionStagePath, "/")] + "/")
+	watcher := etcd.GetStageVersionFromStageVersionsWatcher(stageVersion)
+	go watcheStageVersionState(watcher, fromStageVersionStateChan)
+
 	for {
-		// if all stage dependence is start,exit loop and start current stage
 		if count == sum {
 			break
 		}
-
-		res, err := watcher.Next(context.Background())
-		if err != nil {
-			log.Println("error watch stages:", err)
-		}
-		if res.Action == "set" || res.Action == "update" {
-			changeStageInfo := res.Node.Value
-			if _, ok := stageNameMap[strings.Split(changeStageInfo, ",")[0]]; ok {
-				if strings.Split(changeStageInfo, ",")[1] == StageStateSuccess {
-					count++
-				} else if strings.Split(changeStageInfo, ",")[1] == StageStateFailed {
-					for _, v := range stageVersionInfo.To {
-						if v != "" {
-							bootChan <- stageVersionStagePath[:strings.LastIndex(stageVersionStagePath, "/")] + "/" + v
-						}
-						// }
+		select {
+		case fromStageVersion := <-fromStageVersionChan:
+			// get a fromStageVersion from chan to check it's state
+			go getCurrentStageVersionState(fromStageVersion, fromStageVersionStateChan)
+		case stateInfo := <-fromStageVersionStateChan:
+			// get a fromStageVersion state info
+			// first check is this state from curren stageVersion's fromStageVersion
+			// then check is the state is stage running success or failed
+			// 	if state is success,record this and continue wait
+			// 	if state is failed,failed current stageVersion
+			if len(strings.Split(stateInfo, ",")) == 2 {
+				stageName := strings.Split(stateInfo, ",")[0]
+				stageState := strings.Split(stateInfo, ",")[1]
+				if _, exist := stageNameMap[stageName]; exist {
+					if stageState == StateSuccess {
+						fromStageVersionStartDoneMap[stageName] = stageName
+						count = len(fromStageVersionStartDoneMap)
+					} else if stageState == StateFailed {
+						// if got a failed stageVersion,shutdown current stageVersion
+						// notify current stageVresion's to stageVersion
+						// return func
+						stageVersionState.RunResult = StateFailed
+						stageVersionState.Detail = "pre stage" + stageName + " is failed"
+						changeStageVersionState(stageVersion, bootChan, stageVersionState.RunResult, stageVersionState.Detail)
+						finishChan <- stageVersionState
+						return
 					}
-					stageVersionState.RunResult = StageStateFailed
-					stageVersionState.Detail = "pre stage " + strings.Split(changeStageInfo, ",")[0] + " is failed"
-					finishChan <- stageVersionState
-					etcd.EtcdSet(stageVersionStagePath+"/state", stageVersionInfo.Name+","+StageStateFailed)
-					return
 				}
 			}
 		}
@@ -180,26 +265,57 @@ func startStage(stageVersionStagePath string, bootChan chan string, finishChan c
 	// check is stage run timeout,and get run result
 	select {
 	case <-timeout:
-		stageVersionState.RunResult = StageStateFailed
+		stageVersionState.RunResult = StateFailed
 		stageVersionState.Detail = "time out"
 	case startResult := <-stageStartFinish:
 		stageVersionState = startResult
 	}
 
-	// check stage run result and set it to etcd
-	if stageVersionState.RunResult == StageStateSuccess {
-		etcd.EtcdSet(stageVersionStagePath+"/state", stageVersionInfo.Name+","+StageStateSuccess)
-	} else if stageVersionState.RunResult == StageStateFailed {
-		etcd.EtcdSet(stageVersionStagePath+"/state", stageVersionInfo.Name+","+StageStateFailed)
-	}
+	changeStageVersionState(stageVersion, bootChan, stageVersionState.RunResult, stageVersionState.Detail)
+	finishChan <- stageVersionState
+}
 
-	// notify stages dependence on current stage
-	for _, v := range stageVersionInfo.To {
-		if v != "" {
-			bootChan <- stageVersionStagePath[:strings.LastIndex(stageVersionStagePath, "/")] + "/" + v
+func getCurrentStageVersionState(stageVresion *models.StageVersion, stateChan chan string) {
+	state, err := etcd.GetCurrentStageVersionState(stageVresion)
+	if err != nil {
+		log.Println("[getCurrentStageVersionState]:error when get current stageVersion State info :", err)
+	} else {
+		stateChan <- state
+	}
+}
+
+func watcheStageVersionState(watcher client.Watcher, fromStageVersionChan chan string) {
+	for {
+		res, err := watcher.Next(context.Background())
+		if err != nil {
+			log.Println("[watcheStageVersionState]:error watch stages:", err)
+		}
+
+		if res.Action == "set" || res.Action == "update" {
+			changeStageInfo := res.Node.Value
+			fromStageVersionChan <- changeStageInfo
 		}
 	}
-	finishChan <- stageVersionState
+}
+
+func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *models.StageVersion, state, reason string) {
+	etcd.ChangeCurrentStageVresionState(stageVersion, state, reason)
+	toStageVersions, err := etcd.GetCurrentStageVersionToRelation(stageVersion)
+	if err != nil {
+		log.Println("[changeStageVersionState]:error when shoutdown stage version:", err)
+	}
+
+	if state == StateSuccess || state == StateFailed {
+		for _, toStageVersionName := range strings.Split(toStageVersions, ",") {
+			if toStageVersionName != "" {
+				var toStageVersion models.StageVersion
+				toStageVersion = *stageVersion
+				toStageVersion.Name = toStageVersionName
+				bootChan <- &toStageVersion
+			}
+		}
+	}
+
 }
 
 func startStageInK8S(runResultChan chan models.StageVersionState, runResult models.StageVersionState) {
@@ -210,10 +326,10 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 	time.Sleep(timeDur)
 
 	if rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(100) < 50 {
-		runResult.RunResult = StageStateSuccess
+		runResult.RunResult = StateSuccess
 		runResult.Detail = "run success"
 	} else {
-		runResult.RunResult = StageStateFailed
+		runResult.RunResult = StateFailed
 		runResult.Detail = "not luck"
 	}
 
