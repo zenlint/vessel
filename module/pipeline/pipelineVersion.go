@@ -355,7 +355,9 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 	startStatus := <-watchCh
 	if startStatus == kubeclient.OK {
 		for _, ipPort := range ipPorts {
+			// Should be go routine here to ensure the causetime is not out of timeout
 			if checkBussinessResult(ipPort.Ip, ipPort.Port) {
+				// Going to write other things there, creationTimeStamp, selfLink
 				runResult.RunResult <- StartSucessful
 			} else {
 				runResult.RunResult <- StartFailed
@@ -373,6 +375,7 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 // checkBussinessResult : get bussiness result from pipelineVersion.statusCheckUrl, success:200, ignore:0,others:failed
 func checkBussinessResult(ip string, port int64) bool {
 	// Later, to put read checkStatusUrl here and get return value to res
+	// Read for statusCheckCount times, each time should in statusCheckInterval
 	var res int
 	if res == 200 {
 		return true
