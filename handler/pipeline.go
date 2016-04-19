@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"encoding/json"
 
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/macaron.v1"
@@ -92,7 +93,11 @@ func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, 
 	plInfo.Labels = utils.TransMapToStr(pst.MetaData.Labels)
 	plInfo.Annotations = utils.TransMapToStr(pst.MetaData.Annotations)
 	//ignore plJson Detail
-	plInfo.Detail = ""
+	pstbs,err := json.Marshal(pst)
+	if err != nil{
+		return nil, err
+	}
+	plInfo.Detail = string(pstbs)
 	plInfo.MetaData = pst.MetaData
 	plInfo.StageSpecs = pst.Spec
 
@@ -109,7 +114,13 @@ func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, 
 		//StatusCheckUrl to Detail
 		//StatusCheckInterval to Detail
 		//StatusCheckCount to Detail
-		sInfo.Detail = ""
+
+		sbs,err := json.Marshal(value)
+		if err != nil{
+			return nil, err
+		}
+		sInfo.Detail = string(sbs)
+
 		sInfo.From = strings.Split(value.Dependence, ",")
 		if len(sInfo.From) == 1 && sInfo.From[0] == "" {
 			sInfo.From = make([]string, 0)

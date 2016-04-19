@@ -31,6 +31,7 @@ type Pipeline struct {
 	Annotations string           `json:"annotations"`
 	Detail      string           `json:"detail" gorm:"type:text"`
 	Stages      []*Stage         `sql:"-"`
+	// todo-del MetaData StageSpecs
 	MetaData    PipelineMetaData `sql:"-"`
 	StageSpecs  []StageSpec      `sql:"-"`
 }
@@ -52,17 +53,18 @@ type PipelineVersion struct {
 	StageVersions string           `json:"stageVersions"`
 	Log           string           `json:"log" gorm:"type:text"`
 	Status        string           `json:"state"`
+	// todo-del MetaData StageSpecs
 	MetaData      PipelineMetaData `sql:"-"`
 	StageSpecs    []StageSpec      `sql:"-"`
 }
 
-func (pv *PipelineVersion) GetMetadata() PipelineMetaData {
-	return pv.MetaData
-}
-
-func (pv *PipelineVersion) GetSpec() []StageSpec {
-	return pv.StageSpecs
-}
+// func (pv *PipelineVersion) GetMetadata() PipelineMetaData {
+// 	return pv.MetaData
+// }
+//
+// func (pv *PipelineVersion) GetSpec() []StageSpec {
+// 	return pv.StageSpecs
+// }
 
 // type Status struct {
 // 	Id         int64     `json:"id"`                                        //
@@ -100,6 +102,66 @@ func (plv *PipelineVersion) Save() error {
 
 	err = db.Create(plv).Error
 	return err
+}
+
+func GetPipeline(pid int64) *Pipeline {
+	result := new(Pipeline)
+	db, err := GetDb()
+	if err != nil {
+		return nil
+	}
+
+	// get pipeline info
+	err = db.Where("id = ?", pid).First(result).Error
+	if err != nil {
+		return nil
+	}
+
+	// get pipeline stage infos
+	stages := make([]*Stage, 0)
+	db.Where("workspace_id= ?", result.WorkspaceId).Where("project_id= ?", result.ProjectId).Where("pipeline_id= ?", result.Id).Find(&stages)
+	for _, stage := range stages {
+		result.Stages = append(result.Stages, GetStage(stage.Id))
+	}
+	// result.Stages = stages
+
+	// get pipelineMetaData
+	var pipelineMetaData PipelineMetaData
+	db.Where("workspace= ?", result.WorkspaceId).Where("project= ?", result.ProjectId).First(&pipelineMetaData)
+	result.MetaData = pipelineMetaData
+
+	// get stageSpecInfo
+	stageSpecs := make([]StageSpec, 0)
+	db.Where("workspace_id= ?", result.WorkspaceId).Where("project_id= ?", result.ProjectId).Where("pipeline_id= ?", result.Id).Find(&stageSpecs)
+	result.StageSpecs = stageSpecs
+
+	return result
+}
+
+func GetPipelineVersion(pvid int64) *PipelineVersion {
+	result := new(PipelineVersion)
+	db, err := GetDb()
+	if err != nil {
+		return nil
+	}
+
+	// get pipeline info
+	err = db.Where("id = ?", pvid).First(result).Error
+	if err != nil {
+		return nil
+	}
+
+	// get pipelineMetaData
+	var pipelineMetaData PipelineMetaData
+	db.Where("workspace= ?", result.WorkspaceId).Where("project= ?", result.ProjectId).First(&pipelineMetaData)
+	result.MetaData = pipelineMetaData
+
+	// get stageSpecInfo
+	stageSpecs := make([]StageSpec, 0)
+	db.Where("workspace_id= ?", result.WorkspaceId).Where("project_id= ?", result.ProjectId).Where("pipeline_id= ?", result.Id).Find(&stageSpecs)
+	result.StageSpecs = stageSpecs
+
+	return result
 }
 
 // get pipeline info by pipeline id
