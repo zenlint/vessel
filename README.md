@@ -14,8 +14,8 @@ test json
       "creationTimestamp":"backup",
       "deletionTimestamp":"backup",
       "timeoutDuration":7200,
-      "labels":"backup",
-      "annotations":"backup"
+      "labels":{"desc":"backup"},
+      "annotations":{"ann":"backup"}
    },
 
    "spec":[
@@ -120,7 +120,6 @@ test json
       }
    ]
 }
-
 
 ```
 
