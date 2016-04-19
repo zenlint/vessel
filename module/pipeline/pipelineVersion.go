@@ -12,14 +12,18 @@ import (
 	"github.com/containerops/vessel/module/etcd"
 	"golang.org/x/net/context"
 
+	kubeclient "github.com/containerops/vessel/module/kubernetes"
 	"github.com/coreos/etcd/client"
 )
 
 const (
-	StateNotStart = "not start"
-	StateStarting = "working"
-	StateSuccess  = "success"
-	StateFailed   = "failed"
+	StateNotStart  = "not start"
+	StateStarting  = "working"
+	StateSuccess   = "success"
+	StateFailed    = "failed"
+	StartSucessful = "OK"
+	StartFailed    = "ERROR"
+	StartTimeout   = "TIMEOUT"
 )
 
 // BootPipelineVersion : start a pipelineVersion,boot the stage and return the result
@@ -319,21 +323,62 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 }
 
 func startStageInK8S(runResultChan chan models.StageVersionState, runResult models.StageVersionState) {
-	sec := rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(5) + 3
 
-	timeStr := strconv.FormatInt(sec, 10) + "s"
-	timeDur, _ := time.ParseDuration(timeStr)
-	time.Sleep(timeDur)
+	/*	sec := rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(5) + 3
+		timeStr := strconv.FormatInt(sec, 10) + "s"
+		timeDur, _ := time.ParseDuration(timeStr)
+		time.Sleep(timeDur)
+		if rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(100) < 50 {
+			runResult.RunResult = StateSuccess
+			runResult.Detail = "run success"
+		} else {
+			runResult.RunResult = StateFailed
+			runResult.Detail = "not luck"
+		}*/
 
-	if rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(100) < 50 {
-		runResult.RunResult = StateSuccess
-		runResult.Detail = "run success"
-	} else {
-		runResult.RunResult = StateFailed
-		runResult.Detail = "not luck"
+	pipelineVersion := models.GetPipelineVersion(runResult.PipelineVersionId)
+	watchCh := make(chan string)
+	// hostip := kubeclient.GetHostIp()
+
+	//ipProts to store ips and ports of pods in pipeline after it is stated
+	ipPorts := &[]kubeclient.IpPort{}
+	if err := kubeclient.GetPipelinePodsIPort(pipelineVersion, ipPorts); err != nil {
+		log.Printf("Get podsip in pipeline %v, err\n", pipelineVersion.GetMetadata().Name, err)
 	}
 
-	// runResult.GetPipelineVersion()
+	// First, to watch the pipeline status and then to start it
+	go kubeclient.WatchPipelineStatus(pipelineVersion, kubeclient.Added, watchCh)
+	if err := kubeclient.StartPipeline(pipelineVersion); err != nil {
+		log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineVersion.MetaData.Name, err)
+	}
+
+	startStatus := <-watchCh
+	if startStatus == kubeclient.OK {
+		for _, ipPort := range ipPorts {
+			if checkBussinessResult(ipPort.Ip, ipPort.Port) {
+				runResult.RunResult <- StartSucessful
+			} else {
+				runResult.RunResult <- StartFailed
+			}
+		}
+	} else if startStatus == kubeclient.Error {
+		runResult.RunResult <- StartFailed
+	}
+
+	runResult.RunResult <- StartTimeout
 
 	runResultChan <- runResult
+}
+
+// checkBussinessResult : get bussiness result from pipelineVersion.statusCheckUrl, success:200, ignore:0,others:failed
+func checkBussinessResult(ip string, port int64) bool {
+	// Later, to put read checkStatusUrl here and get return value to res
+	var res int
+	if res == 200 {
+		return true
+	} else if res == 0 {
+		return true
+	}
+
+	return false
 }

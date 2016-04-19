@@ -32,11 +32,25 @@ func StartPipeline(pipelineVersion *models.PipelineVersion) error {
 	if err := CreateService(pipelineVersion); err != nil {
 		return err
 	}
+	// CLIENT.Pods(namespace).Get(name).Status.PodIP
+	// CLIENT.
 	//createrc && createservice
 	return nil
 }
 
 func DeletePipeline(pipelineVersion *models.PipelineVersion) error {
+	return nil
+}
+
+func GetPipelinePodsIPort(pipelineVersion *models.PipelineVersion, podIps *[]IpPort) error {
+	for _, stage := range pipelineVersion.StageSpecs {
+		podIp, err := getPodIp(pipelineVersion.GetMetadata().Namespace, stage.Name)
+		if err != nil {
+			return err
+		}
+
+		(*podIps) = append(*podIps, IpPort{Ip: podIp, Port: stage.Port})
+	}
 	return nil
 }
 
