@@ -82,8 +82,28 @@ type StageVersionState struct {
 	StageId           int64  `json:"pipelineVersionId"`
 	StageVersionId    int64  `json:"stageVersionId"`
 	StageName         string `json:"stageName"`
-	RunResult         string `json:"runResult"`
-	Detail            string `json:"detail"`
+	//OK, ERR, TIMEOUT
+	RunResult string `json:"runResult"`
+	//reserved
+	Detail string `json:"detail"`
+}
+
+func GetPipelineVersion(pvid int64) *PipelineVersion {
+
+	return &PipelineVersion{}
+}
+
+func GetPipeline(pid int64) *Pipeline {
+
+	return &Pipeline{}
+}
+
+func GetStageVersion(svid int64) *StageVersion {
+	return &StageVersion{}
+}
+
+func GetStage(sid int64) *Stage {
+	return &Stage{}
 }
 
 func (stage *Stage) Save() error {
