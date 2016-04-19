@@ -49,6 +49,10 @@ type Spec struct {
 
 type StageSpec struct {
 	Name                string `json:"name"`
+	WorkspaceId         int64
+	ProjectId           int64
+	PipelineId          int64
+	StageId             int64
 	Replicas            int    `json:"replicsa"`
 	Dependence          string `json:"dependence"`
 	Kind                string `json:"kind"`
