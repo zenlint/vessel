@@ -71,26 +71,26 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineVersion, checkOp string
 	ns := OK
 	rc := OK
 	service := OK
-	// for {
-	select {
-	case ns = <-nsCh:
-		if ns == Error || ns == Timeout {
-			ch <- ns
-			return
-		}
-		// temp = nameRes
-	case rc = <-rcRes:
-		if rc == Error || rc == Timeout {
-			ch <- rc
-			return
-		}
-	case service = <-serviceRes:
-		if service == Error || service == Timeout {
-			ch <- service
-			return
+	for i := 0; i < 3; i++ {
+		select {
+		case ns = <-nsCh:
+			if ns == Error || ns == Timeout {
+				ch <- ns
+				return
+			}
+			// temp = nameRes
+		case rc = <-rcRes:
+			if rc == Error || rc == Timeout {
+				ch <- rc
+				return
+			}
+		case service = <-serviceRes:
+			if service == Error || service == Timeout {
+				ch <- service
+				return
+			}
 		}
 	}
-	// }
 
 	ch <- OK
 	return

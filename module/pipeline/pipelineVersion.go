@@ -333,5 +333,7 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 		runResult.Detail = "not luck"
 	}
 
+	// runResult.GetPipelineVersion()
+
 	runResultChan <- runResult
 }
