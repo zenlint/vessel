@@ -5,6 +5,7 @@ import (
 
 	// "github.com/containerops/vessel/models"
 	// "k8s.io/kubernetes/pkg/api"
+	"github.com/containerops/vessel/setting"
 	"k8s.io/kubernetes/pkg/client/restclient"
 	"k8s.io/kubernetes/pkg/client/unversioned"
 	// "k8s.io/kubernetes/pkg/util/intstr"
@@ -21,11 +22,16 @@ const (
 	OK      = "OK"
 )
 
+type IpPort struct {
+	Ip   string `json:"ip"`
+	Port int    `json:"port"`
+}
+
 var CLIENT *unversioned.Client
 
 func New(hostIp string) {
 	clientConfig := restclient.Config{}
-	clientConfig.Host = hostIp
+	clientConfig.Host = setting.RunTime.Database.Host
 	client, err := unversioned.New(&clientConfig)
 	if err != nil {
 		fmt.Errorf("New unversioned client err: %v!\n", err.Error())
@@ -34,6 +40,10 @@ func New(hostIp string) {
 	CLIENT = client
 }
 
+/*func GetHostIp() string {
+	return setting.RunTime.Database.Host
+}
+*/
 /*
 // Lay here for back up,the func have been moved to pipeline.go, as StartPipelin
 func CreateK8SResource(pipelineversion *models.PipelineVersion) error {
