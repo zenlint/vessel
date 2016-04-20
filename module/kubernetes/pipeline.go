@@ -42,18 +42,6 @@ func DeletePipeline(pipelineVersion *models.PipelineVersion) error {
 	return nil
 }
 
-func GetPipelinePodsIPort(pipelineVersion *models.PipelineVersion, podIps *[]IpPort) error {
-	for _, stage := range pipelineVersion.StageSpecs {
-		podIp, err := getPodIp(pipelineVersion.GetMetadata().Namespace, stage.Name)
-		if err != nil {
-			return err
-		}
-
-		(*podIps) = append(*podIps, IpPort{Ip: podIp, Port: stage.Port})
-	}
-	return nil
-}
-
 func WatchPipelineStatus(pipelineVersion *models.PipelineVersion, checkOp string, ch chan string) {
 	labelKey := "app"
 	pipelineMetadata := pipelineVersion.GetMetadata()

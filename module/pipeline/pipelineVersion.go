@@ -341,22 +341,22 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 	// hostip := kubeclient.GetHostIp()
 
 	//ipProts to store ips and ports of pods in pipeline after it is stated
-	ipPorts := &[]kubeclient.IpPort{}
-	if err := kubeclient.GetPipelinePodsIPort(pipelineVersion, ipPorts); err != nil {
+	// ipPorts := &[]kubeclient.IpPort{}
+	/*if err := kubeclient.GetPipelinePodsIPort(pipelineVersion, ipPorts); err != nil {
 		log.Printf("Get podsip in pipeline %v, err\n", pipelineVersion.GetMetadata().Name, err)
-	}
+	}*/
 
 	// First, to watch the pipeline status and then to start it
 	go kubeclient.WatchPipelineStatus(pipelineVersion, kubeclient.Added, watchCh)
 	if err := kubeclient.StartPipeline(pipelineVersion); err != nil {
 		log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineVersion.MetaData.Name, err)
 	}
-
+	// go
 	startStatus := <-watchCh
 	if startStatus == kubeclient.OK {
 		for _, ipPort := range ipPorts {
 			// Should be go routine here to ensure the causetime is not out of timeout
-			if checkBussinessResult(ipPort.Ip, ipPort.Port) {
+			if checkBussinessResult(ipPort.Ip, ipPort.Port, pipelineVersion) {
 				// Going to write other things there, creationTimeStamp, selfLink
 				runResult.RunResult <- StartSucessful
 			} else {
@@ -370,18 +370,4 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 	runResult.RunResult <- StartTimeout
 
 	runResultChan <- runResult
-}
-
-// checkBussinessResult : get bussiness result from pipelineVersion.statusCheckUrl, success:200, ignore:0,others:failed
-func checkBussinessResult(ip string, port int64) bool {
-	// Later, to put read checkStatusUrl here and get return value to res
-	// Read for statusCheckCount times, each time should in statusCheckInterval
-	var res int
-	if res == 200 {
-		return true
-	} else if res == 0 {
-		return true
-	}
-
-	return false
 }

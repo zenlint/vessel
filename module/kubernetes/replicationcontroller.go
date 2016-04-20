@@ -78,29 +78,27 @@ func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout
 
 	t := time.NewTimer(time.Second * time.Duration(timeout))
 
-	for {
-		select {
-		case event, ok := <-w.ResultChan():
-			//fmt.Println(event.Type)
-			if !ok {
-				ch <- Error
-				return
-				// fmt.Errorf("Watch err\n")
-				// return "", errors.New("error occours from watch chanle")
-			}
-			//fmt.Println(event.Type)
-			if string(event.Type) == checkOp {
-				ch <- OK
-				return
-				// return "OK", nil
-			}
-
-		case <-t.C:
-			ch <- Timeout
-			return
-			// return "TIMEOUT", nil
+	// for {
+	select {
+	case event, ok := <-w.ResultChan():
+		//fmt.Println(event.Type)
+		if !ok {
+			ch <- Error
+			// return
+			// fmt.Errorf("Watch err\n")
+			// return "", errors.New("error occours from watch chanle")
+		} else if string(event.Type) == checkOp {
+			ch <- OK
+			// return
+			// return "OK", nil
 		}
+
+	case <-t.C:
+		ch <- Timeout
+		// return
+		// return "TIMEOUT", nil
 	}
+	// }
 }
 
 // checkRC rc have no status, once the rc are found, it is with running status

@@ -58,7 +58,7 @@ type StageSpec struct {
 	Kind                string `json:"kind"`
 	StatusCheckUrl      string `json:"statusCheckUrl"`
 	StatusCheckInterval int64  `json:"statusCheckInterval"`
-	StatusCheckCount    int64  `json:"statusCheckCount"`
+	StatusCheckCount    int    `json:"statusCheckCount"`
 	Image               string `json:"image"`
 	Port                int    `json:"port"`
 }

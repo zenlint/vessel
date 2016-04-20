@@ -22,10 +22,11 @@ const (
 	OK      = "OK"
 )
 
-type IpPort struct {
-	Ip   string `json:"ip"`
-	Port int    `json:"port"`
-}
+/*type Output struct {
+	Ip               string `json:"ip"`
+	Port             int    `json:"port"`
+	BusssinessStatus bool   `json:bussinessStauts`
+}*/
 
 var CLIENT *unversioned.Client
 

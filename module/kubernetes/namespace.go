@@ -52,33 +52,31 @@ func WatchNamespaceStatus(labelKey string, labelValue string, timeout int64, che
 	}
 
 	t := time.NewTimer(time.Second * time.Duration(timeout))
-	for {
-		select {
-		case event, ok := <-w.ResultChan():
-			//fmt.Println(event.Type)
-			if !ok {
-				ch <- Error
-				return
-				// fmt.Errorf("Watch err\n")
-				// return "", errors.New("error occours from watch chanle")
-			}
-			//fmt.Println(event.Type)
+	// for {
+	select {
+	case event, ok := <-w.ResultChan():
+		//fmt.Println(event.Type)
+		if !ok {
+			ch <- Error
+			// return
+			// fmt.Errorf("Watch err\n")
+			// return "", errors.New("error occours from watch chanle")
+		} else if string(event.Type) == checkOp {
 			// Pod have phase, so we have to wait for the phase change to the right status when added
-			if string(event.Type) == checkOp {
-				fmt.Println(event.Object.(*api.Namespace).Status.Phase)
+			fmt.Println(event.Object.(*api.Namespace).Status.Phase)
 
-				if (checkOp == string(watch.Deleted)) || ((checkOp != string(watch.Deleted)) &&
-					(event.Object.(*api.Namespace).Status.Phase == "Active")) {
-					ch <- OK
-					return
-					// return "OK", nil
-				}
+			if (checkOp == string(watch.Deleted)) || ((checkOp != string(watch.Deleted)) &&
+				(event.Object.(*api.Namespace).Status.Phase == "Active")) {
+				ch <- OK
+				// return
+				// return "OK", nil
 			}
-
-		case <-t.C:
-			ch <- Timeout
-			return
-			// return "TIMEOUT", nil
 		}
+
+	case <-t.C:
+		ch <- Timeout
+		// return
+		// return "TIMEOUT", nil
+
 	}
 }
