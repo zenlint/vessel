@@ -1,20 +1,17 @@
 package kubernetes
 
 import (
-	// "encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/containerops/vessel/models"
-	// "k8s.io/kubernetes/pkg/api"
-	// "k8s.io/kubernetes/pkg/util/intstr"
 )
 
-func GetPipelineBussinessRes(pipelineVersion *models.PipelineVersion, ch chan bool) {
-	namespace := pipelineVersion.GetMetadata().Namespace
-	timeout := pipelineVersion.GetMetadata().TimeoutDuration
-	// Res := true
-	for _, stage := range pipelineVersion.StageSpecs {
+func GetPipelineBussinessRes(pipelineVersion *models.PipelineSpecTemplate, ch chan bool) {
+	namespace := pipelineVersion.MetaData.Namespace
+	timeout := pipelineVersion.MetaData.TimeoutDuration
+
+	for _, stage := range pipelineVersion.Spec {
 		podIp, err := getPodIp(namespace, stage.Name)
 		if err != nil {
 			ch <- false
@@ -28,15 +25,14 @@ func GetPipelineBussinessRes(pipelineVersion *models.PipelineVersion, ch chan bo
 		checkUrl := fmt.Sprintf("https://%v:%v%v", podIp, port, statusCheckLink)
 		t := time.NewTimer(time.Second * time.Duration(timeout))
 		podCh := make(chan bool)
-		go getPodBussinessRes(statusCheckLink, statusCheckInterval, statusCheckCount, podCh)
-		// for {
+		go getPodBussinessRes(checkUrl, statusCheckInterval, statusCheckCount, podCh)
+
 		select {
 		case podRes := <-ch:
 			if podRes == false {
 				ch <- false
 			}
 		case <-t.C:
-			// consider timeout as err here
 			ch <- false
 		}
 	}
@@ -45,13 +41,10 @@ func GetPipelineBussinessRes(pipelineVersion *models.PipelineVersion, ch chan bo
 }
 
 func getPodBussinessRes(checkUrl string, statusCheckInterval int64, statusCheckCount int, ch chan bool) {
-	// request to checkUrl and get time
-	// select {}
 	for i := 0; i < statusCheckCount; i++ {
 		if i == 0 && 0 == requestBsRes(checkUrl) {
 			ch <- true
 			return
-			// bsRes := requestBsRes(checkUrl)
 		}
 
 		tick := time.NewTimer(time.Duration(statusCheckInterval) * time.Second)

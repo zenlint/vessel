@@ -3,7 +3,6 @@ package pipeline
 import (
 	"encoding/json"
 	"log"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -323,51 +322,42 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 }
 
 func startStageInK8S(runResultChan chan models.StageVersionState, runResult models.StageVersionState) {
-
-	/*	sec := rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(5) + 3
-		timeStr := strconv.FormatInt(sec, 10) + "s"
-		timeDur, _ := time.ParseDuration(timeStr)
-		time.Sleep(timeDur)
-		if rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(100) < 50 {
-			runResult.RunResult = StateSuccess
-			runResult.Detail = "run success"
-		} else {
-			runResult.RunResult = StateFailed
-			runResult.Detail = "not luck"
-		}*/
-
 	pipelineVersion := models.GetPipelineVersion(runResult.PipelineVersionId)
-	watchCh := make(chan string)
-	// hostip := kubeclient.GetHostIp()
-
-	//ipProts to store ips and ports of pods in pipeline after it is stated
-	// ipPorts := &[]kubeclient.IpPort{}
-	/*if err := kubeclient.GetPipelinePodsIPort(pipelineVersion, ipPorts); err != nil {
-		log.Printf("Get podsip in pipeline %v, err\n", pipelineVersion.GetMetadata().Name, err)
-	}*/
-
-	// First, to watch the pipeline status and then to start it
-	go kubeclient.WatchPipelineStatus(pipelineVersion, kubeclient.Added, watchCh)
-	if err := kubeclient.StartPipeline(pipelineVersion); err != nil {
-		log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineVersion.MetaData.Name, err)
+	pipelineSpecTemplate := new(models.PipelineSpecTemplate)
+	err := json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate)
+	if err != nil {
+		log.Printf("Unmarshal PipelineSpecTemplate err : %v\n")
 	}
-	// go
-	startStatus := <-watchCh
-	if startStatus == kubeclient.OK {
-		for _, ipPort := range ipPorts {
-			// Should be go routine here to ensure the causetime is not out of timeout
-			if checkBussinessResult(ipPort.Ip, ipPort.Port, pipelineVersion) {
-				// Going to write other things there, creationTimeStamp, selfLink
-				runResult.RunResult <- StartSucessful
-			} else {
-				runResult.RunResult <- StartFailed
-			}
+
+	k8sCh := make(chan string)
+	bsCh := make(chan bool)
+
+	go kubeclient.WatchPipelineStatus(pipelineSpecTemplate, kubeclient.Added, k8sCh)
+	if err := kubeclient.StartPipeline(pipelineSpecTemplate); err != nil {
+		log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineSpecTemplate.MetaData.Name, err)
+	}
+	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
+
+	k8sRes := ""
+	bsRes := true
+	for i := 0; i < 2; i++ {
+		select {
+		case k8sRes = <-k8sCh:
+		case bsRes = <-bsCh:
 		}
-	} else if startStatus == kubeclient.Error {
-		runResult.RunResult <- StartFailed
 	}
 
-	runResult.RunResult <- StartTimeout
+	if k8sRes == StartFailed {
+		runResult.RunResult = StartFailed
+	}
+	if k8sRes == StateSuccess {
+		if bsRes == true {
+			runResult.RunResult = StartSucessful
+		} else {
+			runResult.RunResult = StartFailed
+		}
+	}
+	runResult.RunResult = StartTimeout
 
 	runResultChan <- runResult
 }

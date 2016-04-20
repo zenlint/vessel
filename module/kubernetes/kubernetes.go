@@ -3,12 +3,9 @@ package kubernetes
 import (
 	"fmt"
 
-	// "github.com/containerops/vessel/models"
-	// "k8s.io/kubernetes/pkg/api"
 	"github.com/containerops/vessel/setting"
 	"k8s.io/kubernetes/pkg/client/restclient"
 	"k8s.io/kubernetes/pkg/client/unversioned"
-	// "k8s.io/kubernetes/pkg/util/intstr"
 )
 
 const (
@@ -22,12 +19,6 @@ const (
 	OK      = "OK"
 )
 
-/*type Output struct {
-	Ip               string `json:"ip"`
-	Port             int    `json:"port"`
-	BusssinessStatus bool   `json:bussinessStauts`
-}*/
-
 var CLIENT *unversioned.Client
 
 func New(hostIp string) {
@@ -37,7 +28,6 @@ func New(hostIp string) {
 	if err != nil {
 		fmt.Errorf("New unversioned client err: %v!\n", err.Error())
 	}
-	// client.ConfigMaps(namespace).
 	CLIENT = client
 }
 

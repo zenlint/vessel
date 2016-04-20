@@ -1,22 +1,17 @@
 package kubernetes
 
 import (
-	// "encoding/json"
-	// "errors"
 	"fmt"
 	"time"
 
-	// "k8s.io/kubernetes/pkg/api"
 	"github.com/containerops/vessel/models"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/watch"
-	// "k8s.io/kubernetes/pkg/util/intstr"
 )
 
-func CreateRC(piplelineVersion *models.PipelineVersion) error {
-	// piplineMetadata := piplelineVersion.MetaData
-	stagespecs := piplelineVersion.StageSpecs
+func CreateRC(piplelineVersion *models.PipelineSpecTemplate) error {
+	stagespecs := piplelineVersion.Spec
 	for _, stagespec := range stagespecs {
 		rc := &api.ReplicationController{
 			ObjectMeta: api.ObjectMeta{
@@ -34,8 +29,6 @@ func CreateRC(piplelineVersion *models.PipelineVersion) error {
 
 		rc.Spec.Template.Spec.Containers = make([]api.Container, 1)
 		rc.SetName(stagespec.Name)
-		// rc.SetNamespace(piplineMetadata.Namespace)
-		// rc.SetNamespace(api.NamespaceDefault)
 		rc.SetNamespace("zenlin-namespace")
 		rc.Labels["app"] = stagespec.Name
 		rc.Spec.Replicas = stagespec.Replicas
@@ -56,7 +49,7 @@ func CreateRC(piplelineVersion *models.PipelineVersion) error {
 	return nil
 }
 
-func DeleteRC(pipelineVersion *models.PipelineVersion) error {
+func DeleteRC(pipelineVersion *models.PipelineSpecTemplate) error {
 	return nil
 }
 
@@ -66,39 +59,24 @@ func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout
 		fmt.Errorf("Params checkOp err, checkOp: %v", checkOp)
 	}
 
-	//opts := api.ListOptions{FieldSelector: fields.Set{"kind": "pod"}.AsSelector()}
 	opts := api.ListOptions{LabelSelector: labels.Set{labelKey: labelValue}.AsSelector()}
-
 	w, err := CLIENT.ReplicationControllers(Namespace).Watch(opts)
 	if err != nil {
 		ch <- Error
-		// return "", err
-		// fmt.Errorf("Get watch interface err")
 	}
 
 	t := time.NewTimer(time.Second * time.Duration(timeout))
-
-	// for {
 	select {
 	case event, ok := <-w.ResultChan():
-		//fmt.Println(event.Type)
 		if !ok {
 			ch <- Error
-			// return
-			// fmt.Errorf("Watch err\n")
-			// return "", errors.New("error occours from watch chanle")
 		} else if string(event.Type) == checkOp {
 			ch <- OK
-			// return
-			// return "OK", nil
 		}
 
 	case <-t.C:
 		ch <- Timeout
-		// return
-		// return "TIMEOUT", nil
 	}
-	// }
 }
 
 // checkRC rc have no status, once the rc are found, it is with running status
