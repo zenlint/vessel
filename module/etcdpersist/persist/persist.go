@@ -1,7 +1,7 @@
 package persist
 
 import (
-	"db"
+	"github.com/containerops/vessel/module/etcdpersist/db"
 
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/golang/glog"

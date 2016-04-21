@@ -1,10 +1,11 @@
 package main
 
 import (
-	"db"
 	"os"
-	"persist"
 	"time"
+
+	"github.com/containerops/vessel/module/etcdpersist/db"
+	"github.com/containerops/vessel/module/etcdpersist/persist"
 
 	"github.com/codegangsta/cli"
 	"github.com/coreos/go-etcd/etcd"
