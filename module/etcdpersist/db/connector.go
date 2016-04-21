@@ -1,40 +1,67 @@
 package db
 
 import (
+	"database/sql"
+	"fmt"
+	"log"
+
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/golang/glog"
 )
 
 var (
 	Orm orm.Ormer
 )
 
-func Connect(mysqlport string, mysqladdr string, dbname string, account string, pwd string) error {
-	glog.Infoln(mysqladdr, mysqlport, dbname, account, pwd)
-	orm, err := connect("default", mysqladdr, mysqlport, account, pwd, dbname)
-	Orm = orm
-	return err
-}
 func init() {
 	orm.RegisterModel(new(Tb_etcd_backup))
 }
 
-//connect to mysql database
-func connect(name string, ip string, port string, account string, pwd string, dbname string) (orm.Ormer, error) {
-	err := orm.RegisterDataBase(name, "mysql",
-		account+":"+pwd+"@tcp("+ip+":"+port+")/"+dbname+"?charset=utf8&loc=Local", 30)
+func Syncdb(db_user, db_pass, db_host, db_port, db_name string) error {
+	err := Create(db_user, db_pass, db_host, db_port, db_name)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	o := orm.NewOrm()
-	err = o.Using(name)
+	err = Connect(db_user, db_pass, db_host, db_port, db_name)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return o, nil
+	name := "default"
+	force := true
+	verbose := true
+	err = orm.RunSyncdb(name, force, verbose)
+	log.Println("database init is complete.\nPlease restart the application")
+	return err
 }
-func LoadConfig() {
 
+func Connect(db_user, db_pass, db_host, db_port, db_name string) error {
+	var dns string
+	orm.RegisterDriver("mysql", orm.DRMySQL)
+	dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8", db_user, db_pass, db_host, db_port, db_name)
+	err := orm.RegisterDataBase("default", "mysql", dns)
+	if err != nil {
+		return err
+	}
+	Orm = orm.NewOrm()
+	err = Orm.Using("default")
+	return err
+}
+
+func Create(db_user, db_pass, db_host, db_port, db_name string) error {
+	var dns string
+	var sqlstring string
+	dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/?charset=utf8", db_user, db_pass, db_host, db_port)
+	sqlstring = fmt.Sprintf("CREATE DATABASE  if not exists `%s` CHARSET utf8 COLLATE utf8_general_ci", db_name)
+	db, err := sql.Open("mysql", dns)
+	if err != nil {
+		panic(err.Error())
+	}
+	r, err := db.Exec(sqlstring)
+	if err != nil {
+		log.Println(err, r)
+	} else {
+		log.Println("Database ", db_name, " created")
+	}
+	defer db.Close()
+	return err
 }

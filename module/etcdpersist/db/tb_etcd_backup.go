@@ -6,14 +6,14 @@ import (
 )
 
 type Tb_etcd_backup struct {
-	Id             int64  `orm:"pk;size(11)"`
+	Id             int64
 	Key            string `orm:"size(255)"`
 	Parent_key     string `orm:"size(255)"`
 	Value          string `orm:"size(255)"`
-	Dir            int    `orm:"size(1)"`
-	Ttl            int64  `orm:"size(11)"`
-	Modified_index uint64 `orm:"size(11)"`
-	Created_index  uint64 `orm:"size(11)"`
+	Dir            bool
+	Ttl            uint32
+	Modified_index uint32
+	Created_index  uint32
 }
 
 func (this *Tb_etcd_backup) Update() (int64, error) {
@@ -41,7 +41,6 @@ func (this *Tb_etcd_backup) InertOrUpdate() (bool, int64, error) {
 	newObj.Modified_index = this.Modified_index
 	newObj.Created_index = this.Created_index
 	newObj.Parent_key = this.Parent_key
-
 	create, id, err := Orm.ReadOrCreate(this, "Key")
 	if err == nil && !create {
 		if newObj.Modified_index > this.Modified_index {
@@ -66,12 +65,12 @@ func (this *Tb_etcd_backup) Exist() bool {
 	return Orm.QueryTable("Tb_etcd_backup").Filter("Key", this.Key).Exist()
 }
 func (this *Tb_etcd_backup) IsDirectory() bool {
-	return this.Dir == 1
+	return this.Dir
 }
 
 func (this *Tb_etcd_backup) IsExpired() bool {
 	if this.Ttl > 0 {
-		if time.Now().Unix()-this.Ttl > 0 {
+		if uint32(time.Now().Unix())-this.Ttl > 0 {
 			return true
 		}
 	}

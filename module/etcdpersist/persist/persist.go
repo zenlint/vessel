@@ -40,16 +40,17 @@ func extractNodes(node *etcd.Node, recursive bool) []*db.Tb_etcd_backup {
 func backupNode(node *etcd.Node) *db.Tb_etcd_backup {
 	key := &db.Tb_etcd_backup{
 		Key:            node.Key,
-		Modified_index: node.ModifiedIndex,
-		Created_index:  node.CreatedIndex,
+		Modified_index: uint32(node.ModifiedIndex),
+		Created_index:  uint32(node.CreatedIndex),
 	}
-	if node.Dir {
-		key.Dir = 1
-	} else {
-		key.Dir = 0
-	}
+	key.Dir = node.Dir
+	//	if node.Dir {
+	//		key.Dir = 1
+	//	} else {
+	//		key.Dir = 0
+	//	}
 	if node.Expiration != nil {
-		key.Ttl = node.Expiration.Unix()
+		key.Ttl = uint32(node.Expiration.Unix())
 	}
 	if node.Dir != true && node.Key != "" {
 		key.Value = node.Value

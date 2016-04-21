@@ -38,8 +38,12 @@ func main() {
 			Usage:   "install mysql",
 			Action:  install,
 			Flags: []cli.Flag{
-				cli.IntFlag{Name: "test"},
-				cli.StringFlag{Name: "load"}},
+				cli.StringFlag{Name: "dbname"},
+				cli.StringFlag{Name: "dbpwd"},
+				cli.StringFlag{Name: "dbip"},
+				cli.StringFlag{Name: "dbport"},
+				cli.StringFlag{Name: "dbaccount"},
+			},
 		},
 	}
 
@@ -48,7 +52,6 @@ func main() {
 
 func createEtcd(configPath string) *etcd.Client {
 	etcdClient, err := etcd.NewClientFromFile(configPath)
-
 	if err != nil {
 		glog.Fatalln("Can not locate configuration file: `"+configPath+"`. Error: ", err)
 	}
@@ -67,11 +70,13 @@ func extractetcd(etcdClient persist.EtcdClient) {
 	}
 }
 func backup(c *cli.Context) {
-	if err := db.Connect(c.String("dbport"), c.String("dbip"),
-		c.String("dbname"), c.String("dbaccount"), c.String("dbpwd")); err != nil {
+	if err := db.Connect(c.String("dbaccount"), c.String("dbpwd"),
+		c.String("dbip"), c.String("dbport"), c.String("dbname")); err != nil {
 		glog.Fatalln(err)
 	}
 	etcdClient := createEtcd(persist.Conf.EtcdConfigPath)
+	extractetcd(etcdClient)
+	glog.Infoln("backup running", time.Now().UTC())
 	for {
 		select {
 		case <-time.After(time.Second * time.Duration(persist.Conf.Delay)):
@@ -82,4 +87,8 @@ func backup(c *cli.Context) {
 }
 func install(c *cli.Context) {
 	glog.Infoln("install running")
+	if err := db.Syncdb(c.String("dbaccount"), c.String("dbpwd"),
+		c.String("dbip"), c.String("dbport"), c.String("dbname")); err != nil {
+		glog.Fatalln(err)
+	}
 }
