@@ -12,6 +12,7 @@ import (
 
 func CreateRC(piplelineVersion *models.PipelineSpecTemplate) error {
 	stagespecs := piplelineVersion.Spec
+	metadata := piplelineVersion.MetaData
 	for _, stagespec := range stagespecs {
 		rc := &api.ReplicationController{
 			ObjectMeta: api.ObjectMeta{
@@ -29,7 +30,7 @@ func CreateRC(piplelineVersion *models.PipelineSpecTemplate) error {
 
 		rc.Spec.Template.Spec.Containers = make([]api.Container, 1)
 		rc.SetName(stagespec.Name)
-		rc.SetNamespace("zenlin-namespace")
+		rc.SetNamespace(metadata.Namespace)
 		rc.Labels["app"] = stagespec.Name
 		rc.Spec.Replicas = stagespec.Replicas
 		rc.Spec.Template.SetName(stagespec.Name)
@@ -43,7 +44,7 @@ func CreateRC(piplelineVersion *models.PipelineSpecTemplate) error {
 		}
 		rc.Spec.Selector["app"] = stagespec.Name
 
-		if _, err := CLIENT.ReplicationControllers("zenlin-namespace").Create(rc); err != nil {
+		if _, err := CLIENT.ReplicationControllers(metadata.Namespace).Create(rc); err != nil {
 			fmt.Println("Create rc err : %v\n", err)
 			return err
 		}

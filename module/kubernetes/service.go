@@ -13,6 +13,7 @@ import (
 
 func CreateService(pipelineVersion *models.PipelineSpecTemplate) error {
 	stagespecs := pipelineVersion.Spec
+	metadata := pipelineVersion.MetaData
 	for _, stagespec := range stagespecs {
 		service := &api.Service{
 			ObjectMeta: api.ObjectMeta{
@@ -25,12 +26,12 @@ func CreateService(pipelineVersion *models.PipelineSpecTemplate) error {
 
 		service.Spec.Ports = make([]api.ServicePort, 1)
 		service.ObjectMeta.SetName(stagespec.Name)
-		service.ObjectMeta.SetNamespace("zenlin-namespace")
+		service.ObjectMeta.SetNamespace(metadata.Namespace)
 		service.ObjectMeta.Labels["app"] = stagespec.Name
 		service.Spec.Ports[0] = api.ServicePort{Port: stagespec.Port, TargetPort: intstr.FromString(stagespec.Name)}
 		service.Spec.Selector["app"] = stagespec.Name
 
-		if _, err := CLIENT.Services("zenlin-namespace").Create(service); err != nil {
+		if _, err := CLIENT.Services(metadata.Namespace).Create(service); err != nil {
 			fmt.Println("Create service err : %v\n", err)
 			return err
 		}
