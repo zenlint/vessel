@@ -8,10 +8,18 @@ import (
 )
 
 func GetPipelineBussinessRes(pipelineVersion *models.PipelineSpecTemplate, ch chan bool) {
+	fmt.Println("Enter GetPipelineBussinessRes")
 	namespace := pipelineVersion.MetaData.Namespace
 	timeout := pipelineVersion.MetaData.TimeoutDuration
 	// replicas := pipelineVersion.
 	for _, stage := range pipelineVersion.Spec {
+		if stage.StatusCheckCount == 0 || stage.StatusCheckInterval == 0 {
+			// ch <- true
+			continue
+		}
+		/*select {
+		}
+			case*/
 		replicas := stage.Replicas
 		ipArray := make([]string, replicas)
 		err := getPodIp(namespace, stage.Name, &ipArray)

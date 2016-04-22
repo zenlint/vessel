@@ -1,6 +1,8 @@
 package kubernetes
 
 import (
+	"fmt"
+
 	"github.com/containerops/vessel/models"
 )
 
@@ -28,6 +30,7 @@ func DeletePipeline(pipelineVersion *models.PipelineSpecTemplate) error {
 }
 
 func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, checkOp string, ch chan string) {
+	fmt.Println("Enter WatchPipelineStatus")
 	labelKey := "app"
 	pipelineMetadata := pipelineVersion.MetaData
 	nsLabelValue := pipelineMetadata.Name
@@ -37,48 +40,62 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, checkOp s
 	stageSpecs := pipelineVersion.Spec
 	length := len(stageSpecs)
 	nsCh := make(chan string)
-	rcChs := make([]chan string, length)
-	serviceChs := make([]chan string, length)
+	//rcCh := make([]chan string, length)
+	//serviceCh := make([]chan string, length)
 
 	go WatchNamespaceStatus(labelKey, nsLabelValue, timeout, checkOp, nsCh)
-	for i, stageSpec := range stageSpecs {
-		go WatchRCStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, rcChs[i])
-		go WatchServiceStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, serviceChs[i])
+	rcCh := make(chan string, length)
+	serviceCh := make(chan string, length)
+	for _, stageSpec := range stageSpecs {
+		go WatchRCStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, rcCh)
+		go WatchServiceStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, serviceCh)
 	}
 
-	rcRes := make(chan string)
-	serviceRes := make(chan string)
-	go wait(length, rcChs, rcRes)
-	go wait(length, serviceChs, serviceRes)
+	//rcRes := make(chan string)
+	// serviceRes := make(chan string)
+	// go wait(length, rcChs, rcRes)
+	// go wait(length, serviceChs, serviceRes)
 
 	ns := OK
 	rc := OK
 	service := OK
-	for i := 0; i < 3; i++ {
+	rcCount := 0
+	serviceCount := 0
+	for i := 0; i < 1+length*2; i++ {
 		select {
 		case ns = <-nsCh:
 			if ns == Error || ns == Timeout {
+				fmt.Println("Get watch ns event err or timeout")
 				ch <- ns
 				return
 			}
-		case rc = <-rcRes:
+		case rc = <-rcCh:
 			if rc == Error || rc == Timeout {
+				fmt.Println("Get watch rc event err or timeout")
 				ch <- rc
 				return
+			} else {
+				rcCount++
+				fmt.Printf("Get watch rc event OK count %v\n", rcCount)
 			}
-		case service = <-serviceRes:
+		case service = <-serviceCh:
 			if service == Error || service == Timeout {
+				fmt.Println("Get watch service event err or timeout")
 				ch <- service
 				return
+			} else {
+				serviceCount++
+				fmt.Printf("Get watch service event ok count %v\n", serviceCount)
 			}
 		}
 	}
 
+	fmt.Println("WatchPipelineStatus return OK")
 	ch <- OK
 	// return
 }
 
-func wait(length int, array []chan string, ch chan string) {
+/*func wait(length int, array []chan string, ch chan string) {
 	count := 0
 	for i := 0; i < length; i++ {
 		res := <-array[i]
@@ -93,3 +110,4 @@ func wait(length int, array []chan string, ch chan string) {
 		ch <- OK
 	}
 }
+*/

@@ -56,6 +56,7 @@ func WatchNamespaceStatus(labelKey string, labelValue string, timeout int64, che
 		}
 
 	case <-t.C:
+		fmt.Println("Watch namespace timeout")
 		ch <- Timeout
 	}
 }

@@ -36,7 +36,7 @@ func getPodIp(namespace string, rcName string, ipArray *[]string) error {
 		return err
 	}
 	for i, pod := range pods.Items {
-		ipArray[i] = pod.Status.PodIP
+		(*ipArray)[i] = pod.Status.PodIP
 	}
 
 	return nil

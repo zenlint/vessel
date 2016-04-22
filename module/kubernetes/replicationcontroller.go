@@ -58,26 +58,32 @@ func DeleteRC(pipelineVersion *models.PipelineSpecTemplate) error {
 
 // WatchServiceStatus return status of the operation(specified by checkOp) of the pod, OK, TIMEOUT.
 func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout int64, checkOp string, ch chan string) {
+	fmt.Println("Enter WatchRCStatus")
 	if checkOp != string(watch.Deleted) && checkOp != string(watch.Added) {
-		fmt.Errorf("Params checkOp err, checkOp: %v", checkOp)
+		fmt.Printf("Params checkOp err, checkOp: %v", checkOp)
 	}
 
 	opts := api.ListOptions{LabelSelector: labels.Set{labelKey: labelValue}.AsSelector()}
 	w, err := CLIENT.ReplicationControllers(Namespace).Watch(opts)
 	if err != nil {
 		ch <- Error
+		fmt.Printf("Get watch RC interface err %v\n", err)
+		return
 	}
 
 	t := time.NewTimer(time.Second * time.Duration(timeout))
 	select {
 	case event, ok := <-w.ResultChan():
 		if !ok {
+			fmt.Println("Get RC event !ok")
 			ch <- Error
 		} else if string(event.Type) == checkOp {
+			fmt.Println("Get RC event ok")
 			ch <- OK
 		}
 
 	case <-t.C:
+		fmt.Println("WatchRCStatus timeout")
 		ch <- Timeout
 	}
 }
