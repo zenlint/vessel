@@ -26,6 +26,16 @@ func StartPipeline(pipelineVersion *models.PipelineSpecTemplate) error {
 }
 
 func DeletePipeline(pipelineVersion *models.PipelineSpecTemplate) error {
+	meta := pipelineVersion.MetaData
+	specs := pipelineVersion.Spec
+
+	for _, spec := range specs {
+		CLIENT.ReplicationControllers(meta.Namespace).Delete(spec.Name)
+		CLIENT.Services(meta.Namespace).Delete(spec.Name)
+	}
+
+	CLIENT.Namespaces().Delete(meta.Namespace)
+
 	return nil
 }
 
