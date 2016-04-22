@@ -334,8 +334,8 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 
 	go kubeclient.WatchPipelineStatus(pipelineSpecTemplate, kubeclient.Added, k8sCh)
 
-	runResult.RunResult = <-k8sCh
-	/*if err := kubeclient.StartPipeline(pipelineSpecTemplate); err != nil {
+	// runResult.RunResult = <-k8sCh
+	if err := kubeclient.StartPipeline(pipelineSpecTemplate); err != nil {
 		log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineSpecTemplate.MetaData.Name, err)
 	}
 	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
@@ -359,7 +359,7 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 			runResult.RunResult = StartFailed
 		}
 	}
-	runResult.RunResult = StartTimeout*/
+	runResult.RunResult = StartTimeout
 
 	runResultChan <- runResult
 }
