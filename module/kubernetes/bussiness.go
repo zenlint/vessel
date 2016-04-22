@@ -15,6 +15,7 @@ func GetPipelineBussinessRes(pipelineVersion *models.PipelineSpecTemplate, ch ch
 		podIp, err := getPodIp(namespace, stage.Name)
 		if err != nil {
 			ch <- false
+			fmt.Println("aaaaaaaaaaaaa")
 			return
 		}
 
@@ -30,13 +31,15 @@ func GetPipelineBussinessRes(pipelineVersion *models.PipelineSpecTemplate, ch ch
 		select {
 		case podRes := <-ch:
 			if podRes == false {
+				fmt.Println("bbbbbbbbbbbbbb")
 				ch <- false
 			}
 		case <-t.C:
+			fmt.Println("cccccccccccccccccccc")
 			ch <- false
 		}
 	}
-
+	fmt.Println("dddddddddddddddddd")
 	ch <- true
 }
 
