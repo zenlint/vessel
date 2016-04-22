@@ -26,7 +26,7 @@ func GetPipelineBussinessRes(pipelineVersion *models.PipelineSpecTemplate, ch ch
 		statusCheckLink := stage.StatusCheckUrl
 		statusCheckInterval := stage.StatusCheckInterval
 		statusCheckCount := stage.StatusCheckCount
-		podsCh := make([]bool, replicas)
+		podsCh := make([]chan bool, replicas)
 		t := time.NewTimer(time.Second * time.Duration(timeout))
 		for i := 0; i < replicas; i++ {
 			checkUrl := fmt.Sprintf("https://%v:%v%v", ipArray[i], port, statusCheckLink)
@@ -51,7 +51,7 @@ func GetPipelineBussinessRes(pipelineVersion *models.PipelineSpecTemplate, ch ch
 	ch <- true
 }
 
-func waitbs(length int, array []chan string, ch chan bool) {
+func waitbs(length int, array []chan bool, ch chan bool) {
 	count := 0
 	for i := 0; i < length; i++ {
 		res := <-array[i]
