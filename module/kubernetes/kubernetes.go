@@ -21,9 +21,10 @@ const (
 
 var CLIENT *unversioned.Client
 
-func New(hostIp string) {
+func init() {
 	clientConfig := restclient.Config{}
-	clientConfig.Host = setting.RunTime.Database.Host
+	clientConfig.Host = "127.0.0.1:8080"
+	// clientConfig.Host = setting.RunTime.Database.Host
 	client, err := unversioned.New(&clientConfig)
 	if err != nil {
 		fmt.Errorf("New unversioned client err: %v!\n", err.Error())
