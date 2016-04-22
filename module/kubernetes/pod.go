@@ -26,14 +26,26 @@ func CheckPod(namespace string, podName string) bool {
 	return false
 }
 
-func getPodIp(namespace string, podName string) (string, error) {
-	pod, err := CLIENT.Pods(namespace).Get(podName)
+func getPodIp(namespace string, rcName string, ipArray *[]string) error {
+	// pod, err := CLIENT.Pods(namespace).Get(podName)
+
+	opts := api.ListOptions{LabelSelector: labels.Set{"app": rcName}.AsSelector()}
+	pods, err := CLIENT.Pods(namespace).List(opts)
 	if err != nil {
+		fmt.Printf("getPodIp err %v\n", err)
+		return err
+	}
+	for i, pod := range pods.Items {
+		ipArray[i] = pod.Status.PodIP
+	}
+
+	return nil
+	/*if err != nil {
 		fmt.Printf("Get pod %v err: %v\n", podName, err)
 		return "", err
 	}
 
-	return pod.Status.PodIP, nil
+	return pod.Status.PodIP, nil*/
 }
 
 // GetPodPhase get phase of the resource by namespace and podname, return empty string when no pod find

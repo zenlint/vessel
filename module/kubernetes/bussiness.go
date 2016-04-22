@@ -10,13 +10,15 @@ import (
 func GetPipelineBussinessRes(pipelineVersion *models.PipelineSpecTemplate, ch chan bool) {
 	namespace := pipelineVersion.MetaData.Namespace
 	timeout := pipelineVersion.MetaData.TimeoutDuration
-
+	// replicas := pipelineVersion.
 	for _, stage := range pipelineVersion.Spec {
-		podIp, err := getPodIp(namespace, stage.Name)
+		replicas := stage.Replicas
+		ipArray := make([]string, replicas)
+		err := getPodIp(namespace, stage.Name, ipArray)
 		if err != nil {
 			ch <- false
 			fmt.Printf("xxxxx%v\n", err)
-			fmt.Println("aaaaaaaaaaaaa")
+			// fmt.Println("aaaaaaaaaaaaa")
 			return
 		}
 
@@ -24,13 +26,18 @@ func GetPipelineBussinessRes(pipelineVersion *models.PipelineSpecTemplate, ch ch
 		statusCheckLink := stage.StatusCheckUrl
 		statusCheckInterval := stage.StatusCheckInterval
 		statusCheckCount := stage.StatusCheckCount
-		checkUrl := fmt.Sprintf("https://%v:%v%v", podIp, port, statusCheckLink)
-		t := time.NewTimer(time.Second * time.Duration(timeout))
+		podsCh := make([]string, replicas)
+		for i := 0; i < replicas; i++ {
+			checkUrl := fmt.Sprintf("https://%v:%v%v", ipArray[i], port, statusCheckLink)
+			t := time.NewTimer(time.Second * time.Duration(timeout))
+			go getPodBussinessRes(checkUrl, statusCheckInterval, statusCheckCount, podsCh[i])
+		}
+
 		podCh := make(chan bool)
-		go getPodBussinessRes(checkUrl, statusCheckInterval, statusCheckCount, podCh)
+		go wait(replicas, podsCh, podCh)
 
 		select {
-		case podRes := <-ch:
+		case podRes := <-podCh:
 			if podRes == false {
 				fmt.Println("bbbbbbbbbbbbbb")
 				ch <- false
