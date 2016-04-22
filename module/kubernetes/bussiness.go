@@ -15,6 +15,7 @@ func GetPipelineBussinessRes(pipelineVersion *models.PipelineSpecTemplate, ch ch
 		podIp, err := getPodIp(namespace, stage.Name)
 		if err != nil {
 			ch <- false
+			fmt.Printf("xxxxx%v\n", err)
 			fmt.Println("aaaaaaaaaaaaa")
 			return
 		}

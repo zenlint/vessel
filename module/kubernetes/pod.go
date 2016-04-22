@@ -29,7 +29,7 @@ func CheckPod(namespace string, podName string) bool {
 func getPodIp(namespace string, podName string) (string, error) {
 	pod, err := CLIENT.Pods(namespace).Get(podName)
 	if err != nil {
-		fmt.Errorf("Get pod %v err: %v\n", podName, err)
+		fmt.Printf("Get pod %v err: %v\n", podName, err)
 		return "", err
 	}
 

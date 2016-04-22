@@ -256,6 +256,7 @@ func startStage(stageVersion *models.StageVersion, bootChan chan *models.StageVe
 
 	// start run stage
 	stageStartFinish := make(chan models.StageVersionState, 1)
+	go startStageInK8S(stageStartFinish, stageVersionState)
 	/*timeout := make(chan bool, 1)
 	// stageStartFinish <- stageVersionState
 	go startStageInK8S(stageStartFinish, stageVersionState)
