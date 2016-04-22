@@ -44,11 +44,6 @@ func backupNode(node *etcd.Node) *db.Tb_etcd_backup {
 		Created_index:  uint32(node.CreatedIndex),
 	}
 	key.Dir = node.Dir
-	//	if node.Dir {
-	//		key.Dir = 1
-	//	} else {
-	//		key.Dir = 0
-	//	}
 	if node.Expiration != nil {
 		key.Ttl = uint32(node.Expiration.Unix())
 	}

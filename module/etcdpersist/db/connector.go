@@ -3,10 +3,10 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang/glog"
 )
 
 var (
@@ -30,7 +30,7 @@ func Syncdb(db_user, db_pass, db_host, db_port, db_name string) error {
 	force := true
 	verbose := true
 	err = orm.RunSyncdb(name, force, verbose)
-	log.Println("database init is complete.\nPlease restart the application")
+	glog.Infoln("database init is complete.\nPlease restart the application")
 	return err
 }
 
@@ -58,9 +58,9 @@ func Create(db_user, db_pass, db_host, db_port, db_name string) error {
 	}
 	r, err := db.Exec(sqlstring)
 	if err != nil {
-		log.Println(err, r)
+		glog.Infoln(err, r)
 	} else {
-		log.Println("Database ", db_name, " created")
+		glog.Infoln("Database ", db_name, " created")
 	}
 	defer db.Close()
 	return err

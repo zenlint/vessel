@@ -9,7 +9,7 @@ type Tb_etcd_backup struct {
 	Id             int64
 	Key            string `orm:"size(255)"`
 	Parent_key     string `orm:"size(255)"`
-	Value          string `orm:"size(255)"`
+	Value          string `orm:"type(text)"`
 	Dir            bool
 	Ttl            uint32
 	Modified_index uint32
