@@ -330,7 +330,7 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 	}
 	fmt.Println(pipelineSpecTemplate)
 	k8sCh := make(chan string)
-	// bsCh := make(chan bool)
+	bsCh := make(chan bool)
 
 	go kubeclient.WatchPipelineStatus(pipelineSpecTemplate, kubeclient.Added, k8sCh)
 
@@ -350,15 +350,20 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 	}
 
 	if k8sRes == StartFailed {
+		fmt.Printf("k8s res %v\n", StateFailed)
 		runResult.RunResult = StartFailed
 	}
-	if k8sRes == StateSuccess {
+	if k8sRes == StartSucessful {
+		fmt.Printf("k8s res %v\n", StartSucessful)
 		if bsRes == true {
+			fmt.Printf("bs res %v\n", StartSucessful)
 			runResult.RunResult = StartSucessful
 		} else {
+			fmt.Printf("bs res %v\n", StartFailed)
 			runResult.RunResult = StartFailed
 		}
 	}
+	fmt.Printf("k8s & bs res %v\n", StartTimeout)
 	runResult.RunResult = StartTimeout
 
 	runResultChan <- runResult
