@@ -2,14 +2,14 @@ package pipeline
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/containerops/vessel/models"
+	"github.com/containerops/vessel/module/etcd"
+	"golang.org/x/net/context"
 	"log"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/containerops/vessel/models"
-	"github.com/containerops/vessel/module/etcd"
-	"golang.org/x/net/context"
 
 	kubeclient "github.com/containerops/vessel/module/kubernetes"
 	"github.com/coreos/etcd/client"
@@ -328,7 +328,7 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 	if err != nil {
 		log.Printf("Unmarshal PipelineSpecTemplate err : %v\n")
 	}
-
+	fmt.Println(pipelineSpecTemplate)
 	k8sCh := make(chan string)
 	bsCh := make(chan bool)
 
