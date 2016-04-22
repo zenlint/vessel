@@ -149,8 +149,9 @@ func V1GETPipelineHandler(ctx *macaron.Context) (int, []byte) {
 }
 
 func V1DELETEPipelineHandler(ctx *macaron.Context, reqData models.PipelineSpecTemplate) (int, []byte) {
-	kubernetes.DeletePipeline(reqData)
-	return http.StatusOK, []byte("")
+	kubernetes.DeletePipeline(&reqData)
+	retstr := "Sent delete pipeline " + reqData.MetaData.Name + " event"
+	return http.StatusOK, []byte(retstr)
 }
 
 func V1RunPipelineHandler(ctx *macaron.Context) (int, []byte) {

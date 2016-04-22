@@ -34,7 +34,7 @@ func SetRouters(m *macaron.Macaron) {
 			m.Post("/", binding.Bind(models.PipelineSpecTemplate{}), handler.V1POSTPipelineHandler)
 			m.Put("/:pipeline", handler.V1PUTPipelineHandler)
 			m.Get("/:pipeline", handler.V1GETPipelineHandler)
-			m.Delete("/:pipeline", binding.Bind(models.PipelineSpecTemplate{}), handler.V1DELETEPipelineHandler)
+			m.Delete("/", binding.Bind(models.PipelineSpecTemplate{}), handler.V1DELETEPipelineHandler)
 
 			m.Put("/:pipeline/run", handler.V1RunPipelineHandler)
 
