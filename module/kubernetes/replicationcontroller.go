@@ -37,8 +37,10 @@ func CreateRC(piplelineVersion *models.PipelineSpecTemplate) error {
 		rc.Spec.Template.Spec.Containers[0] = api.Container{Ports: []api.ContainerPort{api.ContainerPort{
 			Name:          stagespec.Name,
 			ContainerPort: stagespec.Port}},
-			Name:  stagespec.Name,
-			Image: stagespec.Image}
+			Name:            stagespec.Name,
+			Image:           stagespec.Image,
+			ImagePullPolicy: "IfNotPresent",
+		}
 		rc.Spec.Selector["app"] = stagespec.Name
 
 		if _, err := CLIENT.ReplicationControllers("zenlin-namespace").Create(rc); err != nil {

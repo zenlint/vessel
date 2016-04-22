@@ -100,6 +100,20 @@ func SyncDatabase() error {
 		}
 	}
 
+	if !db.HasTable(&PipelineMetaData{}) {
+		err = db.CreateTable(&PipelineMetaData{}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	if !db.HasTable(&StageSpec{}) {
+		err = db.CreateTable(&StageSpec{}).Error
+		if err != nil {
+			return err
+		}
+	}
+
 	fmt.Println("sync DB done !")
 	return nil
 }
