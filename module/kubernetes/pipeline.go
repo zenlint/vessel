@@ -58,11 +58,11 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	// serviceCh := make(chan string, length)
 
 	// for _, stageSpec := range stageSpecs {
-	rcCh := make([]chan string)
-	serviceCh := make([]chan string)
+	rcCh := make(chan string)
+	serviceCh := make(chan string)
 
-	go WatchRCStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, rcCh)
-	go WatchServiceStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, serviceCh)
+	go WatchRCStatus(namespace, labelKey, stageName, timeout, checkOp, rcCh)
+	go WatchServiceStatus(namespace, labelKey, stageName, timeout, checkOp, serviceCh)
 	// }
 
 	//rcRes := make(chan string)
