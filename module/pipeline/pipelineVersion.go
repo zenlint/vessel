@@ -340,9 +340,9 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 	pipelineSpecTemplate := new(models.PipelineSpecTemplate)
 
 	stageName := runResult.StageName
-
-	err := json.Unmarshal([]byte(pipelineSpecTemplate.Detail), pipelineSpecTemplate)
-	fmt.Printf("goting to deal with stage name  = %v\n", stageName)
+	fmt.Printf("Enter startStageInK8S to start stage %v\n", stageName)
+	err := json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate)
+	// fmt.Printf("goting to deal with stage name  = %v\n", stageName)
 	fmt.Printf("goting to deal with pipelinePecTemplate detail  = %v\n", pipelineSpecTemplate)
 	// err := json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate)
 	if err != nil {
@@ -359,38 +359,38 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 		log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineSpecTemplate.MetaData.Name, err)
 	}
 	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
-	fmt.Println("11111111111111")
+	// fmt.Println("11111111111111")
 	k8sRes := ""
 	bsRes := true
 	for i := 0; i < 2; i++ {
 		select {
 		case k8sRes = <-k8sCh:
-			fmt.Printf("k8sCh return %v\n", k8sRes)
+			fmt.Printf("k8sCh start stage name = %v return %v\n", stageName, k8sRes)
 		case bsRes = <-bsCh:
-			fmt.Printf("bsCh return %v\n", bsRes)
+			// fmt.Printf("bsCh return %v\n", bsRes)
 		}
 	}
 
 	if k8sRes == StartFailed {
-		fmt.Printf("k8s res %v\n", StateFailed)
+		fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StateFailed)
 		runResult.RunResult = StartFailed
 		runResult.Detail = StartFailed
 		runResultChan <- runResult
 	} else if k8sRes == StartSucessful {
-		fmt.Printf("k8s res %v\n", StartSucessful)
+		// fmt.Printf("k8s res %v\n", StartSucessful)
 		if bsRes == true {
-			fmt.Printf("bs res %v\n", StartSucessful)
+			fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StartSucessful)
 			runResult.RunResult = StartSucessful
 			runResult.Detail = StartSucessful
 			runResultChan <- runResult
 		} else {
-			fmt.Printf("bs res %v\n", StartFailed)
+			fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StartFailed)
 			runResult.RunResult = StartFailed
 			runResult.Detail = StartFailed
 			runResultChan <- runResult
 		}
 	} else {
-		fmt.Printf("k8s & bs res %v\n", StartTimeout)
+		fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StartTimeout)
 		runResult.RunResult = StartTimeout
 		runResult.Detail = StartTimeout
 		runResultChan <- runResult

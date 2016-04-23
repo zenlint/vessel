@@ -43,7 +43,7 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	fmt.Println("Enter WatchPipelineStatus")
 	labelKey := "app"
 	pipelineMetadata := pipelineVersion.MetaData
-	nsLabelValue := pipelineMetadata.Name
+	// nsLabelValue := pipelineMetadata.Name
 	timeout := pipelineMetadata.TimeoutDuration
 	namespace := pipelineMetadata.Namespace
 
