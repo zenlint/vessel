@@ -380,8 +380,8 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 		// fmt.Printf("k8s res %v\n", StartSucessful)
 		if bsRes == true {
 			fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StartSucessful)
-			runResult.RunResult = StartSucessful
-			runResult.Detail = StartSucessful
+			runResult.RunResult = StateSuccess
+			runResult.Detail = StateSuccess
 			runResultChan <- runResult
 		} else {
 			fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StartFailed)
