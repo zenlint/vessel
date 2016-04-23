@@ -47,19 +47,23 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	timeout := pipelineMetadata.TimeoutDuration
 	namespace := pipelineMetadata.Namespace
 
-	stageSpecs := pipelineVersion.Spec
-	length := len(stageSpecs)
+	// stageSpecs := pipelineVersion.Spec
+	// length := len(stageSpecs)
 	// 0423 nsCh := make(chan string)
 	//rcCh := make([]chan string, length)
 	//serviceCh := make([]chan string, length)
 	//0423
 	// go WatchNamespaceStatus(labelKey, nsLabelValue, timeout, checkOp, nsCh)
-	rcCh := make(chan string, length)
-	serviceCh := make(chan string, length)
-	for _, stageSpec := range stageSpecs {
-		go WatchRCStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, rcCh)
-		go WatchServiceStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, serviceCh)
-	}
+	// rcCh := make(chan string, length)
+	// serviceCh := make(chan string, length)
+
+	// for _, stageSpec := range stageSpecs {
+	rcCh := make([]chan string)
+	serviceCh := make([]chan string)
+
+	go WatchRCStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, rcCh)
+	go WatchServiceStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, serviceCh)
+	// }
 
 	//rcRes := make(chan string)
 	// serviceRes := make(chan string)
@@ -71,7 +75,7 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	service := OK
 	rcCount := 0
 	serviceCount := 0
-	for i := 0; i < length*2; i++ {
+	for i := 0; i < 2; i++ {
 		select {
 		/*
 			case ns = <-nsCh:
