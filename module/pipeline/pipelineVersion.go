@@ -336,10 +336,14 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 }
 
 func startStageInK8S(runResultChan chan models.StageVersionState, runResult models.StageVersionState) {
-	// pipelineVersion := models.GetPipelineVersion(runResult.PipelineVersionId)
+	pipelineVersion := models.GetPipelineVersion(runResult.PipelineVersionId)
 	pipelineSpecTemplate := new(models.PipelineSpecTemplate)
-	err := json.Unmarshal([]byte(runResult.Detail), pipelineSpecTemplate)
 
+	stageName := runResult.StageName
+
+	err := json.Unmarshal([]byte(pipelineSpecTemplate.Detail), pipelineSpecTemplate)
+	fmt.Printf("goting to deal with stage name  = %v\n", stageName)
+	fmt.Printf("goting to deal with pipelinePecTemplate detail  = %v\n", pipelineSpecTemplate)
 	// err := json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate)
 	if err != nil {
 		log.Printf("Unmarshal PipelineSpecTemplate err : %v\n")
@@ -348,10 +352,10 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 	k8sCh := make(chan string)
 	bsCh := make(chan bool)
 
-	go kubeclient.WatchPipelineStatus(pipelineSpecTemplate, kubeclient.Added, k8sCh)
+	go kubeclient.WatchPipelineStatus(pipelineSpecTemplate, stageName, kubeclient.Added, k8sCh)
 
 	// runResult.RunResult = <-k8sCh
-	if err := kubeclient.StartPipeline(pipelineSpecTemplate); err != nil {
+	if err := kubeclient.StartPipeline(pipelineSpecTemplate, stageName); err != nil {
 		log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineSpecTemplate.MetaData.Name, err)
 	}
 	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)

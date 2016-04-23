@@ -6,7 +6,7 @@ import (
 	"github.com/containerops/vessel/models"
 )
 
-func StartPipeline(pipelineVersion *models.PipelineSpecTemplate) error {
+func StartPipeline(pipelineVersion *models.PipelineSpecTemplate, stageName string) error {
 	piplineMetadata := pipelineVersion.MetaData
 	if _, err := CLIENT.Namespaces().Get(piplineMetadata.Namespace); err != nil {
 		if err := CreateNamespace(pipelineVersion); err != nil {
@@ -14,11 +14,11 @@ func StartPipeline(pipelineVersion *models.PipelineSpecTemplate) error {
 		}
 	}
 
-	if err := CreateRC(pipelineVersion); err != nil {
+	if err := CreateRC(pipelineVersion, stageName); err != nil {
 		return err
 	}
 
-	if err := CreateService(pipelineVersion); err != nil {
+	if err := CreateService(pipelineVersion, stageName); err != nil {
 		return err
 	}
 
@@ -39,7 +39,7 @@ func DeletePipeline(pipelineVersion *models.PipelineSpecTemplate) error {
 	return nil
 }
 
-func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, checkOp string, ch chan string) {
+func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName string, checkOp string, ch chan string) {
 	fmt.Println("Enter WatchPipelineStatus")
 	labelKey := "app"
 	pipelineMetadata := pipelineVersion.MetaData
@@ -49,11 +49,11 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, checkOp s
 
 	stageSpecs := pipelineVersion.Spec
 	length := len(stageSpecs)
-	nsCh := make(chan string)
+	// 0423 nsCh := make(chan string)
 	//rcCh := make([]chan string, length)
 	//serviceCh := make([]chan string, length)
-
-	go WatchNamespaceStatus(labelKey, nsLabelValue, timeout, checkOp, nsCh)
+	//0423
+	// go WatchNamespaceStatus(labelKey, nsLabelValue, timeout, checkOp, nsCh)
 	rcCh := make(chan string, length)
 	serviceCh := make(chan string, length)
 	for _, stageSpec := range stageSpecs {
@@ -66,19 +66,21 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, checkOp s
 	// go wait(length, rcChs, rcRes)
 	// go wait(length, serviceChs, serviceRes)
 
-	ns := OK
+	// ns := OK
 	rc := OK
 	service := OK
 	rcCount := 0
 	serviceCount := 0
-	for i := 0; i < 1+length*2; i++ {
+	for i := 0; i < length*2; i++ {
 		select {
-		case ns = <-nsCh:
-			if ns == Error || ns == Timeout {
-				fmt.Println("Get watch ns event err or timeout")
-				ch <- ns
-				return
-			}
+		/*
+			case ns = <-nsCh:
+				if ns == Error || ns == Timeout {
+					fmt.Println("Get watch ns event err or timeout")
+					ch <- ns
+					return
+				}
+		*/
 		case rc = <-rcCh:
 			if rc == Error || rc == Timeout {
 				fmt.Println("Get watch rc event err or timeout")

@@ -10,43 +10,45 @@ import (
 	"k8s.io/kubernetes/pkg/watch"
 )
 
-func CreateRC(piplelineVersion *models.PipelineSpecTemplate) error {
+func CreateRC(piplelineVersion *models.PipelineSpecTemplate, stageName string) error {
 	stagespecs := piplelineVersion.Spec
 	metadata := piplelineVersion.MetaData
 	for _, stagespec := range stagespecs {
-		rc := &api.ReplicationController{
-			ObjectMeta: api.ObjectMeta{
-				Labels: map[string]string{},
-			},
-			Spec: api.ReplicationControllerSpec{
-				Template: &api.PodTemplateSpec{
-					ObjectMeta: api.ObjectMeta{
-						Labels: map[string]string{},
-					},
+		if stagespec.Name == stageName {
+			rc := &api.ReplicationController{
+				ObjectMeta: api.ObjectMeta{
+					Labels: map[string]string{},
 				},
-				Selector: map[string]string{},
-			},
-		}
+				Spec: api.ReplicationControllerSpec{
+					Template: &api.PodTemplateSpec{
+						ObjectMeta: api.ObjectMeta{
+							Labels: map[string]string{},
+						},
+					},
+					Selector: map[string]string{},
+				},
+			}
 
-		rc.Spec.Template.Spec.Containers = make([]api.Container, 1)
-		rc.SetName(stagespec.Name)
-		rc.SetNamespace(metadata.Namespace)
-		rc.Labels["app"] = stagespec.Name
-		rc.Spec.Replicas = stagespec.Replicas
-		rc.Spec.Template.SetName(stagespec.Name)
-		rc.Spec.Template.Labels["app"] = stagespec.Name
-		rc.Spec.Template.Spec.Containers[0] = api.Container{Ports: []api.ContainerPort{api.ContainerPort{
-			Name:          stagespec.Name,
-			ContainerPort: stagespec.Port}},
-			Name:            stagespec.Name,
-			Image:           stagespec.Image,
-			ImagePullPolicy: "IfNotPresent",
-		}
-		rc.Spec.Selector["app"] = stagespec.Name
+			rc.Spec.Template.Spec.Containers = make([]api.Container, 1)
+			rc.SetName(stagespec.Name)
+			rc.SetNamespace(metadata.Namespace)
+			rc.Labels["app"] = stagespec.Name
+			rc.Spec.Replicas = stagespec.Replicas
+			rc.Spec.Template.SetName(stagespec.Name)
+			rc.Spec.Template.Labels["app"] = stagespec.Name
+			rc.Spec.Template.Spec.Containers[0] = api.Container{Ports: []api.ContainerPort{api.ContainerPort{
+				Name:          stagespec.Name,
+				ContainerPort: stagespec.Port}},
+				Name:            stagespec.Name,
+				Image:           stagespec.Image,
+				ImagePullPolicy: "IfNotPresent",
+			}
+			rc.Spec.Selector["app"] = stagespec.Name
 
-		if _, err := CLIENT.ReplicationControllers(metadata.Namespace).Create(rc); err != nil {
-			fmt.Println("Create rc err : %v\n", err)
-			return err
+			if _, err := CLIENT.ReplicationControllers(metadata.Namespace).Create(rc); err != nil {
+				fmt.Println("Create rc err : %v\n", err)
+				return err
+			}
 		}
 	}
 	return nil

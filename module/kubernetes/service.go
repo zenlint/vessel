@@ -11,29 +11,31 @@ import (
 	"k8s.io/kubernetes/pkg/watch"
 )
 
-func CreateService(pipelineVersion *models.PipelineSpecTemplate) error {
+func CreateService(pipelineVersion *models.PipelineSpecTemplate, stageName string) error {
 	stagespecs := pipelineVersion.Spec
 	metadata := pipelineVersion.MetaData
 	for _, stagespec := range stagespecs {
-		service := &api.Service{
-			ObjectMeta: api.ObjectMeta{
-				Labels: map[string]string{},
-			},
-			Spec: api.ServiceSpec{
-				Selector: map[string]string{},
-			},
-		}
+		if stagespec.Name == stageName {
+			service := &api.Service{
+				ObjectMeta: api.ObjectMeta{
+					Labels: map[string]string{},
+				},
+				Spec: api.ServiceSpec{
+					Selector: map[string]string{},
+				},
+			}
 
-		service.Spec.Ports = make([]api.ServicePort, 1)
-		service.ObjectMeta.SetName(stagespec.Name)
-		service.ObjectMeta.SetNamespace(metadata.Namespace)
-		service.ObjectMeta.Labels["app"] = stagespec.Name
-		service.Spec.Ports[0] = api.ServicePort{Port: stagespec.Port, TargetPort: intstr.FromString(stagespec.Name)}
-		service.Spec.Selector["app"] = stagespec.Name
+			service.Spec.Ports = make([]api.ServicePort, 1)
+			service.ObjectMeta.SetName(stagespec.Name)
+			service.ObjectMeta.SetNamespace(metadata.Namespace)
+			service.ObjectMeta.Labels["app"] = stagespec.Name
+			service.Spec.Ports[0] = api.ServicePort{Port: stagespec.Port, TargetPort: intstr.FromString(stagespec.Name)}
+			service.Spec.Selector["app"] = stagespec.Name
 
-		if _, err := CLIENT.Services(metadata.Namespace).Create(service); err != nil {
-			fmt.Println("Create service err : %v\n", err)
-			return err
+			if _, err := CLIENT.Services(metadata.Namespace).Create(service); err != nil {
+				fmt.Println("Create service err : %v\n", err)
+				return err
+			}
 		}
 	}
 	return nil
