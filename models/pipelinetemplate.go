@@ -61,4 +61,6 @@ type StageSpec struct {
 	StatusCheckCount    int    `json:"statusCheckCount"`
 	Image               string `json:"image"`
 	Port                int    `json:"port"`
+	EnvName             string `json:"envName"`
+	EnvValue            string `json:"envValue"`
 }

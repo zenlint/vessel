@@ -42,6 +42,9 @@ func CreateRC(piplelineVersion *models.PipelineSpecTemplate, stageName string) e
 				Name:            stagespec.Name,
 				Image:           stagespec.Image,
 				ImagePullPolicy: "IfNotPresent",
+				Env: []api.EnvVar{api.EnvVar{
+					Name:  stagespec.EnvNmae,
+					Value: stagespec.EnvValue}},
 			}
 			rc.Spec.Selector["app"] = stagespec.Name
 
