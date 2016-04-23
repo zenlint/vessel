@@ -160,16 +160,22 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 
 	for {
 		if finishStageNum == sumStage {
+		if finishStageNum == sumStage {
+fmt.Println("######################################finishStageNum == sumStage")
 			notifyBootDone <- true
+
 			// stageVersionStateChan <- strings.Join(failedList, ",")
 			stageVersionStateStr, _ := json.Marshal(stageVersionStateList)
 			stageVersionStateChan <- string(stageVersionStateStr)
 			return
 		}
-
+fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$finishStageNum")
+fmt.Pringln(finishStageNum)
 		stageVersionState := <-finishChan
 		stageVersionState.ChangeStageVersionState()
 		finishStageNum++
+fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$finishStageNum+++++")
+fmt.Pringln(finishStageNum)
 		stageVersionStateList = append(stageVersionStateList, stageVersionState)
 	}
 }
@@ -257,6 +263,7 @@ func startStage(stageVersion *models.StageVersion, bootChan chan *models.StageVe
 	// start run stage
 	stageStartFinish := make(chan models.StageVersionState, 1)
 	go startStageInK8S(stageStartFinish, stageVersionState)
+
 	/*timeout := make(chan bool, 1)
 	// stageStartFinish <- stageVersionState
 	go startStageInK8S(stageStartFinish, stageVersionState)
@@ -311,10 +318,14 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 	if err != nil {
 		log.Println("[changeStageVersionState]:error when shoutdown stage version:", err)
 	}
+	fmt.Println("*********************************************************************")
+	fmt.Println(state)
 
 	if state == StateSuccess || state == StateFailed {
 		for _, toStageVersionName := range strings.Split(toStageVersions, ",") {
+			fmt.Println(toStageVersions)
 			if toStageVersionName != "" {
+				fmt.Println(toStageVersionName)
 				var toStageVersion models.StageVersion
 				toStageVersion = *stageVersion
 				toStageVersion.Name = toStageVersionName
@@ -322,7 +333,7 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 			}
 		}
 	}
-
+	fmt.Println("*********************************************************************")
 }
 
 func startStageInK8S(runResultChan chan models.StageVersionState, runResult models.StageVersionState) {
