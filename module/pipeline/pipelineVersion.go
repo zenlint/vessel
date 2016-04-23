@@ -160,8 +160,7 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 
 	for {
 		if finishStageNum == sumStage {
-		if finishStageNum == sumStage {
-fmt.Println("######################################finishStageNum == sumStage")
+			fmt.Println("######################################finishStageNum == sumStage")
 			notifyBootDone <- true
 
 			// stageVersionStateChan <- strings.Join(failedList, ",")
@@ -169,13 +168,13 @@ fmt.Println("######################################finishStageNum == sumStage")
 			stageVersionStateChan <- string(stageVersionStateStr)
 			return
 		}
-fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$finishStageNum")
-fmt.Println(finishStageNum)
+		fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$finishStageNum")
+		fmt.Println(finishStageNum)
 		stageVersionState := <-finishChan
 		stageVersionState.ChangeStageVersionState()
 		finishStageNum++
-fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$finishStageNum+++++")
-fmt.Pringln(finishStageNum)
+		fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$finishStageNum+++++")
+		fmt.Println(finishStageNum)
 		stageVersionStateList = append(stageVersionStateList, stageVersionState)
 	}
 }
@@ -337,9 +336,11 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 }
 
 func startStageInK8S(runResultChan chan models.StageVersionState, runResult models.StageVersionState) {
-	pipelineVersion := models.GetPipelineVersion(runResult.PipelineVersionId)
+	// pipelineVersion := models.GetPipelineVersion(runResult.PipelineVersionId)
 	pipelineSpecTemplate := new(models.PipelineSpecTemplate)
-	err := json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate)
+	err := json.Unmarshal([]byte(runResult.Detail), pipelineSpecTemplate)
+
+	// err := json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate)
 	if err != nil {
 		log.Printf("Unmarshal PipelineSpecTemplate err : %v\n")
 	}
