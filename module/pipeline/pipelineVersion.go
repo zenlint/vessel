@@ -170,7 +170,7 @@ fmt.Println("######################################finishStageNum == sumStage")
 			return
 		}
 fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$finishStageNum")
-fmt.Pringln(finishStageNum)
+fmt.Println(finishStageNum)
 		stageVersionState := <-finishChan
 		stageVersionState.ChangeStageVersionState()
 		finishStageNum++
