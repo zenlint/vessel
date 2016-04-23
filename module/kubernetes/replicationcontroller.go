@@ -36,16 +36,30 @@ func CreateRC(piplelineVersion *models.PipelineSpecTemplate, stageName string) e
 			rc.Spec.Replicas = stagespec.Replicas
 			rc.Spec.Template.SetName(stagespec.Name)
 			rc.Spec.Template.Labels["app"] = stagespec.Name
-			rc.Spec.Template.Spec.Containers[0] = api.Container{Ports: []api.ContainerPort{api.ContainerPort{
-				Name:          stagespec.Name,
-				ContainerPort: stagespec.Port}},
-				Name:            stagespec.Name,
-				Image:           stagespec.Image,
-				ImagePullPolicy: "IfNotPresent",
-				Env: []api.EnvVar{api.EnvVar{
-					Name:  stagespec.EnvNmae,
-					Value: stagespec.EnvValue}},
+			if stagespec.EnvName != "" && stagespec.EnvValue != "" {
+				rc.Spec.Template.Spec.Containers[0] = api.Container{Ports: []api.ContainerPort{api.ContainerPort{
+					Name:          stagespec.Name,
+					ContainerPort: stagespec.Port}},
+					Name:            stagespec.Name,
+					Image:           stagespec.Image,
+					ImagePullPolicy: "IfNotPresent",
+					Env: []api.EnvVar{api.EnvVar{
+						Name:  stagespec.EnvName,
+						Value: stagespec.EnvValue}},
+				}
+			} else {
+				rc.Spec.Template.Spec.Containers[0] = api.Container{Ports: []api.ContainerPort{api.ContainerPort{
+					Name:          stagespec.Name,
+					ContainerPort: stagespec.Port}},
+					Name:            stagespec.Name,
+					Image:           stagespec.Image,
+					ImagePullPolicy: "IfNotPresent",
+				}
 			}
+			/*
+				if stagespec.EnvName != "" && stagespec.EnvValue != "" {
+					rc.Spec.Template.Spec.Containers[0].Env
+				}*/
 			rc.Spec.Selector["app"] = stagespec.Name
 
 			if _, err := CLIENT.ReplicationControllers(metadata.Namespace).Create(rc); err != nil {
