@@ -360,28 +360,24 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 		runResult.RunResult = StartFailed
 		runResult.Detail = StartFailed
 		runResultChan <- runResult
-		return
-	}
-	if k8sRes == StartSucessful {
+	} else if k8sRes == StartSucessful {
 		fmt.Printf("k8s res %v\n", StartSucessful)
 		if bsRes == true {
 			fmt.Printf("bs res %v\n", StartSucessful)
 			runResult.RunResult = StartSucessful
 			runResult.Detail = StartSucessful
 			runResultChan <- runResult
-			return
 		} else {
 			fmt.Printf("bs res %v\n", StartFailed)
 			runResult.RunResult = StartFailed
 			runResult.Detail = StartFailed
 			runResultChan <- runResult
-			return
 		}
+	} else {
+		fmt.Printf("k8s & bs res %v\n", StartTimeout)
+		runResult.RunResult = StartTimeout
+		runResult.Detail = StartTimeout
+		runResultChan <- runResult
 	}
 
-	fmt.Printf("k8s & bs res %v\n", StartTimeout)
-	runResult.RunResult = StartTimeout
-	runResult.Detail = StartTimeout
-
-	runResultChan <- runResult
 }
