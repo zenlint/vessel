@@ -32,7 +32,7 @@ func CreateService(pipelineVersion *models.PipelineSpecTemplate, stageName strin
 			service.Spec.Ports[0] = api.ServicePort{Port: stagespec.Port, TargetPort: intstr.FromString(stagespec.Name)}
 			service.Spec.Selector["app"] = stagespec.Name
 
-			if _, err := CLIENT.Services(metadata.Namespace).Create(service); err != nil {
+			if _, err := models.K8sClient.Services(metadata.Namespace).Create(service); err != nil {
 				fmt.Println("Create service err : %v\n", err)
 				return err
 			}
@@ -53,7 +53,7 @@ func WatchServiceStatus(Namespace string, labelKey string, labelValue string, ti
 
 	opts := api.ListOptions{LabelSelector: labels.Set{labelKey: labelValue}.AsSelector()}
 
-	w, err := CLIENT.Services(Namespace).Watch(opts)
+	w, err := models.K8sClient.Services(Namespace).Watch(opts)
 	if err != nil {
 		ch <- Error
 	}
@@ -76,7 +76,7 @@ func WatchServiceStatus(Namespace string, labelKey string, labelValue string, ti
 // CheckService service have no status, once the service are found, it is with running status
 func CheckService(namespace string, serviceName string) bool {
 
-	services, err := CLIENT.Services(namespace).List(api.ListOptions{})
+	services, err := models.K8sClient.Services(namespace).List(api.ListOptions{})
 	if err != nil {
 		fmt.Errorf("List services err: %v\n", err.Error())
 	}

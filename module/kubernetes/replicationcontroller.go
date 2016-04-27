@@ -62,7 +62,7 @@ func CreateRC(piplelineVersion *models.PipelineSpecTemplate, stageName string) e
 				}*/
 			rc.Spec.Selector["app"] = stagespec.Name
 
-			if _, err := CLIENT.ReplicationControllers(metadata.Namespace).Create(rc); err != nil {
+			if _, err := models.K8sClient.ReplicationControllers(metadata.Namespace).Create(rc); err != nil {
 				fmt.Println("Create rc err : %v\n", err)
 				return err
 			}
@@ -83,7 +83,7 @@ func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout
 	}
 
 	opts := api.ListOptions{LabelSelector: labels.Set{labelKey: labelValue}.AsSelector()}
-	w, err := CLIENT.ReplicationControllers(Namespace).Watch(opts)
+	w, err := models.K8sClient.ReplicationControllers(Namespace).Watch(opts)
 	if err != nil {
 		ch <- Error
 		fmt.Printf("Get watch RC interface err %v\n", err)
@@ -109,7 +109,7 @@ func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout
 
 // checkRC rc have no status, once the rc are found, it is with running status
 func CheckRC(namespace string, rcName string) bool {
-	rcs, err := CLIENT.ReplicationControllers(namespace).List(api.ListOptions{})
+	rcs, err := models.K8sClient.ReplicationControllers(namespace).List(api.ListOptions{})
 	if err != nil {
 		fmt.Errorf("List rcs err: %v\n", err.Error())
 	}

@@ -1,6 +1,7 @@
 package setting
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"github.com/ghodss/yaml"
@@ -41,6 +42,10 @@ type RunTimeConf struct {
 		Username  string
 		Password  string
 	}
+	K8s struct {
+		Host string
+		Port string
+	}
 }
 
 var (
@@ -70,6 +75,6 @@ func InitConf(globalFilePath string, runtimeFilePath string) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Println(RunTime)
 	return nil
 }
