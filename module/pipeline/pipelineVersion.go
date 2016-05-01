@@ -349,25 +349,30 @@ func startStageInK8S(runResultChan chan models.StageVersionState, runResult mode
 		log.Printf("Unmarshal PipelineSpecTemplate err : %v\n")
 	}
 	fmt.Println(pipelineSpecTemplate)
-	k8sCh := make(chan string)
-	bsCh := make(chan bool)
-
-	go kubeclient.WatchPipelineStatus(pipelineSpecTemplate, stageName, kubeclient.Added, k8sCh)
-
-	// runResult.RunResult = <-k8sCh
-	if err := kubeclient.StartPipeline(pipelineSpecTemplate, stageName); err != nil {
-		log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineSpecTemplate.MetaData.Name, err)
-	}
-	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
-	// fmt.Println("11111111111111")
 	k8sRes := ""
 	bsRes := true
-	for i := 0; i < 2; i++ {
-		select {
-		case k8sRes = <-k8sCh:
-			fmt.Printf("k8sCh start stage name = %v return %v\n", stageName, k8sRes)
-		case bsRes = <-bsCh:
+
+	//Check whether the stage name exists
+	if kubeclient.CheckRC(pipelineSpecTemplate.MetaData.Namespace,stageName){
+		fmt.Printf("k8s replicationcontrollers %v already exist", stageName)
+		k8sRes = StartFailed
+	}else{
+		k8sCh := make(chan string)
+		bsCh := make(chan bool)
+		go kubeclient.WatchPipelineStatus(pipelineSpecTemplate, stageName, kubeclient.Added, k8sCh)
+
+		// runResult.RunResult = <-k8sCh
+		if err := kubeclient.StartPipeline(pipelineSpecTemplate, stageName); err != nil {
+			log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineSpecTemplate.MetaData.Name, err)
+		}
+		go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
+		for i := 0; i < 2; i++ {
+			select {
+			case k8sRes = <-k8sCh:
+				fmt.Printf("k8sCh start stage name = %v return %v\n", stageName, k8sRes)
+			case bsRes = <-bsCh:
 			// fmt.Printf("bsCh return %v\n", bsRes)
+			}
 		}
 	}
 
