@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/containerops/vessel/models"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/watch"
@@ -13,7 +14,7 @@ import (
 // CheckPod check weather the pod spcified by namespace and podname is exist
 func CheckPod(namespace string, podName string) bool {
 
-	pods, err := CLIENT.Pods(namespace).List(api.ListOptions{})
+	pods, err := models.K8sClient.Pods(namespace).List(api.ListOptions{})
 	if err != nil {
 		fmt.Errorf("List pods err: %v\n", err.Error())
 	}
@@ -27,10 +28,10 @@ func CheckPod(namespace string, podName string) bool {
 }
 
 func getPodIp(namespace string, rcName string, ipArray *[]string) error {
-	// pod, err := CLIENT.Pods(namespace).Get(podName)
+	// pod, err := models.K8sClient.Pods(namespace).Get(podName)
 
 	opts := api.ListOptions{LabelSelector: labels.Set{"app": rcName}.AsSelector()}
-	pods, err := CLIENT.Pods(namespace).List(opts)
+	pods, err := models.K8sClient.Pods(namespace).List(opts)
 	if err != nil {
 		fmt.Printf("getPodIp err %v\n", err)
 		return err
@@ -50,7 +51,7 @@ func getPodIp(namespace string, rcName string, ipArray *[]string) error {
 
 // GetPodPhase get phase of the resource by namespace and podname, return empty string when no pod find
 func GetPodStatus(namespace string, podName string) string {
-	pods, err := CLIENT.Pods(namespace).List(api.ListOptions{})
+	pods, err := models.K8sClient.Pods(namespace).List(api.ListOptions{})
 	if err != nil {
 		fmt.Errorf("List pods err: %v\n", err.Error())
 	}
@@ -70,7 +71,7 @@ func WatchPodStatus(podNamespace string, labelKey string, labelValue string, tim
 	}
 
 	opts := api.ListOptions{LabelSelector: labels.Set{labelKey: labelValue}.AsSelector()}
-	w, err := CLIENT.Pods(podNamespace).Watch(opts)
+	w, err := models.K8sClient.Pods(podNamespace).Watch(opts)
 	if err != nil {
 		fmt.Errorf("Get watch interface err")
 		return "", err

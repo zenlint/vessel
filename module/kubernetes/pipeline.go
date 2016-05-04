@@ -8,7 +8,7 @@ import (
 
 func StartPipeline(pipelineVersion *models.PipelineSpecTemplate, stageName string) error {
 	piplineMetadata := pipelineVersion.MetaData
-	if _, err := CLIENT.Namespaces().Get(piplineMetadata.Namespace); err != nil {
+	if _, err := models.K8sClient.Namespaces().Get(piplineMetadata.Namespace); err != nil {
 		if err := CreateNamespace(pipelineVersion); err != nil {
 			return err
 		}
@@ -30,11 +30,11 @@ func DeletePipeline(pipelineVersion *models.PipelineSpecTemplate) error {
 	specs := pipelineVersion.Spec
 
 	for _, spec := range specs {
-		CLIENT.ReplicationControllers(meta.Namespace).Delete(spec.Name)
-		CLIENT.Services(meta.Namespace).Delete(spec.Name)
+		models.K8sClient.ReplicationControllers(meta.Namespace).Delete(spec.Name)
+		models.K8sClient.Services(meta.Namespace).Delete(spec.Name)
 	}
 
-	CLIENT.Namespaces().Delete(meta.Namespace)
+	models.K8sClient.Namespaces().Delete(meta.Namespace)
 
 	return nil
 }

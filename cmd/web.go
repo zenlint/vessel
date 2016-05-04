@@ -40,7 +40,12 @@ func runWeb(c *cli.Context) {
 		fmt.Println(err)
 		return
 	}
+
 	if err := models.InitEtcd(); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err := models.InitK8s(); err != nil {
 		fmt.Println(err)
 		return
 	}

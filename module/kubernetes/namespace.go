@@ -20,7 +20,7 @@ func CreateNamespace(pipelineVersion *models.PipelineSpecTemplate) error {
 	}
 	namespaceObj.SetLabels(map[string]string{"app": piplineMetadata.Name})
 
-	if _, err := CLIENT.Namespaces().Create(namespaceObj); err != nil {
+	if _, err := models.K8sClient.Namespaces().Create(namespaceObj); err != nil {
 		fmt.Errorf("Create namespace err : %v\n", err)
 		return err
 	}
@@ -34,7 +34,7 @@ func WatchNamespaceStatus(labelKey string, labelValue string, timeout int64, che
 	}
 
 	opts := api.ListOptions{LabelSelector: labels.Set{labelKey: labelValue}.AsSelector()}
-	w, err := CLIENT.Namespaces().Watch(opts)
+	w, err := models.K8sClient.Namespaces().Watch(opts)
 	if err != nil {
 		ch <- Error
 		return
