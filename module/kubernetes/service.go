@@ -56,6 +56,7 @@ func WatchServiceStatus(Namespace string, labelKey string, labelValue string, ti
 	w, err := models.K8sClient.Services(Namespace).Watch(opts)
 	if err != nil {
 		ch <- Error
+		return
 	}
 
 	t := time.NewTimer(time.Second * time.Duration(timeout))
