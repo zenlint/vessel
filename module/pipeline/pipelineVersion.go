@@ -324,21 +324,16 @@ func startStageInK8S(pipelineVersionId int64,stageName string) (err error){
 	}
 
 	log.Infoln("goting to deal with pipelinePecTemplate detail = ", pipelineSpecTemplate)
-
 	k8sCh := make(chan string)
 	bsCh := make(chan bool)
-	if kubeclient.CheckRC(pipelineSpecTemplate.MetaData.Namespace,stageName){
-		err = errors.New("this stage name = " + stageName + "rc is exists")
-		k8sCh <- err.Error()
-	}else{
-		go kubeclient.WatchPipelineStatus(pipelineSpecTemplate, stageName, kubeclient.Added, k8sCh)
-		// runResult.RunResult = <-k8sCh
-		err = kubeclient.StartPipeline(pipelineSpecTemplate, stageName)
-		if err != nil {
-			log.Infoln("Start k8s resource pipeline name: ", pipelineSpecTemplate.MetaData.Name," err: ", err)
-		}
-	}
 
+	go kubeclient.WatchPipelineStatus(pipelineSpecTemplate, stageName, kubeclient.Added, k8sCh)
+
+	// runResult.RunResult = <-k8sCh
+	err = kubeclient.StartPipeline(pipelineSpecTemplate, stageName)
+	if err != nil {
+		log.Infoln("Start k8s resource pipeline name: ", pipelineSpecTemplate.MetaData.Name," err: ", err)
+	}
 	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
 	for i := 0; i < 2; i++ {
 		select {
