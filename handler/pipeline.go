@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/golang/glog"
 	"gopkg.in/macaron.v1"
 
 	"github.com/containerops/vessel/models"
@@ -62,6 +62,9 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData models.PipelineSpecTemp
 		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_interval
 		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_count
 	*/
+	if err := checkRequsetData(&reqData); err != nil {
+		return http.StatusOK, []byte(err.Error())
+	}
 
 	pl, err := createPipelineAndStage(reqData)
 	if err != nil {
@@ -130,12 +133,9 @@ func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, 
 		sInfo.StageSpec = value
 
 		plInfo.Stages = append(plInfo.Stages, sInfo)
+		log.Infoln(value)
 	}
-
-	log.Error(plInfo)
-	for _, value := range plInfo.Stages {
-		log.Error(value)
-	}
+	log.Infoln(plInfo)
 
 	return plInfo, nil
 }

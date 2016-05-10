@@ -14,6 +14,8 @@ type GlobalConf struct {
 	Author      string
 	Email       string
 	RuntimePath string
+	Kind		string
+	ApiVersion	string
 }
 
 type RunTimeConf struct {
