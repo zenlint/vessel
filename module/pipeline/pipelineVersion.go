@@ -327,11 +327,11 @@ func startStageInK8S(pipelineVersionId int64,stageName string) (err error){
 
 	// runResult.RunResult = <-k8sCh
 	err = kubeclient.StartPipeline(pipelineSpecTemplate, stageName)
-	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
 	if err != nil {
 		log.Infoln("Start k8s resource pipeline name: ", pipelineSpecTemplate.MetaData.Name," err: ", err)
-		return err
+		k8sCh <- err.Error()
 	}
+	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
 	for i := 0; i < 2; i++ {
 		select {
 		case k8sRes := <-k8sCh:
