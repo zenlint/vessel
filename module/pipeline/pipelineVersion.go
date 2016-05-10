@@ -172,7 +172,7 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 		stageVersionState := <-finishChan
 		stageVersionState.ChangeStageVersionState()
 		stageVersionStateList = append(stageVersionStateList, stageVersionState)
-		if stageVersionState.RunResult != StartSucessful{
+		if stageVersionState.RunResult != StateSuccess{
 			finishStageNum = sumStage
 		}else{
 			finishStageNum++
