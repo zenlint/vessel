@@ -1,7 +1,7 @@
 package kubernetes
 
 import (
-	"fmt"
+	log "github.com/golang/glog"
 
 	"github.com/containerops/vessel/models"
 )
@@ -40,7 +40,7 @@ func DeletePipeline(pipelineVersion *models.PipelineSpecTemplate) error {
 }
 
 func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName string, checkOp string, ch chan string) {
-	fmt.Println("Enter WatchPipelineStatus")
+	log.Infoln("Enter WatchPipelineStatus")
 	labelKey := "app"
 	pipelineMetadata := pipelineVersion.MetaData
 	// nsLabelValue := pipelineMetadata.Name
@@ -80,33 +80,33 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 		/*
 			case ns = <-nsCh:
 				if ns == Error || ns == Timeout {
-					fmt.Println("Get watch ns event err or timeout")
+					log.Infoln("Get watch ns event err or timeout")
 					ch <- ns
 					return
 				}
 		*/
 		case rc = <-rcCh:
 			if rc == Error || rc == Timeout {
-				fmt.Println("Get watch rc event err or timeout")
+				log.Infoln("Get watch rc event err or timeout")
 				ch <- rc
 				return
 			} else {
 				rcCount++
-				fmt.Printf("Get watch rc event OK count %v\n", rcCount)
+				log.Infoln("Get watch rc event OK count ", rcCount)
 			}
 		case service = <-serviceCh:
 			if service == Error || service == Timeout {
-				fmt.Println("Get watch service event err or timeout")
+				log.Infoln("Get watch service event err or timeout")
 				ch <- service
 				return
 			} else {
 				serviceCount++
-				fmt.Printf("Get watch service event ok count %v\n", serviceCount)
+				log.Infoln("Get watch service event ok count ", serviceCount)
 			}
 		}
 	}
 
-	fmt.Println("WatchPipelineStatus return OK")
+	log.Infoln("WatchPipelineStatus return OK")
 	ch <- OK
 	// return
 }
