@@ -361,7 +361,7 @@ func formatStageVersionState(stageVersion *models.StageVersion,err error) *model
 		stageVersionState.Detail = StartTimeout
 	}else{
 		stageVersionState.RunResult = StartFailed
-		stageVersionState.Detail = StartFailed
+		stageVersionState.Detail = err.Error()
 	}
 	return &stageVersionState
 }
