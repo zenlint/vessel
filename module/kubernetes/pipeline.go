@@ -61,6 +61,8 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	rcCh := make(chan string)
 	serviceCh := make(chan string)
 
+	//todo:watch all pod start
+	//go WatchPodStatus(namespace, labelKey, stageName, timeout, checkOp)
 	go WatchRCStatus(namespace, labelKey, stageName, timeout, checkOp, rcCh)
 	go WatchServiceStatus(namespace, labelKey, stageName, timeout, checkOp, serviceCh)
 	// }
