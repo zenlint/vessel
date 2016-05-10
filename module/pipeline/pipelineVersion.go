@@ -112,7 +112,7 @@ func BootPipelineVersion(pipelineId int64) (string, error) {
 	go bootStage(bootChan, finishChan, notifyBootDone)
 	go isFinish(finishChan, stageVersionStateChan, len(stageVersions), notifyBootDone)
 
-	// search all stage, start stage which from is ""
+	// search all stage, start stage which from is empty
 	for _, stageVersion := range stageVersions {
 		if stageVersion.Name != "" {
 			from, err := etcd.GetCurrentStageVersionFromRelation(stageVersion)
@@ -127,13 +127,13 @@ func BootPipelineVersion(pipelineId int64) (string, error) {
 		}
 	}
 
-	runResult := <-stageVersionStateChan
+	stageVersionState := <-stageVersionStateChan
 	err = pipelineVersion.Done()
 	if err != nil {
 		log.Infoln("error when update pipelineVersion state", err)
 	}
 	log.Infoln("all job is done!")
-	return runResult, nil
+	return stageVersionState, nil
 }
 
 // receive bootChan's message start give stage by stage path in etcd
@@ -327,10 +327,11 @@ func startStageInK8S(pipelineVersionId int64,stageName string) (err error){
 
 	// runResult.RunResult = <-k8sCh
 	err = kubeclient.StartPipeline(pipelineSpecTemplate, stageName)
+	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
 	if err != nil {
 		log.Infoln("Start k8s resource pipeline name: ", pipelineSpecTemplate.MetaData.Name," err: ", err)
+		return err
 	}
-	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
 	for i := 0; i < 2; i++ {
 		select {
 		case k8sRes := <-k8sCh:

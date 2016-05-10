@@ -62,7 +62,7 @@ func V1POSTPipelineHandler(ctx *macaron.Context, reqData models.PipelineSpecTemp
 		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_interval
 		/containerops/vessel/ws-xxx/pj-xxx/pl-xxx1/plv-xxx/stagev-xxx/check/check_status_count
 	*/
-	if err := checkRequsetData(&reqData); err != nil {
+	if err := checkRequestData(&reqData); err != nil {
 		return http.StatusOK, []byte(err.Error())
 	}
 
