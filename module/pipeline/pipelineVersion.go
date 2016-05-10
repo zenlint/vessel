@@ -120,7 +120,7 @@ func BootPipelineVersion(pipelineId int64) (string, error) {
 				// error when get from relation from etcd ,all stage should stop and return err
 				stageVersionStateChan <- err.Error()
 				notifyBootDone <- true
-				continue
+				break
 			} else if from == "" {
 				bootChan <- stageVersion
 			}
@@ -171,9 +171,13 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 		log.Infoln("finishStageNum = ",finishStageNum)
 		stageVersionState := <-finishChan
 		stageVersionState.ChangeStageVersionState()
-		finishStageNum++
-		log.Infoln("finishStageNum++ = ",finishStageNum)
 		stageVersionStateList = append(stageVersionStateList, stageVersionState)
+		if stageVersionState.RunResult != StartSucessful{
+			finishStageNum = sumStage
+		}else{
+			finishStageNum++
+		}
+		log.Infoln("finishStageNum++ = ",finishStageNum)
 	}
 }
 
@@ -329,7 +333,6 @@ func startStageInK8S(pipelineVersionId int64,stageName string) (err error){
 	err = kubeclient.StartPipeline(pipelineSpecTemplate, stageName)
 	if err != nil {
 		log.Infoln("Start k8s resource pipeline name: ", pipelineSpecTemplate.MetaData.Name," err: ", err)
-		return err
 	}
 	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
 	for i := 0; i < 2; i++ {
