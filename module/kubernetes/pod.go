@@ -64,10 +64,13 @@ func GetPodStatus(namespace string, podName string) string {
 }
 
 // WatchPodStatus return status of the operation(specified by checkOp) of the pod, OK, TIMEOUT.
-func WatchPodStatus(podNamespace string, labelKey string, labelValue string, timeout int64, checkOp string,sum int,ch chan string){
+func WatchPodStatus(podNamespace string, labelKey string, labelValue string, timeout int64, checkOp string, sum int, ch chan string) {
 	log.Printf("Enter WatchPodStatus")
 	if checkOp != string(watch.Deleted) && checkOp != string(watch.Added) {
 		log.Printf("Params checkOp err, checkOp: %v", checkOp)
+	}
+	if sum == 0{
+		return
 	}
 
 	opts := api.ListOptions{LabelSelector: labels.Set{labelKey: labelValue}.AsSelector()}
@@ -77,25 +80,25 @@ func WatchPodStatus(podNamespace string, labelKey string, labelValue string, tim
 		log.Printf("Get watch interface err")
 		return
 	}
+	watchType := checkOp
+	if checkOp == watch.Added {
+		watchType = watch.Modified
+	}
 
 	t := time.NewTimer(time.Second * time.Duration(timeout))
-	for count := 0; count < sum;{
+	for count := 0; count < sum; {
 		select {
 		case event, ok := <-w.ResultChan():
 			if !ok {
 				log.Printf("Watch err\n")
 				ch <- Error
-
+				return
 				// Pod have phase, so we have to wait for the phase change to the right status when added
-			}else {
-				log.Println(string(event.Type))
-				log.Println(event.Object.(*api.Pod).Status.Phase)
-				if string(event.Type) == checkOp {
-					if event.Object.(*api.Pod).Status.Phase != "running"{
-						continue
-					}
-					ch <- OK
+			} else {
+				if string(event.Type) != watchType || event.Object.(*api.Pod).Status.Phase != "running" {
+					continue
 				}
+				ch <- OK
 			}
 			count++
 		case <-t.C:

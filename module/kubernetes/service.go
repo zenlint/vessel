@@ -65,6 +65,7 @@ func WatchServiceStatus(Namespace string, labelKey string, labelValue string, ti
 	case event, ok := <-w.ResultChan():
 		if !ok {
 			ch <- Error
+			return
 		} else if string(event.Type) == checkOp {
 			ch <- OK
 		}

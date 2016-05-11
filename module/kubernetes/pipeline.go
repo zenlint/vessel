@@ -63,7 +63,14 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	serviceCh := make(chan string)
 
 	//todo:watch all pod start
-	go WatchPodStatus(namespace, labelKey, stageName, timeout, checkOp,1,podCh)
+
+	podCount := 0
+	for _,specItem := range pipelineVersion.Spec{
+		if specItem.Name == stageName{
+			podCount = specItem.Replicas
+		}
+	}
+	go WatchPodStatus(namespace, labelKey, stageName, timeout, checkOp, podCount, podCh)
 	go WatchRCStatus(namespace, labelKey, stageName, timeout, checkOp, rcCh)
 	go WatchServiceStatus(namespace, labelKey, stageName, timeout, checkOp, serviceCh)
 	// }
@@ -78,7 +85,7 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	service := OK
 	rcCount := 0
 	serviceCount := 0
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 2 + podCount; i++ {
 		select {
 		case pod = <-podCh:
 			if pod == Error || pod == Timeout {
@@ -92,19 +99,17 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 				log.Println("Get watch rc event err or timeout")
 				ch <- rc
 				return
-			} else {
-				rcCount++
-				log.Println("Get watch rc event OK count ", rcCount)
 			}
+			rcCount++
+			log.Println("Get watch rc event OK count ", rcCount)
 		case service = <-serviceCh:
 			if service == Error || service == Timeout {
 				log.Println("Get watch service event err or timeout")
 				ch <- service
 				return
-			} else {
-				serviceCount++
-				log.Println("Get watch service event ok count ", serviceCount)
 			}
+			serviceCount++
+			log.Println("Get watch service event ok count ", serviceCount)
 		}
 	}
 
