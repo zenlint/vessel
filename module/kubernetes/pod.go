@@ -69,7 +69,7 @@ func WatchPodStatus(podNamespace string, labelKey string, labelValue string, tim
 	if checkOp != string(watch.Deleted) && checkOp != string(watch.Added) {
 		log.Printf("Params checkOp err, checkOp: %v", checkOp)
 	}
-	if sum == 0{
+	if sum == 0 {
 		return
 	}
 
@@ -93,14 +93,12 @@ func WatchPodStatus(podNamespace string, labelKey string, labelValue string, tim
 				log.Printf("Watch err\n")
 				ch <- Error
 				return
-				// Pod have phase, so we have to wait for the phase change to the right status when added
-			} else {
-				if string(event.Type) != watchType || event.Object.(*api.Pod).Status.Phase != "running" {
-					continue
-				}
-				ch <- OK
 			}
-			count++
+			log.Println(event.Type,event.Object.(*api.Pod).Status.Phase)
+			if string(event.Type) == watchType && event.Object.(*api.Pod).Status.Phase != "Running" {
+				ch <- OK
+				count++
+			}
 		case <-t.C:
 			log.Println("WatchRCStatus timeout")
 			ch <- Timeout

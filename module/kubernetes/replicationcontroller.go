@@ -97,7 +97,9 @@ func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout
 			log.Println("Get RC event !ok")
 			ch <- Error
 			return
-		} else if string(event.Type) == checkOp {
+		}
+		log.Println(event.Type,event.Object.(*api.Pod).Status.Phase)
+		if string(event.Type) == checkOp {
 			log.Println("Get RC event ok")
 			ch <- OK
 		}
