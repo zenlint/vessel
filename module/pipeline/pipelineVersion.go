@@ -5,7 +5,6 @@ import (
 	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/module/etcd"
 	"golang.org/x/net/context"
-	log "github.com/golang/glog"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +12,8 @@ import (
 	kubeclient "github.com/containerops/vessel/module/kubernetes"
 	"github.com/coreos/etcd/client"
 	"errors"
+	"fmt"
+	"github.com/containerops/vessel/utils"
 )
 
 const (
@@ -130,9 +131,9 @@ func BootPipelineVersion(pipelineId int64) (string, error) {
 	stageVersionState := <-stageVersionStateChan
 	err = pipelineVersion.Done()
 	if err != nil {
-		log.Infoln("error when update pipelineVersion state", err)
+		fmt.Println(utils.CurrentLocation(), "error when update pipelineVersion state", err)
 	}
-	log.Infoln("all job is done!")
+	fmt.Println(utils.CurrentLocation(), "all job is done!")
 	return stageVersionState, nil
 }
 
@@ -143,7 +144,7 @@ func bootStage(bootChan chan *models.StageVersion, finishChan chan models.StageV
 		select {
 		case stageVersion := <-bootChan:
 			if _, ok := bootMap[stageVersion.Name]; !ok {
-				log.Infoln("start boot :", stageVersion.Name)
+				fmt.Println(utils.CurrentLocation(), "start boot :", stageVersion.Name)
 				bootMap[stageVersion.Name] = true
 				go startStage(stageVersion, bootChan, finishChan)
 			}
@@ -160,7 +161,7 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 
 	for {
 		if finishStageNum == sumStage {
-			log.Infoln("finishStageNum == sumStage")
+			fmt.Println(utils.CurrentLocation(), "finishStageNum == sumStage")
 			notifyBootDone <- true
 
 			// stageVersionStateChan <- strings.Join(failedList, ",")
@@ -168,17 +169,17 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 			stageVersionStateChan <- string(stageVersionStateStr)
 			return
 		}
-		log.Infoln("finishStageNum = ",finishStageNum)
+		fmt.Println(utils.CurrentLocation(), "finishStageNum = ",finishStageNum)
 		stageVersionState := <-finishChan
 		stageVersionState.ChangeStageVersionState()
 		stageVersionStateList = append(stageVersionStateList, stageVersionState)
-		log.Infoln(stageVersionState.RunResult)
+		fmt.Println(utils.CurrentLocation(), stageVersionState.RunResult)
 		if stageVersionState.RunResult != StateSuccess{
 			finishStageNum = sumStage
 		}else{
 			finishStageNum++
 		}
-		log.Infoln("finishStageNum++ = ",finishStageNum)
+		fmt.Println(utils.CurrentLocation(), "finishStageNum++ = ",finishStageNum)
 	}
 }
 
@@ -273,7 +274,7 @@ func startStage(stageVersion *models.StageVersion, bootChan chan *models.StageVe
 func getCurrentStageVersionState(stageVersion *models.StageVersion, stateChan chan string) {
 	state, err := etcd.GetCurrentStageVersionState(stageVersion)
 	if err != nil {
-		log.Infoln("[getCurrentStageVersionState]:error when get current stageVersion State info :", err)
+		fmt.Println(utils.CurrentLocation(), "[getCurrentStageVersionState]:error when get current stageVersion State info :", err)
 	} else {
 		stateChan <- state
 	}
@@ -283,7 +284,7 @@ func watchStageVersionState(watcher client.Watcher, fromStageVersionChan chan st
 	for {
 		res, err := watcher.Next(context.Background())
 		if err != nil {
-			log.Infoln("[watcheStageVersionState]:error watch stages:", err)
+			fmt.Println(utils.CurrentLocation(), "[watcheStageVersionState]:error watch stages:", err)
 		}
 
 		if res.Action == "set" || res.Action == "update" {
@@ -297,15 +298,15 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 	etcd.ChangeCurrentStageVresionState(stageVersion, state, reason)
 	toStageVersions, err := etcd.GetCurrentStageVersionToRelation(stageVersion)
 	if err != nil {
-		log.Infoln("[changeStageVersionState]:error when shoutdown stage version:", err)
+		fmt.Println(utils.CurrentLocation(), "[changeStageVersionState]:error when shoutdown stage version:", err)
 	}
-	log.Infoln(state)
+	fmt.Println(utils.CurrentLocation(), state)
 
 	if state == StateSuccess || state == StateFailed {
 		for _, toStageVersionName := range strings.Split(toStageVersions, ",") {
-			log.Infoln(toStageVersions)
+			fmt.Println(utils.CurrentLocation(), toStageVersions)
 			if toStageVersionName != "" {
-				log.Infoln(toStageVersionName)
+				fmt.Println(utils.CurrentLocation(), toStageVersionName)
 				toStageVersion := *stageVersion
 				toStageVersion.Name = toStageVersionName
 				bootChan <- &toStageVersion
@@ -315,16 +316,16 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 }
 
 func startStageInK8S(pipelineVersionId int64,stageName string) (err error){
-	log.Infoln("Enter startStageInK8S to start stage ", stageName)
+	fmt.Println(utils.CurrentLocation(), "Enter startStageInK8S to start stage ", stageName)
 	pipelineVersion := models.GetPipelineVersion(pipelineVersionId)
 	pipelineSpecTemplate := new(models.PipelineSpecTemplate)
 
 	if err = json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate); err != nil {
-		log.Infoln("Unmarshal PipelineSpecTemplate err: ",err)
+		fmt.Println(utils.CurrentLocation(), "Unmarshal PipelineSpecTemplate err: ",err)
 		return err
 	}
 
-	log.Infoln("goting to deal with pipelinePecTemplate detail = ", pipelineSpecTemplate)
+	fmt.Println(utils.CurrentLocation(), "goting to deal with pipelinePecTemplate detail = ", pipelineSpecTemplate)
 	k8sCh := make(chan string)
 	bsCh := make(chan bool)
 
@@ -333,13 +334,13 @@ func startStageInK8S(pipelineVersionId int64,stageName string) (err error){
 	// runResult.RunResult = <-k8sCh
 	err = kubeclient.StartPipeline(pipelineSpecTemplate, stageName)
 	if err != nil {
-		log.Infoln("Start k8s resource pipeline name: ", pipelineSpecTemplate.MetaData.Name," err: ", err)
+		fmt.Println(utils.CurrentLocation(), "Start k8s resource pipeline name: ", pipelineSpecTemplate.MetaData.Name," err: ", err)
 	}
 	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
 	for i := 0; i < 2; i++ {
 		select {
 		case k8sRes := <-k8sCh:
-			log.Infoln("k8sCh start stage name = ", stageName," return ", k8sRes)
+			fmt.Println(utils.CurrentLocation(), "k8sCh start stage name = ", stageName," return ", k8sRes)
 		case bsRes := <-bsCh:
 			if !bsRes{
 				err = errors.New("Get pipeline bussiness Res wrong")
@@ -357,7 +358,7 @@ func formatStageVersionState(stageVersion *models.StageVersion,err error) *model
 		StageId: stageVersion.StageId,
 		StageVersionId: stageVersion.PipelineVersionId,
 		StageName: stageVersion.Name}
-	log.Infoln("k8s module stage name = ", stageVersion.Name," ret ", err)
+	fmt.Println(utils.CurrentLocation(), "k8s module stage name = ", stageVersion.Name," ret ", err)
 	if err == nil {
 		stageVersionState.RunResult = StateSuccess
 		stageVersionState.Detail = StateSuccess

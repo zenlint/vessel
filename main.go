@@ -8,11 +8,9 @@ import (
 
 	"github.com/containerops/vessel/cmd"
 	"github.com/containerops/vessel/setting"
-	"flag"
 )
 
 func main() {
-	flag.Parse()
 	if err := setting.InitConf("./conf/global.yaml", "./conf/runtime.yaml"); err != nil {
 		fmt.Printf("Read config error: %v", err.Error())
 		return

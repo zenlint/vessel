@@ -6,13 +6,13 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/golang/glog"
 	"gopkg.in/macaron.v1"
 
 	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/module/kubernetes"
 	"github.com/containerops/vessel/module/pipeline"
 	"github.com/containerops/vessel/utils"
+	"fmt"
 )
 
 // type PipelinePOSTJSON struct {
@@ -133,9 +133,9 @@ func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, 
 		sInfo.StageSpec = value
 
 		plInfo.Stages = append(plInfo.Stages, sInfo)
-		log.Infoln(value)
+		fmt.Println(utils.CurrentLocation(), value)
 	}
-	log.Infoln(plInfo)
+	fmt.Println(utils.CurrentLocation(), plInfo)
 
 	return plInfo, nil
 }
