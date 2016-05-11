@@ -68,7 +68,7 @@ func WatchServiceStatus(Namespace string, labelKey string, labelValue string, ti
 			ch <- Error
 			return
 		}
-		log.Println(event.Type,event.Object.(*api.Pod).Status.Phase)
+		log.Println(event.Type,event.Object)
 		if string(event.Type) == checkOp {
 			ch <- OK
 		}
