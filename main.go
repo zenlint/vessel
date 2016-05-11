@@ -8,6 +8,7 @@ import (
 
 	"github.com/containerops/vessel/cmd"
 	"github.com/containerops/vessel/setting"
+	"log"
 )
 
 func main() {
@@ -15,6 +16,7 @@ func main() {
 		fmt.Printf("Read config error: %v", err.Error())
 		return
 	}
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
 
 	cmdWeb := cmd.GetCmdWeb()
 

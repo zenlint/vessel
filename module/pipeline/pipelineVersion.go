@@ -12,18 +12,17 @@ import (
 	kubeclient "github.com/containerops/vessel/module/kubernetes"
 	"github.com/coreos/etcd/client"
 	"errors"
-	"fmt"
-	"github.com/containerops/vessel/utils"
+	"log"
 )
 
 const (
-	StateNotStart  = "not start"
-	StateStarting  = "working"
-	StateSuccess   = "success"
-	StateFailed    = "failed"
+	StateNotStart = "not start"
+	StateStarting = "working"
+	StateSuccess = "success"
+	StateFailed = "failed"
 	StartSucessful = "OK"
-	StartFailed    = "ERROR"
-	StartTimeout   = "TIMEOUT"
+	StartFailed = "ERROR"
+	StartTimeout = "TIMEOUT"
 )
 
 // BootPipelineVersion : start a pipelineVersion,boot the stage and return the result
@@ -131,9 +130,9 @@ func BootPipelineVersion(pipelineId int64) (string, error) {
 	stageVersionState := <-stageVersionStateChan
 	err = pipelineVersion.Done()
 	if err != nil {
-		fmt.Println(utils.CurrentLocation(), "error when update pipelineVersion state", err)
+		log.Println("error when update pipelineVersion state", err)
 	}
-	fmt.Println(utils.CurrentLocation(), "all job is done!")
+	log.Println("all job is done!")
 	return stageVersionState, nil
 }
 
@@ -144,7 +143,7 @@ func bootStage(bootChan chan *models.StageVersion, finishChan chan models.StageV
 		select {
 		case stageVersion := <-bootChan:
 			if _, ok := bootMap[stageVersion.Name]; !ok {
-				fmt.Println(utils.CurrentLocation(), "start boot :", stageVersion.Name)
+				log.Println("start boot :", stageVersion.Name)
 				bootMap[stageVersion.Name] = true
 				go startStage(stageVersion, bootChan, finishChan)
 			}
@@ -161,7 +160,7 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 
 	for {
 		if finishStageNum == sumStage {
-			fmt.Println(utils.CurrentLocation(), "finishStageNum == sumStage")
+			log.Println("finishStageNum == sumStage")
 			notifyBootDone <- true
 
 			// stageVersionStateChan <- strings.Join(failedList, ",")
@@ -169,17 +168,17 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 			stageVersionStateChan <- string(stageVersionStateStr)
 			return
 		}
-		fmt.Println(utils.CurrentLocation(), "finishStageNum = ",finishStageNum)
+		log.Println("finishStageNum = ", finishStageNum)
 		stageVersionState := <-finishChan
 		stageVersionState.ChangeStageVersionState()
 		stageVersionStateList = append(stageVersionStateList, stageVersionState)
-		fmt.Println(utils.CurrentLocation(), stageVersionState.RunResult)
-		if stageVersionState.RunResult != StateSuccess{
+		log.Println(stageVersionState.RunResult)
+		if stageVersionState.RunResult != StateSuccess {
 			finishStageNum = sumStage
-		}else{
+		} else {
 			finishStageNum++
 		}
-		fmt.Println(utils.CurrentLocation(), "finishStageNum++ = ",finishStageNum)
+		log.Println("finishStageNum++ = ", finishStageNum)
 	}
 }
 
@@ -213,14 +212,14 @@ func startStage(stageVersion *models.StageVersion, bootChan chan *models.StageVe
 	watcher := etcd.GetStageVersionFromStageVersionsWatcher(stageVersion)
 	go watchStageVersionState(watcher, fromStageVersionStateChan)
 
-	for count, sum := 0,len(stageNameMap); count < sum; {
+	for count, sum := 0, len(stageNameMap); count < sum; {
 		select {
 		case stateInfo := <-fromStageVersionStateChan:
-			// get a fromStageVersion state info
-			// first check is this state from curren stageVersion's fromStageVersion
-			// then check is the state is stage running success or failed
-			// 	if state is success,record this and continue wait
-			// 	if state is failed,failed current stageVersion
+		// get a fromStageVersion state info
+		// first check is this state from curren stageVersion's fromStageVersion
+		// then check is the state is stage running success or failed
+		// 	if state is success,record this and continue wait
+		// 	if state is failed,failed current stageVersion
 			infoArr := strings.Split(stateInfo, ",")
 			if len(infoArr) != 2 {
 				continue;
@@ -246,7 +245,7 @@ func startStage(stageVersion *models.StageVersion, bootChan chan *models.StageVe
 	}
 
 	// start run stage
-	err := startStageInK8S(stageVersion.PipelineVersionId,stageVersion.Name)
+	err := startStageInK8S(stageVersion.PipelineVersionId, stageVersion.Name)
 	stageVersionState := formatStageVersionState(stageVersion, err)
 
 	/*timeout := make(chan bool, 1)
@@ -274,7 +273,7 @@ func startStage(stageVersion *models.StageVersion, bootChan chan *models.StageVe
 func getCurrentStageVersionState(stageVersion *models.StageVersion, stateChan chan string) {
 	state, err := etcd.GetCurrentStageVersionState(stageVersion)
 	if err != nil {
-		fmt.Println(utils.CurrentLocation(), "[getCurrentStageVersionState]:error when get current stageVersion State info :", err)
+		log.Println("[getCurrentStageVersionState]:error when get current stageVersion State info :", err)
 	} else {
 		stateChan <- state
 	}
@@ -284,7 +283,7 @@ func watchStageVersionState(watcher client.Watcher, fromStageVersionChan chan st
 	for {
 		res, err := watcher.Next(context.Background())
 		if err != nil {
-			fmt.Println(utils.CurrentLocation(), "[watcheStageVersionState]:error watch stages:", err)
+			log.Println("[watcheStageVersionState]:error watch stages:", err)
 		}
 
 		if res.Action == "set" || res.Action == "update" {
@@ -298,15 +297,15 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 	etcd.ChangeCurrentStageVresionState(stageVersion, state, reason)
 	toStageVersions, err := etcd.GetCurrentStageVersionToRelation(stageVersion)
 	if err != nil {
-		fmt.Println(utils.CurrentLocation(), "[changeStageVersionState]:error when shoutdown stage version:", err)
+		log.Println("[changeStageVersionState]:error when shoutdown stage version:", err)
 	}
-	fmt.Println(utils.CurrentLocation(), state)
+	log.Println(state)
 
 	if state == StateSuccess || state == StateFailed {
 		for _, toStageVersionName := range strings.Split(toStageVersions, ",") {
-			fmt.Println(utils.CurrentLocation(), toStageVersions)
+			log.Println(toStageVersions)
 			if toStageVersionName != "" {
-				fmt.Println(utils.CurrentLocation(), toStageVersionName)
+				log.Println(toStageVersionName)
 				toStageVersion := *stageVersion
 				toStageVersion.Name = toStageVersionName
 				bootChan <- &toStageVersion
@@ -315,17 +314,17 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 	}
 }
 
-func startStageInK8S(pipelineVersionId int64,stageName string) (err error){
-	fmt.Println(utils.CurrentLocation(), "Enter startStageInK8S to start stage ", stageName)
+func startStageInK8S(pipelineVersionId int64, stageName string) (err error) {
+	log.Println("Enter startStageInK8S to start stage ", stageName)
 	pipelineVersion := models.GetPipelineVersion(pipelineVersionId)
 	pipelineSpecTemplate := new(models.PipelineSpecTemplate)
 
 	if err = json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate); err != nil {
-		fmt.Println(utils.CurrentLocation(), "Unmarshal PipelineSpecTemplate err: ",err)
+		log.Println("Unmarshal PipelineSpecTemplate err: ", err)
 		return err
 	}
 
-	fmt.Println(utils.CurrentLocation(), "goting to deal with pipelinePecTemplate detail = ", pipelineSpecTemplate)
+	log.Println("goting to deal with pipelinePecTemplate detail = ", pipelineSpecTemplate)
 	k8sCh := make(chan string)
 	bsCh := make(chan bool)
 
@@ -334,15 +333,15 @@ func startStageInK8S(pipelineVersionId int64,stageName string) (err error){
 	// runResult.RunResult = <-k8sCh
 	err = kubeclient.StartPipeline(pipelineSpecTemplate, stageName)
 	if err != nil {
-		fmt.Println(utils.CurrentLocation(), "Start k8s resource pipeline name: ", pipelineSpecTemplate.MetaData.Name," err: ", err)
+		log.Println("Start k8s resource pipeline name: ", pipelineSpecTemplate.MetaData.Name, " err: ", err)
 	}
 	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
 	for i := 0; i < 2; i++ {
 		select {
 		case k8sRes := <-k8sCh:
-			fmt.Println(utils.CurrentLocation(), "k8sCh start stage name = ", stageName," return ", k8sRes)
+			log.Println("k8sCh start stage name = ", stageName, " return ", k8sRes)
 		case bsRes := <-bsCh:
-			if !bsRes{
+			if !bsRes {
 				err = errors.New("Get pipeline bussiness Res wrong")
 			}
 		}
@@ -350,7 +349,7 @@ func startStageInK8S(pipelineVersionId int64,stageName string) (err error){
 	return err
 }
 
-func formatStageVersionState(stageVersion *models.StageVersion,err error) *models.StageVersionState {
+func formatStageVersionState(stageVersion *models.StageVersion, err error) *models.StageVersionState {
 	// pre declare current stageVersion's runState
 	stageVersionState := models.StageVersionState{
 		PipelineId:stageVersion.PipelineId,
@@ -358,14 +357,14 @@ func formatStageVersionState(stageVersion *models.StageVersion,err error) *model
 		StageId: stageVersion.StageId,
 		StageVersionId: stageVersion.PipelineVersionId,
 		StageName: stageVersion.Name}
-	fmt.Println(utils.CurrentLocation(), "k8s module stage name = ", stageVersion.Name," ret ", err)
+	log.Println("k8s module stage name = ", stageVersion.Name, " ret ", err)
 	if err == nil {
 		stageVersionState.RunResult = StateSuccess
 		stageVersionState.Detail = StateSuccess
-	}else if err.Error() == StartTimeout{
+	} else if err.Error() == StartTimeout {
 		stageVersionState.RunResult = StartTimeout
 		stageVersionState.Detail = StartTimeout
-	}else{
+	} else {
 		stageVersionState.RunResult = StartFailed
 		stageVersionState.Detail = err.Error()
 	}

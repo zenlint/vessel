@@ -2,8 +2,7 @@ package kubernetes
 
 import (
 	"github.com/containerops/vessel/models"
-	"fmt"
-	"github.com/containerops/vessel/utils"
+	"log"
 )
 
 func StartPipeline(pipelineVersion *models.PipelineSpecTemplate, stageName string) error {
@@ -40,7 +39,7 @@ func DeletePipeline(pipelineVersion *models.PipelineSpecTemplate) error {
 }
 
 func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName string, checkOp string, ch chan string) {
-	fmt.Println(utils.CurrentLocation(), "Enter WatchPipelineStatus")
+	log.Println("Enter WatchPipelineStatus")
 	labelKey := "app"
 	pipelineMetadata := pipelineVersion.MetaData
 	// nsLabelValue := pipelineMetadata.Name
@@ -89,26 +88,26 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 		*/
 		case rc = <-rcCh:
 			if rc == Error || rc == Timeout {
-				fmt.Println(utils.CurrentLocation(), "Get watch rc event err or timeout")
+				log.Println("Get watch rc event err or timeout")
 				ch <- rc
 				return
 			} else {
 				rcCount++
-				fmt.Println(utils.CurrentLocation(), "Get watch rc event OK count ", rcCount)
+				log.Println("Get watch rc event OK count ", rcCount)
 			}
 		case service = <-serviceCh:
 			if service == Error || service == Timeout {
-				fmt.Println(utils.CurrentLocation(), "Get watch service event err or timeout")
+				log.Println("Get watch service event err or timeout")
 				ch <- service
 				return
 			} else {
 				serviceCount++
-				fmt.Println(utils.CurrentLocation(), "Get watch service event ok count ", serviceCount)
+				log.Println("Get watch service event ok count ", serviceCount)
 			}
 		}
 	}
 
-	fmt.Println(utils.CurrentLocation(), "WatchPipelineStatus return OK")
+	log.Println("WatchPipelineStatus return OK")
 	ch <- OK
 	// return
 }

@@ -7,8 +7,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/watch"
-	"fmt"
-	"github.com/containerops/vessel/utils"
+	"log"
 )
 
 func CreateRC(piplelineVersion *models.PipelineSpecTemplate, stageName string) error {
@@ -64,7 +63,7 @@ func CreateRC(piplelineVersion *models.PipelineSpecTemplate, stageName string) e
 			rc.Spec.Selector["app"] = stagespec.Name
 
 			if _, err := models.K8sClient.ReplicationControllers(metadata.Namespace).Create(rc); err != nil {
-				fmt.Println(utils.CurrentLocation(), "Create rc err : ", err)
+				log.Println("Create rc err : ", err)
 				return err
 			}
 		}
@@ -78,16 +77,16 @@ func DeleteRC(pipelineVersion *models.PipelineSpecTemplate) error {
 
 // WatchServiceStatus return status of the operation(specified by checkOp) of the pod, OK, TIMEOUT.
 func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout int64, checkOp string, ch chan string) {
-	fmt.Println(utils.CurrentLocation(), "Enter WatchRCStatus")
+	log.Println("Enter WatchRCStatus")
 	if checkOp != string(watch.Deleted) && checkOp != string(watch.Added) {
-		fmt.Println(utils.CurrentLocation(), "Params checkOp err, checkOp: ", checkOp)
+		log.Println("Params checkOp err, checkOp: ", checkOp)
 	}
 
 	opts := api.ListOptions{LabelSelector: labels.Set{labelKey: labelValue}.AsSelector()}
 	w, err := models.K8sClient.ReplicationControllers(Namespace).Watch(opts)
 	if err != nil {
 		ch <- Error
-		fmt.Println(utils.CurrentLocation(), "Get watch RC interface err ", err)
+		log.Println("Get watch RC interface err ", err)
 		return
 	}
 
@@ -95,15 +94,15 @@ func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout
 	select {
 	case event, ok := <-w.ResultChan():
 		if !ok {
-			fmt.Println(utils.CurrentLocation(), "Get RC event !ok")
+			log.Println("Get RC event !ok")
 			ch <- Error
 		} else if string(event.Type) == checkOp {
-			fmt.Println(utils.CurrentLocation(), "Get RC event ok")
+			log.Println("Get RC event ok")
 			ch <- OK
 		}
 
 	case <-t.C:
-		fmt.Println(utils.CurrentLocation(), "WatchRCStatus timeout")
+		log.Println("WatchRCStatus timeout")
 		ch <- Timeout
 	}
 }
@@ -112,7 +111,7 @@ func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout
 func CheckRC(namespace string, rcName string) bool {
 	rcs, err := models.K8sClient.ReplicationControllers(namespace).List(api.ListOptions{})
 	if err != nil {
-		fmt.Println(utils.CurrentLocation(), "List rcs err: ", err.Error())
+		log.Println("List rcs err: ", err.Error())
 	}
 
 	for _, rc := range rcs.Items {

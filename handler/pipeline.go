@@ -12,7 +12,7 @@ import (
 	"github.com/containerops/vessel/module/kubernetes"
 	"github.com/containerops/vessel/module/pipeline"
 	"github.com/containerops/vessel/utils"
-	"fmt"
+	"log"
 )
 
 // type PipelinePOSTJSON struct {
@@ -133,9 +133,9 @@ func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, 
 		sInfo.StageSpec = value
 
 		plInfo.Stages = append(plInfo.Stages, sInfo)
-		fmt.Println(utils.CurrentLocation(), value)
+		log.Println(value)
 	}
-	fmt.Println(utils.CurrentLocation(), plInfo)
+	log.Println(plInfo)
 
 	return plInfo, nil
 }
