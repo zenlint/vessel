@@ -87,13 +87,15 @@ func WatchPodStatus(podNamespace string, labelKey string, labelValue string, tim
 				ch <- Error
 
 				// Pod have phase, so we have to wait for the phase change to the right status when added
-			}else if string(event.Type) == checkOp {
+			}else {
 				log.Println(string(event.Type))
 				log.Println(event.Object.(*api.Pod).Status.Phase)
-				if event.Object.(*api.Pod).Status.Phase != "running"{
-					continue
+				if string(event.Type) == checkOp {
+					if event.Object.(*api.Pod).Status.Phase != "running"{
+						continue
+					}
+					ch <- OK
 				}
-				ch <- OK
 			}
 			count++
 		case <-t.C:
