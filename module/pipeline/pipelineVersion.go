@@ -2,27 +2,27 @@ package pipeline
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/module/etcd"
 	"golang.org/x/net/context"
-	"log"
 	"strconv"
 	"strings"
 	"time"
 
 	kubeclient "github.com/containerops/vessel/module/kubernetes"
 	"github.com/coreos/etcd/client"
+	"errors"
+	"log"
 )
 
 const (
-	StateNotStart  = "not start"
-	StateStarting  = "working"
-	StateSuccess   = "success"
-	StateFailed    = "failed"
+	StateNotStart = "not start"
+	StateStarting = "working"
+	StateSuccess = "success"
+	StateFailed = "failed"
 	StartSucessful = "OK"
-	StartFailed    = "ERROR"
-	StartTimeout   = "TIMEOUT"
+	StartFailed = "ERROR"
+	StartTimeout = "TIMEOUT"
 )
 
 // BootPipelineVersion : start a pipelineVersion,boot the stage and return the result
@@ -112,7 +112,7 @@ func BootPipelineVersion(pipelineId int64) (string, error) {
 	go bootStage(bootChan, finishChan, notifyBootDone)
 	go isFinish(finishChan, stageVersionStateChan, len(stageVersions), notifyBootDone)
 
-	// search all stage, start stage which from is ""
+	// search all stage, start stage which from is empty
 	for _, stageVersion := range stageVersions {
 		if stageVersion.Name != "" {
 			from, err := etcd.GetCurrentStageVersionFromRelation(stageVersion)
@@ -120,20 +120,20 @@ func BootPipelineVersion(pipelineId int64) (string, error) {
 				// error when get from relation from etcd ,all stage should stop and return err
 				stageVersionStateChan <- err.Error()
 				notifyBootDone <- true
-				continue
+				break
 			} else if from == "" {
 				bootChan <- stageVersion
 			}
 		}
 	}
 
-	runResult := <-stageVersionStateChan
+	stageVersionState := <-stageVersionStateChan
 	err = pipelineVersion.Done()
 	if err != nil {
 		log.Println("error when update pipelineVersion state", err)
 	}
 	log.Println("all job is done!")
-	return runResult, nil
+	return stageVersionState, nil
 }
 
 // receive bootChan's message start give stage by stage path in etcd
@@ -160,7 +160,7 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 
 	for {
 		if finishStageNum == sumStage {
-			fmt.Println("######################################finishStageNum == sumStage")
+			log.Println("finishStageNum == sumStage")
 			notifyBootDone <- true
 
 			// stageVersionStateChan <- strings.Join(failedList, ",")
@@ -168,14 +168,17 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 			stageVersionStateChan <- string(stageVersionStateStr)
 			return
 		}
-		fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$finishStageNum")
-		fmt.Println(finishStageNum)
+		log.Println("finishStageNum = ", finishStageNum)
 		stageVersionState := <-finishChan
 		stageVersionState.ChangeStageVersionState()
-		finishStageNum++
-		fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$finishStageNum+++++")
-		fmt.Println(finishStageNum)
 		stageVersionStateList = append(stageVersionStateList, stageVersionState)
+		log.Println(stageVersionState.RunResult)
+		if stageVersionState.RunResult != StateSuccess {
+			finishStageNum = sumStage
+		} else {
+			finishStageNum++
+		}
+		log.Println("finishStageNum++ = ", finishStageNum)
 	}
 }
 
@@ -195,73 +198,55 @@ func startStage(stageVersion *models.StageVersion, bootChan chan *models.StageVe
 		}
 	}
 
-	count := 0
-	sum := len(stageNameMap)
-
-	// pre declare current stageVersion's runState
-	var stageVersionState models.StageVersionState
-	stageVersionState.PipelineId = stageVersion.PipelineId
-	stageVersionState.PipelineVersionId = stageVersion.PipelineVersionId
-	stageVersionState.StageId = stageVersion.StageId
-	stageVersionState.StageVersionId = stageVersion.PipelineVersionId
-	stageVersionState.StageName = stageVersion.Name
-
 	// start watch current stageVersion from stageVersion's state and check thoes stageVersion's running state
 	// just in case a stageVersion change after check it's state and before watch it's state
 	fromStageVersionStateChan := make(chan string, 255)
-	fromStageVersionChan := make(chan *models.StageVersion, 255)
 	fromStageVersionStartDoneMap := make(map[string]string)
 
 	for _, fromStageVersionName := range stageNameMap {
-		var tempFromStageVersion models.StageVersion
-		tempFromStageVersion = *stageVersion
-		fromStageVersion := &tempFromStageVersion
+		fromStageVersion := *stageVersion
 		fromStageVersion.Name = fromStageVersionName
-		fromStageVersionChan <- fromStageVersion
+		go getCurrentStageVersionState(&fromStageVersion, fromStageVersionStateChan)
 	}
 
 	watcher := etcd.GetStageVersionFromStageVersionsWatcher(stageVersion)
-	go watcheStageVersionState(watcher, fromStageVersionStateChan)
+	go watchStageVersionState(watcher, fromStageVersionStateChan)
 
-	for {
-		if count == sum {
-			break
-		}
+	for count, sum := 0, len(stageNameMap); count < sum; {
 		select {
-		case fromStageVersion := <-fromStageVersionChan:
-			// get a fromStageVersion from chan to check it's state
-			go getCurrentStageVersionState(fromStageVersion, fromStageVersionStateChan)
 		case stateInfo := <-fromStageVersionStateChan:
-			// get a fromStageVersion state info
-			// first check is this state from curren stageVersion's fromStageVersion
-			// then check is the state is stage running success or failed
-			// 	if state is success,record this and continue wait
-			// 	if state is failed,failed current stageVersion
-			if len(strings.Split(stateInfo, ",")) == 2 {
-				stageName := strings.Split(stateInfo, ",")[0]
-				stageState := strings.Split(stateInfo, ",")[1]
-				if _, exist := stageNameMap[stageName]; exist {
-					if stageState == StateSuccess {
-						fromStageVersionStartDoneMap[stageName] = stageName
-						count = len(fromStageVersionStartDoneMap)
-					} else if stageState == StateFailed {
-						// if got a failed stageVersion,shutdown current stageVersion
-						// notify current stageVresion's to stageVersion
-						// return func
-						stageVersionState.RunResult = StateFailed
-						stageVersionState.Detail = "pre stage" + stageName + " is failed"
-						changeStageVersionState(stageVersion, bootChan, stageVersionState.RunResult, stageVersionState.Detail)
-						finishChan <- stageVersionState
-						return
-					}
+		// get a fromStageVersion state info
+		// first check is this state from curren stageVersion's fromStageVersion
+		// then check is the state is stage running success or failed
+		// 	if state is success,record this and continue wait
+		// 	if state is failed,failed current stageVersion
+			infoArr := strings.Split(stateInfo, ",")
+			if len(infoArr) != 2 {
+				continue;
+			}
+			stageName := strings.Split(stateInfo, ",")[0]
+			stageState := strings.Split(stateInfo, ",")[1]
+			if _, exist := stageNameMap[stageName]; exist {
+				if stageState == StateSuccess {
+					fromStageVersionStartDoneMap[stageName] = stageName
+					count = len(fromStageVersionStartDoneMap)
+				} else if stageState == StateFailed {
+					// if got a failed stageVersion,shutdown current stageVersion
+					// notify current stageVresion's to stageVersion
+					// return func
+
+					stageVersionState := formatStageVersionState(stageVersion, errors.New("pre stage" + stageName + " is failed"))
+					changeStageVersionState(stageVersion, bootChan, stageVersionState.RunResult, stageVersionState.Detail)
+					finishChan <- *stageVersionState
+					return
 				}
 			}
 		}
 	}
 
 	// start run stage
-	stageStartFinish := make(chan models.StageVersionState, 1)
-	go startStageInK8S(stageStartFinish, stageVersionState)
+	err := startStageInK8S(stageVersion.PipelineVersionId, stageVersion.Name)
+	stageVersionState := formatStageVersionState(stageVersion, err)
 
 	/*timeout := make(chan bool, 1)
 	// stageStartFinish <- stageVersionState
@@ -281,15 +266,12 @@ func startStage(stageVersion *models.StageVersion, bootChan chan *models.StageVe
 		stageVersionState = startResult
 	}
 	*/
-	startResult := <-stageStartFinish
-	stageVersionState = startResult
-
 	changeStageVersionState(stageVersion, bootChan, stageVersionState.RunResult, stageVersionState.Detail)
-	finishChan <- stageVersionState
+	finishChan <- *stageVersionState
 }
 
-func getCurrentStageVersionState(stageVresion *models.StageVersion, stateChan chan string) {
-	state, err := etcd.GetCurrentStageVersionState(stageVresion)
+func getCurrentStageVersionState(stageVersion *models.StageVersion, stateChan chan string) {
+	state, err := etcd.GetCurrentStageVersionState(stageVersion)
 	if err != nil {
 		log.Println("[getCurrentStageVersionState]:error when get current stageVersion State info :", err)
 	} else {
@@ -297,7 +279,7 @@ func getCurrentStageVersionState(stageVresion *models.StageVersion, stateChan ch
 	}
 }
 
-func watcheStageVersionState(watcher client.Watcher, fromStageVersionChan chan string) {
+func watchStageVersionState(watcher client.Watcher, fromStageVersionChan chan string) {
 	for {
 		res, err := watcher.Next(context.Background())
 		if err != nil {
@@ -317,83 +299,74 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 	if err != nil {
 		log.Println("[changeStageVersionState]:error when shoutdown stage version:", err)
 	}
-	fmt.Println("*********************************************************************")
-	fmt.Println(state)
+	log.Println(state)
 
 	if state == StateSuccess || state == StateFailed {
 		for _, toStageVersionName := range strings.Split(toStageVersions, ",") {
-			fmt.Println(toStageVersions)
+			log.Println(toStageVersions)
 			if toStageVersionName != "" {
-				fmt.Println(toStageVersionName)
-				var toStageVersion models.StageVersion
-				toStageVersion = *stageVersion
+				log.Println(toStageVersionName)
+				toStageVersion := *stageVersion
 				toStageVersion.Name = toStageVersionName
 				bootChan <- &toStageVersion
 			}
 		}
 	}
-	fmt.Println("*********************************************************************")
 }
 
-func startStageInK8S(runResultChan chan models.StageVersionState, runResult models.StageVersionState) {
-	pipelineVersion := models.GetPipelineVersion(runResult.PipelineVersionId)
+func startStageInK8S(pipelineVersionId int64, stageName string) (err error) {
+	log.Println("Enter startStageInK8S to start stage ", stageName)
+	pipelineVersion := models.GetPipelineVersion(pipelineVersionId)
 	pipelineSpecTemplate := new(models.PipelineSpecTemplate)
 
-	stageName := runResult.StageName
-	fmt.Printf("Enter startStageInK8S to start stage %v\n", stageName)
-	err := json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate)
-	// fmt.Printf("goting to deal with stage name  = %v\n", stageName)
-	fmt.Printf("goting to deal with pipelinePecTemplate detail  = %v\n", pipelineSpecTemplate)
-	// err := json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate)
-	if err != nil {
-		log.Printf("Unmarshal PipelineSpecTemplate err : %v\n")
+	if err = json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate); err != nil {
+		log.Println("Unmarshal PipelineSpecTemplate err: ", err)
+		return err
 	}
-	fmt.Println(pipelineSpecTemplate)
+
+	log.Println("goting to deal with pipelinePecTemplate detail = ", pipelineSpecTemplate)
 	k8sCh := make(chan string)
 	bsCh := make(chan bool)
 
 	go kubeclient.WatchPipelineStatus(pipelineSpecTemplate, stageName, kubeclient.Added, k8sCh)
 
 	// runResult.RunResult = <-k8sCh
-	if err := kubeclient.StartPipeline(pipelineSpecTemplate, stageName); err != nil {
-		log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineSpecTemplate.MetaData.Name, err)
+	err = kubeclient.StartPipeline(pipelineSpecTemplate, stageName)
+	if err != nil {
+		log.Println("Start k8s resource pipeline name: ", pipelineSpecTemplate.MetaData.Name, " err: ", err)
 	}
 	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
-	// fmt.Println("11111111111111")
-	k8sRes := ""
-	bsRes := true
 	for i := 0; i < 2; i++ {
 		select {
-		case k8sRes = <-k8sCh:
-			fmt.Printf("k8sCh start stage name = %v return %v\n", stageName, k8sRes)
-		case bsRes = <-bsCh:
-			// fmt.Printf("bsCh return %v\n", bsRes)
+		case k8sRes := <-k8sCh:
+			log.Println("k8sCh start stage name = ", stageName, " return ", k8sRes)
+		case bsRes := <-bsCh:
+			if !bsRes {
+				err = errors.New("Get pipeline bussiness Res wrong")
+			}
 		}
 	}
+	return err
+}
 
-	if k8sRes == StartFailed {
-		fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StateFailed)
-		runResult.RunResult = StartFailed
-		runResult.Detail = StartFailed
-		runResultChan <- runResult
-	} else if k8sRes == StartSucessful {
-		// fmt.Printf("k8s res %v\n", StartSucessful)
-		if bsRes == true {
-			fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StartSucessful)
-			runResult.RunResult = StateSuccess
-			runResult.Detail = StateSuccess
-			runResultChan <- runResult
-		} else {
-			fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StartFailed)
-			runResult.RunResult = StartFailed
-			runResult.Detail = StartFailed
-			runResultChan <- runResult
-		}
+func formatStageVersionState(stageVersion *models.StageVersion, err error) *models.StageVersionState {
+	// pre declare current stageVersion's runState
+	stageVersionState := models.StageVersionState{
+		PipelineId:stageVersion.PipelineId,
+		PipelineVersionId: stageVersion.PipelineVersionId,
+		StageId: stageVersion.StageId,
+		StageVersionId: stageVersion.PipelineVersionId,
+		StageName: stageVersion.Name}
+	log.Println("k8s module stage name = ", stageVersion.Name, " ret ", err)
+	if err == nil {
+		stageVersionState.RunResult = StateSuccess
+		stageVersionState.Detail = StateSuccess
+	} else if err.Error() == StartTimeout {
+		stageVersionState.RunResult = StartTimeout
+		stageVersionState.Detail = StartTimeout
 	} else {
-		fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StartTimeout)
-		runResult.RunResult = StartTimeout
-		runResult.Detail = StartTimeout
-		runResultChan <- runResult
+		stageVersionState.RunResult = StartFailed
+		stageVersionState.Detail = err.Error()
 	}
-
+	return &stageVersionState
 }

@@ -54,21 +54,17 @@ func isPipelineLegal(pipeline *models.Pipeline) (map[string][]string, error) {
 		}
 		if _, exist := stageMap[stage.Name]; !exist {
 			stageMap[stage.Name] = stage
+
+			// init stage dependence count
+			dependenceCount[stage.Name] = 0
+
+			// count stage dependence
+			for _, from := range stage.From {
+				dependenceCount[from]++
+			}
 		} else {
 			// has a repeat stage name ,return
 			return nil, errors.New("stage has repeat name:" + stage.Name)
-		}
-	}
-
-	// init stage dependence count
-	for stageName, _ := range stageMap {
-		dependenceCount[stageName] = 0
-	}
-
-	// count stage dependence
-	for _, stage := range stageMap {
-		for _, from := range stage.From {
-			dependenceCount[from]++
 		}
 	}
 

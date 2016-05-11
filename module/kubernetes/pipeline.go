@@ -1,9 +1,8 @@
 package kubernetes
 
 import (
-	"fmt"
-
 	"github.com/containerops/vessel/models"
+	"log"
 )
 
 func StartPipeline(pipelineVersion *models.PipelineSpecTemplate, stageName string) error {
@@ -40,7 +39,7 @@ func DeletePipeline(pipelineVersion *models.PipelineSpecTemplate) error {
 }
 
 func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName string, checkOp string, ch chan string) {
-	fmt.Println("Enter WatchPipelineStatus")
+	log.Println("Enter WatchPipelineStatus")
 	labelKey := "app"
 	pipelineMetadata := pipelineVersion.MetaData
 	// nsLabelValue := pipelineMetadata.Name
@@ -58,9 +57,13 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	// serviceCh := make(chan string, length)
 
 	// for _, stageSpec := range stageSpecs {
+	//podSum := pipelineMetadata
+	podCh := make(chan string)
 	rcCh := make(chan string)
 	serviceCh := make(chan string)
 
+	//todo:watch all pod start
+	go WatchPodStatus(namespace, labelKey, stageName, timeout, checkOp,1,podCh)
 	go WatchRCStatus(namespace, labelKey, stageName, timeout, checkOp, rcCh)
 	go WatchServiceStatus(namespace, labelKey, stageName, timeout, checkOp, serviceCh)
 	// }
@@ -70,43 +73,42 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	// go wait(length, rcChs, rcRes)
 	// go wait(length, serviceChs, serviceRes)
 
-	// ns := OK
+	pod := OK
 	rc := OK
 	service := OK
 	rcCount := 0
 	serviceCount := 0
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 3; i++ {
 		select {
-		/*
-			case ns = <-nsCh:
-				if ns == Error || ns == Timeout {
-					fmt.Println("Get watch ns event err or timeout")
-					ch <- ns
-					return
-				}
-		*/
+		case pod = <-podCh:
+			if pod == Error || pod == Timeout {
+				log.Println("Get watch pod event err or timeout")
+				ch <- pod
+				return
+			}
+			log.Println("Get watch pod event OK")
 		case rc = <-rcCh:
 			if rc == Error || rc == Timeout {
-				fmt.Println("Get watch rc event err or timeout")
+				log.Println("Get watch rc event err or timeout")
 				ch <- rc
 				return
 			} else {
 				rcCount++
-				fmt.Printf("Get watch rc event OK count %v\n", rcCount)
+				log.Println("Get watch rc event OK count ", rcCount)
 			}
 		case service = <-serviceCh:
 			if service == Error || service == Timeout {
-				fmt.Println("Get watch service event err or timeout")
+				log.Println("Get watch service event err or timeout")
 				ch <- service
 				return
 			} else {
 				serviceCount++
-				fmt.Printf("Get watch service event ok count %v\n", serviceCount)
+				log.Println("Get watch service event ok count ", serviceCount)
 			}
 		}
 	}
 
-	fmt.Println("WatchPipelineStatus return OK")
+	log.Println("WatchPipelineStatus return OK")
 	ch <- OK
 	// return
 }

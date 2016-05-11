@@ -8,14 +8,15 @@ import (
 
 	"github.com/containerops/vessel/cmd"
 	"github.com/containerops/vessel/setting"
+	"log"
 )
 
 func main() {
-
 	if err := setting.InitConf("./conf/global.yaml", "./conf/runtime.yaml"); err != nil {
 		fmt.Printf("Read config error: %v", err.Error())
 		return
 	}
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
 
 	cmdWeb := cmd.GetCmdWeb()
 
