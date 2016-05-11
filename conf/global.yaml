@@ -5,5 +5,3 @@ version: 0.1.0
 author: Leo Meng
 email: fivestarsky@gmail.com
 runtimePath: runtime.yaml
-kind: CCloud
-apiVersion: v1
