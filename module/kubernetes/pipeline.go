@@ -57,7 +57,7 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	// serviceCh := make(chan string, length)
 
 	// for _, stageSpec := range stageSpecs {
-	podSum := pipelineMetadata
+	//podSum := pipelineMetadata
 	podCh := make(chan string)
 	rcCh := make(chan string)
 	serviceCh := make(chan string)
