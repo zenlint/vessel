@@ -1,7 +1,6 @@
 package kubernetes
 
 import (
-	"errors"
 	"time"
 
 	"github.com/containerops/vessel/models"
