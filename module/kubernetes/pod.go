@@ -81,8 +81,8 @@ func WatchPodStatus(podNamespace string, labelKey string, labelValue string, tim
 		return
 	}
 	watchType := checkOp
-	if checkOp == watch.Added {
-		watchType = watch.Modified
+	if checkOp == string(watch.Added) {
+		watchType = string(watch.Modified)
 	}
 
 	t := time.NewTimer(time.Second * time.Duration(timeout))
