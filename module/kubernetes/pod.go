@@ -82,17 +82,14 @@ func WatchPodStatus(podNamespace string, labelKey string, labelValue string, tim
 	for count := 0; count < sum;{
 		select {
 		case event, ok := <-w.ResultChan():
-			log.Println(string(event.Type))
 			if !ok {
 				log.Printf("Watch err\n")
 				ch <- Error
-
 				// Pod have phase, so we have to wait for the phase change to the right status when added
 			}else if string(event.Type) == checkOp {
-				if (checkOp == string(watch.Deleted)) || ((checkOp != string(watch.Deleted)) &&
-					(event.Object.(*api.Pod).Status.Phase == "running")) {
-					ch <- OK
-				}
+				log.Println(string(event.Type))
+				log.Println(event.Object.(*api.Pod).Status.Phase)
+				ch <- OK
 			}
 			count++
 		case <-t.C:
