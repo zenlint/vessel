@@ -65,6 +65,7 @@ func GetPodStatus(namespace string, podName string) string {
 
 // WatchPodStatus return status of the operation(specified by checkOp) of the pod, OK, TIMEOUT.
 func WatchPodStatus(podNamespace string, labelKey string, labelValue string, timeout int64, checkOp string,sum int,ch chan string){
+	log.Printf("Enter WatchPodStatus")
 	if checkOp != string(watch.Deleted) && checkOp != string(watch.Added) {
 		log.Printf("Params checkOp err, checkOp: %v", checkOp)
 	}
@@ -81,6 +82,7 @@ func WatchPodStatus(podNamespace string, labelKey string, labelValue string, tim
 	for count := 0; count < sum;{
 		select {
 		case event, ok := <-w.ResultChan():
+			log.Println(string(event.Type))
 			if !ok {
 				log.Printf("Watch err\n")
 				ch <- Error
