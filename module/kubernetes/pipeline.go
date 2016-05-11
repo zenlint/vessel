@@ -57,11 +57,13 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	// serviceCh := make(chan string, length)
 
 	// for _, stageSpec := range stageSpecs {
+	podSum := pipelineMetadata
+	podCh := make(chan string)
 	rcCh := make(chan string)
 	serviceCh := make(chan string)
 
 	//todo:watch all pod start
-	//go WatchPodStatus(namespace, labelKey, stageName, timeout, checkOp)
+	go WatchPodStatus(namespace, labelKey, stageName, timeout, checkOp,1,podCh)
 	go WatchRCStatus(namespace, labelKey, stageName, timeout, checkOp, rcCh)
 	go WatchServiceStatus(namespace, labelKey, stageName, timeout, checkOp, serviceCh)
 	// }
@@ -71,21 +73,20 @@ func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName
 	// go wait(length, rcChs, rcRes)
 	// go wait(length, serviceChs, serviceRes)
 
-	// ns := OK
+	pod := OK
 	rc := OK
 	service := OK
 	rcCount := 0
 	serviceCount := 0
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 3; i++ {
 		select {
-		/*
-			case ns = <-nsCh:
-				if ns == Error || ns == Timeout {
-					log.Infoln("Get watch ns event err or timeout")
-					ch <- ns
-					return
-				}
-		*/
+		case pod = <-podCh:
+			if pod == Error || pod == Timeout {
+				log.Println("Get watch pod event err or timeout")
+				ch <- pod
+				return
+			}
+			log.Println("Get watch pod event OK")
 		case rc = <-rcCh:
 			if rc == Error || rc == Timeout {
 				log.Println("Get watch rc event err or timeout")
