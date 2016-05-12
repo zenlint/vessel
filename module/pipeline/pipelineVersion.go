@@ -325,6 +325,9 @@ func startStageInK8S(pipelineVersionId int64, stageName string) (err error) {
 	}
 
 	log.Println("goting to deal with pipelinePecTemplate detail = ", pipelineSpecTemplate)
+	if kubeclient.CheckRC(pipelineSpecTemplate.MetaData.Namespace,stageName){
+		return errors.New("relication controller '" + stageName +"' already exits")
+	}
 	k8sCh := make(chan string)
 	bsCh := make(chan bool)
 
