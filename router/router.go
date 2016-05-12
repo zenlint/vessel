@@ -29,7 +29,7 @@ func SetRouters(m *macaron.Macaron) {
 
 		})
 
-		m.Group("/pipeline/:project", func() {
+		m.Group("/pipeline", func() {
 
 			m.Post("/", binding.Bind(models.PipelineSpecTemplate{}), handler.V1POSTPipelineHandler)
 			m.Put("/:pipeline", handler.V1PUTPipelineHandler)

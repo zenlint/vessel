@@ -9,6 +9,7 @@ import (
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/util/intstr"
 	"k8s.io/kubernetes/pkg/watch"
+	"log"
 )
 
 func CreateService(pipelineVersion *models.PipelineSpecTemplate, stageName string) error {
@@ -65,8 +66,12 @@ func WatchServiceStatus(Namespace string, labelKey string, labelValue string, ti
 	case event, ok := <-w.ResultChan():
 		if !ok {
 			ch <- Error
-		} else if string(event.Type) == checkOp {
+			return
+		}
+		log.Println(event.Type,event.Object.(*api.Service).Status)
+		if string(event.Type) == checkOp {
 			ch <- OK
+			return
 		}
 
 	case <-t.C:
