@@ -98,10 +98,11 @@ func WatchRCStatus(Namespace string, labelKey string, labelValue string, timeout
 			ch <- Error
 			return
 		}
-		log.Println(event.Type,event.Object)
+		log.Println(event.Type,event.Object.(*api.ReplicationController).Status)
 		if string(event.Type) == checkOp {
 			log.Println("Get RC event ok")
 			ch <- OK
+			return
 		}
 	case <-t.C:
 		log.Println("WatchRCStatus timeout")

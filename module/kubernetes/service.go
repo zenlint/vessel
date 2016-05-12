@@ -68,9 +68,10 @@ func WatchServiceStatus(Namespace string, labelKey string, labelValue string, ti
 			ch <- Error
 			return
 		}
-		log.Println(event.Type,event.Object)
+		log.Println(event.Type,event.Object.(*api.Service).Status)
 		if string(event.Type) == checkOp {
 			ch <- OK
+			return
 		}
 
 	case <-t.C:
