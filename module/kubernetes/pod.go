@@ -95,7 +95,7 @@ func WatchPodStatus(podNamespace string, labelKey string, labelValue string, tim
 				return
 			}
 			log.Println(event.Type,event.Object.(*api.Pod).Status.Phase)
-			if string(event.Type) == watchType && event.Object.(*api.Pod).Status.Phase != "Running" {
+			if string(event.Type) == watchType && event.Object.(*api.Pod).Status.Phase == "Running" {
 				ch <- OK
 				count++
 			}
