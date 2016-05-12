@@ -1,0 +1,2 @@
+#!/bin/bash
+etcdpersist  backup -delay=5 -etcd-config=etcd-config.json  -dbname=vessel -dbport=3306 -dbip=192.168.40.142 -dbpwd=123456 -dbaccount=root
