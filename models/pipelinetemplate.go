@@ -4,7 +4,7 @@ type PipelineSpecTemplate struct {
 	Kind       string           `json:"kind"`
 	ApiVersion string           `json:"apiVersion"`
 	MetaData   PipelineMetaData `json:"metadata"`
-	Spec       []StageSpec      `json:"spec"`
+	Spec       []StageSpec      `json:"spec" sql:"-"`
 }
 
 type PipelineMetaData struct {
@@ -17,8 +17,8 @@ type PipelineMetaData struct {
 	CreateonTimestamp string            `json:"createonTimestamp"`
 	DeletionTimestamp string            `json:"deletionTimestamp"`
 	TimeoutDuration   int64             `json:"timeoutDuration"`
-	Labels            map[string]string `json:"labels"`
-	Annotations       map[string]string `json:"annotations"`
+	Labels            map[string]string `json:"labels" sql:"-"`
+	Annotations       map[string]string `json:"annotations" sql:"-"`
 }
 
 /*// pipelineMetadata struct for convert from pipelineVersion.MetaData
@@ -53,12 +53,14 @@ type StageSpec struct {
 	ProjectId           int64
 	PipelineId          int64
 	StageId             int64
-	Replicas            int    `json:"replicsa"`
+	Replicas            int    `json:"replicas"`
 	Dependence          string `json:"dependence"`
 	Kind                string `json:"kind"`
-	StatusCheckUrl      string `json:"statusCheckUrl"`
+	StatusCheckUrl      string `json:"statusCheckLink"`
 	StatusCheckInterval int64  `json:"statusCheckInterval"`
-	StatusCheckCount    int64  `json:"statusCheckCount"`
+	StatusCheckCount    int    `json:"statusCheckCount"`
 	Image               string `json:"image"`
 	Port                int    `json:"port"`
+	EnvName             string `json:"envName"`
+	EnvValue            string `json:"envValue"`
 }

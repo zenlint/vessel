@@ -1,15 +1,6 @@
 package kubernetes
 
-import (
-	"fmt"
-
-	// "github.com/containerops/vessel/models"
-	// "k8s.io/kubernetes/pkg/api"
-	"github.com/containerops/vessel/setting"
-	"k8s.io/kubernetes/pkg/client/restclient"
-	"k8s.io/kubernetes/pkg/client/unversioned"
-	// "k8s.io/kubernetes/pkg/util/intstr"
-)
+// "github.com/containerops/vessel/setting"
 
 const (
 	Added   = "ADDED"
@@ -21,24 +12,6 @@ const (
 	Timeout = "TIMEOUT"
 	OK      = "OK"
 )
-
-type IpPort struct {
-	Ip   string `json:"ip"`
-	Port int    `json:"port"`
-}
-
-var CLIENT *unversioned.Client
-
-func New(hostIp string) {
-	clientConfig := restclient.Config{}
-	clientConfig.Host = setting.RunTime.Database.Host
-	client, err := unversioned.New(&clientConfig)
-	if err != nil {
-		fmt.Errorf("New unversioned client err: %v!\n", err.Error())
-	}
-	// client.ConfigMaps(namespace).
-	CLIENT = client
-}
 
 /*func GetHostIp() string {
 	return setting.RunTime.Database.Host
@@ -106,24 +79,24 @@ func CreateK8SResource(pipelineversion *models.PipelineVersion) error {
 		// }
 
 		// Going to support create namespace after we have namespace watch lib
-		// _, err := CLIENT.Namespaces().Get(piplineMetadata.Namespace)
+		// _, err := models.K8sClient.Namespaces().Get(piplineMetadata.Namespace)
 		// if err != nil {
 		// 	namespaceObj := &api.Namespace{
 		// 		ObjectMeta: api.ObjectMeta{Name: piplineMetadata.Namespace},
 		// 	}
-		// 	if _, err := CLIENT.Namespaces().Create(namespaceObj); err != nil {
+		// 	if _, err := models.K8sClient.Namespaces().Create(namespaceObj); err != nil {
 		// 		fmt.Errorf("Create namespace err : %v\n", err)
 		// 		return err
 		// 	}
 		// 	fmt.Println("dddddd")
 		// }
 
-		if _, err := CLIENT.ReplicationControllers(piplineMetadata.Namespace).Create(rc); err != nil {
+		if _, err := models.K8sClient.ReplicationControllers(piplineMetadata.Namespace).Create(rc); err != nil {
 			fmt.Errorf("Create rc err : %v\n", err)
 			return err
 		}
 
-		if _, err := CLIENT.Services(piplineMetadata.Namespace).Create(service); err != nil {
+		if _, err := models.K8sClient.Services(piplineMetadata.Namespace).Create(service); err != nil {
 			fmt.Errorf("Create service err : %v\n", err)
 			return err
 		}
