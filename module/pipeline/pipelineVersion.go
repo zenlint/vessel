@@ -2,15 +2,14 @@ package pipeline
 
 import (
 	"encoding/json"
-	"log"
-	"math/rand"
-	"strconv"
-	"strings"
-	"time"
-
+	"fmt"
 	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/module/etcd"
 	"golang.org/x/net/context"
+	"log"
+	"strconv"
+	"strings"
+	"time"
 
 	kubeclient "github.com/containerops/vessel/module/kubernetes"
 	"github.com/coreos/etcd/client"
@@ -161,16 +160,21 @@ func isFinish(finishChan chan models.StageVersionState, stageVersionStateChan ch
 
 	for {
 		if finishStageNum == sumStage {
+			fmt.Println("######################################finishStageNum == sumStage")
 			notifyBootDone <- true
+
 			// stageVersionStateChan <- strings.Join(failedList, ",")
 			stageVersionStateStr, _ := json.Marshal(stageVersionStateList)
 			stageVersionStateChan <- string(stageVersionStateStr)
 			return
 		}
-
+		fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$finishStageNum")
+		fmt.Println(finishStageNum)
 		stageVersionState := <-finishChan
 		stageVersionState.ChangeStageVersionState()
 		finishStageNum++
+		fmt.Println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$finishStageNum+++++")
+		fmt.Println(finishStageNum)
 		stageVersionStateList = append(stageVersionStateList, stageVersionState)
 	}
 }
@@ -257,7 +261,9 @@ func startStage(stageVersion *models.StageVersion, bootChan chan *models.StageVe
 
 	// start run stage
 	stageStartFinish := make(chan models.StageVersionState, 1)
-	timeout := make(chan bool, 1)
+	go startStageInK8S(stageStartFinish, stageVersionState)
+
+	/*timeout := make(chan bool, 1)
 	// stageStartFinish <- stageVersionState
 	go startStageInK8S(stageStartFinish, stageVersionState)
 	go func() {
@@ -274,6 +280,9 @@ func startStage(stageVersion *models.StageVersion, bootChan chan *models.StageVe
 	case startResult := <-stageStartFinish:
 		stageVersionState = startResult
 	}
+	*/
+	startResult := <-stageStartFinish
+	stageVersionState = startResult
 
 	changeStageVersionState(stageVersion, bootChan, stageVersionState.RunResult, stageVersionState.Detail)
 	finishChan <- stageVersionState
@@ -308,10 +317,14 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 	if err != nil {
 		log.Println("[changeStageVersionState]:error when shoutdown stage version:", err)
 	}
+	fmt.Println("*********************************************************************")
+	fmt.Println(state)
 
 	if state == StateSuccess || state == StateFailed {
 		for _, toStageVersionName := range strings.Split(toStageVersions, ",") {
+			fmt.Println(toStageVersions)
 			if toStageVersionName != "" {
+				fmt.Println(toStageVersionName)
 				var toStageVersion models.StageVersion
 				toStageVersion = *stageVersion
 				toStageVersion.Name = toStageVersionName
@@ -319,69 +332,68 @@ func changeStageVersionState(stageVersion *models.StageVersion, bootChan chan *m
 			}
 		}
 	}
-
+	fmt.Println("*********************************************************************")
 }
 
 func startStageInK8S(runResultChan chan models.StageVersionState, runResult models.StageVersionState) {
-
-	/*	sec := rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(5) + 3
-		timeStr := strconv.FormatInt(sec, 10) + "s"
-		timeDur, _ := time.ParseDuration(timeStr)
-		time.Sleep(timeDur)
-		if rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(100) < 50 {
-			runResult.RunResult = StateSuccess
-			runResult.Detail = "run success"
-		} else {
-			runResult.RunResult = StateFailed
-			runResult.Detail = "not luck"
-		}*/
-
 	pipelineVersion := models.GetPipelineVersion(runResult.PipelineVersionId)
-	watchCh := make(chan string)
-	// hostip := kubeclient.GetHostIp()
+	pipelineSpecTemplate := new(models.PipelineSpecTemplate)
 
-	//ipProts to store ips and ports of pods in pipeline after it is stated
-	ipPorts := &[]kubeclient.IpPort{}
-	if err := kubeclient.GetPipelinePodsIPort(pipelineVersion, ipPorts); err != nil {
-		log.Printf("Get podsip in pipeline %v, err\n", pipelineVersion.GetMetadata().Name, err)
+	stageName := runResult.StageName
+	fmt.Printf("Enter startStageInK8S to start stage %v\n", stageName)
+	err := json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate)
+	// fmt.Printf("goting to deal with stage name  = %v\n", stageName)
+	fmt.Printf("goting to deal with pipelinePecTemplate detail  = %v\n", pipelineSpecTemplate)
+	// err := json.Unmarshal([]byte(pipelineVersion.Detail), pipelineSpecTemplate)
+	if err != nil {
+		log.Printf("Unmarshal PipelineSpecTemplate err : %v\n")
 	}
+	fmt.Println(pipelineSpecTemplate)
+	k8sCh := make(chan string)
+	bsCh := make(chan bool)
 
-	// First, to watch the pipeline status and then to start it
-	go kubeclient.WatchPipelineStatus(pipelineVersion, kubeclient.Added, watchCh)
-	if err := kubeclient.StartPipeline(pipelineVersion); err != nil {
-		log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineVersion.MetaData.Name, err)
+	go kubeclient.WatchPipelineStatus(pipelineSpecTemplate, stageName, kubeclient.Added, k8sCh)
+
+	// runResult.RunResult = <-k8sCh
+	if err := kubeclient.StartPipeline(pipelineSpecTemplate, stageName); err != nil {
+		log.Printf("Start k8s resource pipeline name :%v err : %v\n", pipelineSpecTemplate.MetaData.Name, err)
 	}
-
-	startStatus := <-watchCh
-	if startStatus == kubeclient.OK {
-		for _, ipPort := range ipPorts {
-			// Should be go routine here to ensure the causetime is not out of timeout
-			if checkBussinessResult(ipPort.Ip, ipPort.Port) {
-				// Going to write other things there, creationTimeStamp, selfLink
-				runResult.RunResult <- StartSucessful
-			} else {
-				runResult.RunResult <- StartFailed
-			}
+	go kubeclient.GetPipelineBussinessRes(pipelineSpecTemplate, bsCh)
+	// fmt.Println("11111111111111")
+	k8sRes := ""
+	bsRes := true
+	for i := 0; i < 2; i++ {
+		select {
+		case k8sRes = <-k8sCh:
+			fmt.Printf("k8sCh start stage name = %v return %v\n", stageName, k8sRes)
+		case bsRes = <-bsCh:
+			// fmt.Printf("bsCh return %v\n", bsRes)
 		}
-	} else if startStatus == kubeclient.Error {
-		runResult.RunResult <- StartFailed
 	}
 
-	runResult.RunResult <- StartTimeout
-
-	runResultChan <- runResult
-}
-
-// checkBussinessResult : get bussiness result from pipelineVersion.statusCheckUrl, success:200, ignore:0,others:failed
-func checkBussinessResult(ip string, port int64) bool {
-	// Later, to put read checkStatusUrl here and get return value to res
-	// Read for statusCheckCount times, each time should in statusCheckInterval
-	var res int
-	if res == 200 {
-		return true
-	} else if res == 0 {
-		return true
+	if k8sRes == StartFailed {
+		fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StateFailed)
+		runResult.RunResult = StartFailed
+		runResult.Detail = StartFailed
+		runResultChan <- runResult
+	} else if k8sRes == StartSucessful {
+		// fmt.Printf("k8s res %v\n", StartSucessful)
+		if bsRes == true {
+			fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StartSucessful)
+			runResult.RunResult = StateSuccess
+			runResult.Detail = StateSuccess
+			runResultChan <- runResult
+		} else {
+			fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StartFailed)
+			runResult.RunResult = StartFailed
+			runResult.Detail = StartFailed
+			runResultChan <- runResult
+		}
+	} else {
+		fmt.Printf("k8s module stage name = %v ret %v\n", stageName, StartTimeout)
+		runResult.RunResult = StartTimeout
+		runResult.Detail = StartTimeout
+		runResultChan <- runResult
 	}
 
-	return false
 }

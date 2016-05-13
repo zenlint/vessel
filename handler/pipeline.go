@@ -1,15 +1,16 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
-	"encoding/json"
 
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/macaron.v1"
 
 	"github.com/containerops/vessel/models"
+	"github.com/containerops/vessel/module/kubernetes"
 	"github.com/containerops/vessel/module/pipeline"
 	"github.com/containerops/vessel/utils"
 )
@@ -93,8 +94,8 @@ func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, 
 	plInfo.Labels = utils.TransMapToStr(pst.MetaData.Labels)
 	plInfo.Annotations = utils.TransMapToStr(pst.MetaData.Annotations)
 	//ignore plJson Detail
-	pstbs,err := json.Marshal(pst)
-	if err != nil{
+	pstbs, err := json.Marshal(pst)
+	if err != nil {
 		return nil, err
 	}
 	plInfo.Detail = string(pstbs)
@@ -115,8 +116,8 @@ func createPipelineAndStage(pst models.PipelineSpecTemplate) (*models.Pipeline, 
 		//StatusCheckInterval to Detail
 		//StatusCheckCount to Detail
 
-		sbs,err := json.Marshal(value)
-		if err != nil{
+		sbs, err := json.Marshal(value)
+		if err != nil {
 			return nil, err
 		}
 		sInfo.Detail = string(sbs)
@@ -147,8 +148,10 @@ func V1GETPipelineHandler(ctx *macaron.Context) (int, []byte) {
 	return http.StatusOK, []byte("")
 }
 
-func V1DELETEPipelineHandler(ctx *macaron.Context) (int, []byte) {
-	return http.StatusOK, []byte("")
+func V1DELETEPipelineHandler(ctx *macaron.Context, reqData models.PipelineSpecTemplate) (int, []byte) {
+	kubernetes.DeletePipeline(&reqData)
+	retstr := "Sent delete pipeline " + reqData.MetaData.Name + " event"
+	return http.StatusOK, []byte(retstr)
 }
 
 func V1RunPipelineHandler(ctx *macaron.Context) (int, []byte) {

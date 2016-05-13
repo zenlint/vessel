@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"k8s.io/kubernetes/pkg/client/restclient"
+	"k8s.io/kubernetes/pkg/client/unversioned"
+
 	"golang.org/x/net/context"
 
 	"github.com/containerops/vessel/setting"
@@ -15,6 +18,7 @@ import (
 var (
 	EtcdClient client.Client
 	DbClient   *gorm.DB
+	K8sClient  *unversioned.Client
 )
 
 //Init Database
@@ -100,6 +104,20 @@ func SyncDatabase() error {
 		}
 	}
 
+	if !db.HasTable(&PipelineMetaData{}) {
+		err = db.CreateTable(&PipelineMetaData{}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	if !db.HasTable(&StageSpec{}) {
+		err = db.CreateTable(&StageSpec{}).Error
+		if err != nil {
+			return err
+		}
+	}
+
 	fmt.Println("sync DB done !")
 	return nil
 }
@@ -135,6 +153,21 @@ func InitEtcd() error {
 	}
 	return nil
 
+}
+
+func InitK8s() error {
+	clientConfig := restclient.Config{}
+	host := setting.RunTime.K8s.Host + ":" + setting.RunTime.K8s.Port
+	fmt.Println(host)
+	clientConfig.Host = host
+	// clientConfig.Host = setting.RunTime.Database.Host
+	client, err := unversioned.New(&clientConfig)
+	if err != nil {
+		return err
+		fmt.Errorf("New unversioned client err: %v!\n", err.Error())
+	}
+	K8sClient = client
+	return nil
 }
 
 //

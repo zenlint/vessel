@@ -1,116 +1,117 @@
 package kubernetes
 
 import (
-	// "encoding/json"
-	// "fmt"
+	"fmt"
 
 	"github.com/containerops/vessel/models"
-	// "k8s.io/kubernetes/pkg/api"
-	// "k8s.io/kubernetes/pkg/util/intstr"
 )
 
-func StartPipeline(pipelineVersion *models.PipelineVersion) error {
+func StartPipeline(pipelineVersion *models.PipelineSpecTemplate, stageName string) error {
 	piplineMetadata := pipelineVersion.MetaData
-	if _, err := CLIENT.Namespaces().Get(piplineMetadata.Namespace); err != nil {
-		// fmt.Println("111111111111111")
+	if _, err := models.K8sClient.Namespaces().Get(piplineMetadata.Namespace); err != nil {
 		if err := CreateNamespace(pipelineVersion); err != nil {
 			return err
 		}
 	}
-	// fmt.Println("222222222222222222222222")
 
-	/*if status, err := WatchNamespaceStatus("app", piplineMetadata.Name, 30, Added); err != nil || status != "OK" {
-		// if status != "OK" {
-		return err
-		// }
-	}
-	*/
-	if err := CreateRC(pipelineVersion); err != nil {
+	if err := CreateRC(pipelineVersion, stageName); err != nil {
 		return err
 	}
 
-	if err := CreateService(pipelineVersion); err != nil {
+	if err := CreateService(pipelineVersion, stageName); err != nil {
 		return err
 	}
-	// CLIENT.Pods(namespace).Get(name).Status.PodIP
-	// CLIENT.
-	//createrc && createservice
+
 	return nil
 }
 
-func DeletePipeline(pipelineVersion *models.PipelineVersion) error {
-	return nil
-}
+func DeletePipeline(pipelineVersion *models.PipelineSpecTemplate) error {
+	meta := pipelineVersion.MetaData
+	specs := pipelineVersion.Spec
 
-func GetPipelinePodsIPort(pipelineVersion *models.PipelineVersion, podIps *[]IpPort) error {
-	for _, stage := range pipelineVersion.StageSpecs {
-		podIp, err := getPodIp(pipelineVersion.GetMetadata().Namespace, stage.Name)
-		if err != nil {
-			return err
-		}
-
-		(*podIps) = append(*podIps, IpPort{Ip: podIp, Port: stage.Port})
+	for _, spec := range specs {
+		models.K8sClient.ReplicationControllers(meta.Namespace).Delete(spec.Name)
+		models.K8sClient.Services(meta.Namespace).Delete(spec.Name)
 	}
+
+	models.K8sClient.Namespaces().Delete(meta.Namespace)
+
 	return nil
 }
 
-func WatchPipelineStatus(pipelineVersion *models.PipelineVersion, checkOp string, ch chan string) {
+func WatchPipelineStatus(pipelineVersion *models.PipelineSpecTemplate, stageName string, checkOp string, ch chan string) {
+	fmt.Println("Enter WatchPipelineStatus")
 	labelKey := "app"
-	pipelineMetadata := pipelineVersion.GetMetadata()
-	nsLabelValue := pipelineMetadata.Name
+	pipelineMetadata := pipelineVersion.MetaData
+	// nsLabelValue := pipelineMetadata.Name
 	timeout := pipelineMetadata.TimeoutDuration
 	namespace := pipelineMetadata.Namespace
 
-	stageSpecs := pipelineVersion.GetSpec()
-	length := len(stageSpecs)
-	nsCh := make(chan string)
-	rcChs := make([]chan string, length)
-	// rcArray := make([]string, length)
-	serviceChs := make([]chan string, length)
-	// serviceArray := make([]string, length)
+	// stageSpecs := pipelineVersion.Spec
+	// length := len(stageSpecs)
+	// 0423 nsCh := make(chan string)
+	//rcCh := make([]chan string, length)
+	//serviceCh := make([]chan string, length)
+	//0423
+	// go WatchNamespaceStatus(labelKey, nsLabelValue, timeout, checkOp, nsCh)
+	// rcCh := make(chan string, length)
+	// serviceCh := make(chan string, length)
 
-	go WatchNamespaceStatus(labelKey, nsLabelValue, timeout, checkOp, nsCh)
-	for i, stageSpec := range stageSpecs {
-		go WatchRCStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, rcChs[i])
-		go WatchServiceStatus(namespace, labelKey, stageSpec.Name, timeout, checkOp, serviceChs[i])
-	}
+	// for _, stageSpec := range stageSpecs {
+	rcCh := make(chan string)
+	serviceCh := make(chan string)
 
-	// nsRes := make(chan string)
-	rcRes := make(chan string)
-	serviceRes := make(chan string)
-	// go waitNamespace(nsCh, nsRes)
-	go wait(length, rcChs, rcRes)
-	go wait(length, serviceChs, serviceRes)
+	go WatchRCStatus(namespace, labelKey, stageName, timeout, checkOp, rcCh)
+	go WatchServiceStatus(namespace, labelKey, stageName, timeout, checkOp, serviceCh)
+	// }
 
-	ns := OK
+	//rcRes := make(chan string)
+	// serviceRes := make(chan string)
+	// go wait(length, rcChs, rcRes)
+	// go wait(length, serviceChs, serviceRes)
+
+	// ns := OK
 	rc := OK
 	service := OK
-	for i := 0; i < 3; i++ {
+	rcCount := 0
+	serviceCount := 0
+	for i := 0; i < 2; i++ {
 		select {
-		case ns = <-nsCh:
-			if ns == Error || ns == Timeout {
-				ch <- ns
-				return
-			}
-			// temp = nameRes
-		case rc = <-rcRes:
+		/*
+			case ns = <-nsCh:
+				if ns == Error || ns == Timeout {
+					fmt.Println("Get watch ns event err or timeout")
+					ch <- ns
+					return
+				}
+		*/
+		case rc = <-rcCh:
 			if rc == Error || rc == Timeout {
+				fmt.Println("Get watch rc event err or timeout")
 				ch <- rc
 				return
+			} else {
+				rcCount++
+				fmt.Printf("Get watch rc event OK count %v\n", rcCount)
 			}
-		case service = <-serviceRes:
+		case service = <-serviceCh:
 			if service == Error || service == Timeout {
+				fmt.Println("Get watch service event err or timeout")
 				ch <- service
 				return
+			} else {
+				serviceCount++
+				fmt.Printf("Get watch service event ok count %v\n", serviceCount)
 			}
 		}
 	}
 
+	fmt.Println("WatchPipelineStatus return OK")
 	ch <- OK
-	return
+	// return
 }
 
-func wait(length int, array []chan string, ch chan string) {
+/*func wait(length int, array []chan string, ch chan string) {
 	count := 0
 	for i := 0; i < length; i++ {
 		res := <-array[i]
@@ -125,3 +126,4 @@ func wait(length int, array []chan string, ch chan string) {
 		ch <- OK
 	}
 }
+*/
