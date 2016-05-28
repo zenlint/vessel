@@ -1,11 +1,11 @@
 package setting
 
-import (
+/*import (
 	"fmt"
 	"io/ioutil"
 
 	"github.com/ghodss/yaml"
-)
+)*/
 
 type GlobalConf struct {
 	AppName     string
@@ -55,7 +55,7 @@ var (
 
 func InitConf(globalFilePath string, runtimeFilePath string) error {
 
-	globalFile, err := ioutil.ReadFile(globalFilePath)
+	/*globalFile, err := ioutil.ReadFile(globalFilePath)
 	if err != nil {
 		return err
 	}
@@ -75,6 +75,6 @@ func InitConf(globalFilePath string, runtimeFilePath string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(RunTime)
+	fmt.Println(RunTime)*/
 	return nil
 }

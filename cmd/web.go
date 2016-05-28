@@ -8,7 +8,7 @@ import (
 	"github.com/codegangsta/cli"
 	"gopkg.in/macaron.v1"
 
-	"github.com/containerops/vessel/models"
+	// "github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/setting"
 	"github.com/containerops/vessel/web"
 )
@@ -36,12 +36,7 @@ func GetCmdWeb() cli.Command {
 }
 
 func runWeb(c *cli.Context) {
-	if err := models.InitDatabase(); err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if err := models.InitEtcd(); err != nil {
+	/*if err := models.InitEtcd(); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -49,7 +44,7 @@ func runWeb(c *cli.Context) {
 		fmt.Println(err)
 		return
 	}
-	models.SyncDatabase()
+	models.SyncDatabase()*/
 
 	m := macaron.New()
 
@@ -66,7 +61,7 @@ func runWeb(c *cli.Context) {
 		listenaddr := fmt.Sprintf("%s:%s", c.String("address"), c.String("port"))
 		server := &http.Server{Addr: listenaddr, TLSConfig: &tls.Config{MinVersion: tls.VersionTLS10}, Handler: m}
 		if err := server.ListenAndServeTLS(setting.RunTime.Http.HttpsCertFile, setting.RunTime.Http.HttpsKeyFile); err != nil {
-			fmt.Printf("Start Dockyard https service error: %v", err.Error())
+			fmt.Printf("Start https service error: %v", err.Error())
 		}
 		break
 	default:
