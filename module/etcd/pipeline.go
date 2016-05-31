@@ -75,11 +75,7 @@ func SetDeletionTimestamp(info *models.Pipeline) error {
 
 func SetPipelineTTL(info *models.Pipeline, timeLife uint64) error {
 	pipelinePath := fmt.Sprintf(VESSEL_PIPELINE_ETCD_PATH, info.Namespace, info.Name)
-	response, err := EtcdGet(pipelinePath)
-	if err != nil {
-		return err
-	}
-	return EtcdSetTTL(pipelinePath, response.Node.Value, timeLife)
+	return EtcdSetTTL(pipelinePath, nil, timeLife)
 }
 
 func ChangePipelineStatus(info *models.Pipeline) error {
