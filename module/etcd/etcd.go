@@ -41,6 +41,7 @@ func EtcdSet(key string, value string) error {
 func EtcdSetDir(key string) error{
 	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, "", &client.SetOptions{
 		Dir:true,
+		Refresh:true,
 	})
 	return err
 }
