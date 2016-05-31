@@ -6,6 +6,6 @@ type Pipeline struct {
 	Stages            []string
 	CreationTimestamp string
 	DeletionTimestamp string
-	TimeoutDuration   uint64
+	TimeoutDuration   int64
 	Status            string
 }

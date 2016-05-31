@@ -3,12 +3,12 @@ package models
 type Stage struct {
 	Name                string
 	Namespace           string
-	Replicas            uint64
+	Replicas            int64
 	Image               string
-	Port                uint64
+	Port                int64
 	StatusCheckLink     string
-	StatusCheckInterval uint64
-	StatusCheckCount    uint64
+	StatusCheckInterval int64
+	StatusCheckCount    int64
 	EnvName             string
 	EnvValue            string
 	Dependence          []string

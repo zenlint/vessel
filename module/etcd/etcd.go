@@ -18,12 +18,12 @@ func CreateClient(settingPoints []map[string]string) (err error) {
 	}
 	endPoints := []string{}
 	for _, value := range settingPoints {
-		endPoints = append(endPoints, fmt.Printf(etcd_connect_path, value["host"], value["port"]))
+		endPoints = append(endPoints, fmt.Sprintf(etcd_connect_path, value["host"], value["port"]))
 	}
 
 	cfg := client.Config{
 		Endpoints:endPoints,
-		Transport:client.DefaultCheckRedirect,
+		Transport:client.DefaultTransport,
 		HeaderTimeoutPerRequest:time.Second,
 	}
 	etcdClient, err = client.New(cfg)
@@ -46,12 +46,11 @@ func EtcdSetTTL(key string, value string, timeLife uint64) error {
 }
 
 func EtcdGet(key string) (*client.Response, error) {
-	_, err := client.NewKeysAPI(etcdClient).Get(context.Background(), key, nil)
-	return err
+	return client.NewKeysAPI(etcdClient).Get(context.Background(), key, nil)
 }
 
 func EtcdWatch(key string) client.Watcher {
-	return client.NewKeysAPI(etcdClient).Watcher(context.Background(), &client.WatcherOptions{
+	return client.NewKeysAPI(etcdClient).Watcher(key, &client.WatcherOptions{
 		Recursive:true,
 	})
 }

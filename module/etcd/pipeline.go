@@ -7,6 +7,8 @@ import (
 
 	"github.com/containerops/vessel/models"
 	"strings"
+	"strconv"
+	"log"
 )
 
 var (
@@ -20,7 +22,7 @@ func SavePipeline(info *models.Pipeline) error {
 	EtcdSet(stagePath + "/stages", strings.Join(info.Stages, ","))
 	EtcdSet(stagePath + "/creationTimestamp", info.CreationTimestamp)
 	EtcdSet(stagePath + "/deletionTimestamp", info.DeletionTimestamp)
-	EtcdSet(stagePath + "/timeoutDuration", info.TimeoutDuration)
+	EtcdSet(stagePath + "/timeoutDuration", strconv.FormatInt(info.TimeoutDuration,10))
 	return EtcdSet(stagePath + "/status", info.Status)
 }
 
@@ -46,7 +48,12 @@ func GetPipeline(info *models.Pipeline) error {
 		case "/deletionTimestamp":
 			info.DeletionTimestamp = v.Value
 		case "/timeoutDuration":
-			info.TimeoutDuration = v.Value
+			value,err :=  strconv.ParseInt(v.Value,10,0)
+			if err != nil {
+				log.Println(err)
+			}else{
+				info.TimeoutDuration = value
+			}
 		case "/status":
 			info.Status = v.Value
 		}

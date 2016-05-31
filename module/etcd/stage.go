@@ -6,6 +6,8 @@ import (
 
 	"github.com/containerops/vessel/models"
 	"strings"
+	"strconv"
+	"log"
 )
 
 var (
@@ -16,11 +18,14 @@ func SaveStage(info *models.Stage) error {
 	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, info.Namespace, info.Name)
 	EtcdSet(stagePath + "/name", info.Name)
 	EtcdSet(stagePath + "/namespace", info.Namespace)
-	EtcdSet(stagePath + "/replicas", info.Replicas)
+	EtcdSet(stagePath + "/replicas", strconv.FormatInt(info.Replicas,10))
 	EtcdSet(stagePath + "/image", info.Image)
+	EtcdSet(stagePath + "/port", strconv.FormatInt(info.Port,10))
+	EtcdSet(stagePath + "/statusCheckLink", info.StatusCheckLink)
+	EtcdSet(stagePath + "/statusCheckInterval", strconv.FormatInt(info.StatusCheckInterval,10))
+	EtcdSet(stagePath + "/statusCheckCount", strconv.FormatInt(info.StatusCheckCount,10))
 	EtcdSet(stagePath + "/envName", info.EnvName)
 	EtcdSet(stagePath + "/envValue", info.EnvValue)
-	EtcdSet(stagePath + "/port", info.Port)
 	EtcdSet(stagePath + "/dependence", strings.Join(info.Dependence,","))
 	return EtcdSet(stagePath + "/status", info.Status)
 }
@@ -41,15 +46,41 @@ func GetStage(info *models.Stage) error {
 		case "/namespace":
 			info.Namespace = v.Value
 		case "/replicas":
-			info.Replicas = v.Value
+			value,err :=  strconv.ParseInt(v.Value,10,0)
+			if err != nil {
+				log.Println(err)
+			}else{
+				info.Replicas = value
+			}
 		case "/image":
 			info.Image = v.Value
+		case "/port":
+			value,err :=  strconv.ParseInt(v.Value,10,0)
+			if err != nil {
+				log.Println(err)
+			}else{
+				info.Port = value
+			}
+		case "/statusCheckLink":
+			info.StatusCheckLink = v.Value
+		case "/statusCheckInterval":
+			value,err :=  strconv.ParseInt(v.Value,10,0)
+			if err != nil {
+				log.Println(err)
+			}else{
+				info.StatusCheckInterval = value
+			}
+		case "/statusCheckCount":
+			value,err :=  strconv.ParseInt(v.Value,10,0)
+			if err != nil {
+				log.Println(err)
+			}else{
+				info.StatusCheckCount = value
+			}
 		case "/envName":
 			info.EnvName = v.Value
 		case "/envValue":
 			info.EnvValue = v.Value
-		case "/port":
-			info.Port = v.Value
 		case "/dependence":
 			info.Dependence = strings.Split(v.Value,",")
 		case "/status":
