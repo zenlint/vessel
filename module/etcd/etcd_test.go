@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-func Test_Etcd(t *testing.T)  {
+func Test_Etcd(t *testing.T) {
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 	settingPoints := []map[string]string{
 		map[string]string{
@@ -25,46 +25,59 @@ func Test_Etcd(t *testing.T)  {
 }
 
 func checkStage() {
-	stage := &models.Stage{
-		Name:"etcdStage",
-		Namespace:"chenzhu",
-	}
+	stage := easyStage()
 	if err := GetStage(stage); err != nil {
 		log.Print(err)
-	}else{
+	} else {
 		log.Println(stage)
 	}
+
 	if err := SaveStage(fulStage()); err != nil {
 		log.Print(err)
 	}
+
+	stage = easyStage()
 	if err := GetStage(stage); err != nil {
 		log.Print(err)
-	}else{
+	} else {
 		log.Println(stage)
 	}
+
+	stage.Status = "OK"
 	if err := ChangeStageStatus(stage); err != nil {
 		log.Print(err)
 	}
+
+	stage = easyStage()
 	str, err := GetStageStatus(stage);
-	if  err != nil {
+	if err != nil {
 		log.Print(err)
-	}else{
-		log.Println(str)
+	} else {
+		log.Println(str,stage)
 	}
-	if err := SetStageStatusTTL(stage,2); err != nil {
+
+	stage.Status = "Delete"
+	if err := SetStageStatusTTL(stage, 2); err != nil {
 		log.Print(err)
-	}else{
-		<-time.After(time.Second * time.Duration(4))
-		if err := GetStage(stage); err != nil {
-			log.Print(err)
-		}else{
-			log.Println(stage)
-		}
+	}
+
+	<-time.After(time.Second * time.Duration(4))
+	if err := GetStage(stage); err != nil {
+		log.Print(err)
+	} else {
+		log.Println(stage)
+	}
+}
+
+func easyStage() *models.Stage {
+	return &models.Stage{
+		Name:"etcdStage",
+		Namespace:"chenzhu",
 	}
 }
 
 func fulStage() *models.Stage {
-	return  &models.Stage{
+	return &models.Stage{
 		Name:"etcdStage",
 		Namespace:"chenzhu",
 		Replicas:3,
@@ -75,59 +88,72 @@ func fulStage() *models.Stage {
 		StatusCheckCount:3,
 		EnvName:"",
 		EnvValue:"",
-		Dependence:[]string{"stageA","stageB","stageC"},
-		Status:"OK",
+		Dependence:[]string{"stageA", "stageB", "stageC"},
+		Status:"Working",
 	}
 }
 
 func checkPipeline() {
-	pipeline := &models.Pipeline{
-		Name:"etcdPipeline",
-		Namespace:"chenzhu",
-	}
+	pipeline := easyPipeline()
 	if err := GetPipeline(pipeline); err != nil {
 		log.Print(err)
-	}else{
+	} else {
 		log.Println(pipeline)
 	}
+
 	if err := SavePipeline(fulPipeline()); err != nil {
 		log.Print(err)
 	}
+
+	pipeline = easyPipeline()
 	if err := GetPipeline(pipeline); err != nil {
 		log.Print(err)
-	}else{
+	} else {
 		log.Println(pipeline)
 	}
+
+	pipeline.Status = "OK"
 	if err := ChangePipelineStatus(pipeline); err != nil {
 		log.Print(err)
 	}
+
+	pipeline = easyPipeline()
 	str, err := GetPipelineStatus(pipeline);
-	if  err != nil {
+	if err != nil {
 		log.Print(err)
-	}else{
-		log.Println(str)
+	} else {
+		log.Println(str, pipeline)
 	}
-	if err := SetPipelineStatusTTL(pipeline,2); err != nil {
+
+	pipeline.Status = "Delete"
+	if err := SetPipelineStatusTTL(pipeline, 2); err != nil {
 		log.Print(err)
-	}else{
-		<-time.After(time.Second * time.Duration(4))
-		if err := GetPipeline(pipeline); err != nil {
-			log.Print(err)
-		}else{
-			log.Println(pipeline)
-		}
+	}
+
+	<-time.After(time.Second * time.Duration(4))
+	if err := GetPipeline(pipeline); err != nil {
+		log.Print(err)
+	} else {
+		log.Println(pipeline)
+	}
+}
+
+func easyPipeline() *models.Pipeline {
+	return &models.Pipeline{
+		Name:"etcdPipeline",
+		Namespace:"chenzhu",
 	}
 }
 
 func fulPipeline() *models.Pipeline {
 	timeStr := time.Now().Format("2016-01-02 15:04:05")
-	return  &models.Pipeline{
+	return &models.Pipeline{
 		Name:"etcdPipeline",
 		Namespace:"chenzhu",
-		Stages:[]string{"stageA","stageB","stageC"},
+		Stages:[]string{"stageA", "stageB", "stageC"},
 		CreationTimestamp:timeStr,
 		DeletionTimestamp:timeStr,
 		TimeoutDuration:60,
-		Status:"OK",
+		Status:"Working",
 	}
 }
