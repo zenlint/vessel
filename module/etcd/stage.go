@@ -16,6 +16,7 @@ var (
 
 func SaveStage(info *models.Stage) error {
 	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, info.Namespace, info.Name)
+	EtcdSetDir(stagePath)
 	EtcdSet(stagePath + "/name", info.Name)
 	EtcdSet(stagePath + "/namespace", info.Namespace)
 	EtcdSet(stagePath + "/replicas", strconv.FormatInt(info.Replicas, 10))

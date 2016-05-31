@@ -38,6 +38,13 @@ func EtcdSet(key string, value string) error {
 	return err
 }
 
+func EtcdSetDir(key string) error{
+	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, "", &client.SetOptions{
+		Dir:true,
+	})
+	return err
+}
+
 func EtcdSetTTL(key string, value string, timeLife uint64, isDir bool) error {
 	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, value, &client.SetOptions{
 		TTL:time.Duration(timeLife),

@@ -17,6 +17,7 @@ var (
 
 func SavePipeline(info *models.Pipeline) error {
 	pipelinePath := fmt.Sprintf(VESSEL_PIPELINE_ETCD_PATH, info.Namespace, info.Name)
+	EtcdSetDir(pipelinePath)
 	EtcdSet(pipelinePath + "/name", info.Name)
 	EtcdSet(pipelinePath + "/namespace", info.Namespace)
 	EtcdSet(pipelinePath + "/stages", strings.Join(info.Stages, ","))
