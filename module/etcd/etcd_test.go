@@ -57,7 +57,11 @@ func checkStage() {
 	}
 
 	stage.Status = "Delete"
-	if err := SetStageStatusTTL(stage, 2); err != nil {
+	if err := ChangeStageStatus(stage); err != nil {
+		log.Print(err)
+	}
+
+	if err := SetStageTTL(stage, 2); err != nil {
 		log.Print(err)
 	}
 
@@ -126,7 +130,11 @@ func checkPipeline() {
 	}
 
 	pipeline.Status = "Delete"
-	if err := SetPipelineStatusTTL(pipeline, 2); err != nil {
+	if err := ChangePipelineStatus(pipeline); err != nil {
+		log.Print(err)
+	}
+
+	if err := SetPipelineTTL(pipeline, 2); err != nil {
 		log.Print(err)
 	}
 
