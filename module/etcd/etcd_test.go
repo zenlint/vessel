@@ -8,6 +8,7 @@ import (
 )
 
 func Test_Etcd(t *testing.T)  {
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
 	settingPoints := []map[string]string{
 		map[string]string{
 			"host": "127.0.0.1",
