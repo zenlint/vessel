@@ -18,15 +18,15 @@ func SaveStage(info *models.Stage) error {
 	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, info.Namespace, info.Name)
 	EtcdSet(stagePath + "/name", info.Name)
 	EtcdSet(stagePath + "/namespace", info.Namespace)
-	EtcdSet(stagePath + "/replicas", strconv.FormatInt(info.Replicas,10))
+	EtcdSet(stagePath + "/replicas", strconv.FormatInt(info.Replicas, 10))
 	EtcdSet(stagePath + "/image", info.Image)
-	EtcdSet(stagePath + "/port", strconv.FormatInt(info.Port,10))
+	EtcdSet(stagePath + "/port", strconv.FormatInt(info.Port, 10))
 	EtcdSet(stagePath + "/statusCheckLink", info.StatusCheckLink)
-	EtcdSet(stagePath + "/statusCheckInterval", strconv.FormatInt(info.StatusCheckInterval,10))
-	EtcdSet(stagePath + "/statusCheckCount", strconv.FormatInt(info.StatusCheckCount,10))
+	EtcdSet(stagePath + "/statusCheckInterval", strconv.FormatInt(info.StatusCheckInterval, 10))
+	EtcdSet(stagePath + "/statusCheckCount", strconv.FormatInt(info.StatusCheckCount, 10))
 	EtcdSet(stagePath + "/envName", info.EnvName)
 	EtcdSet(stagePath + "/envValue", info.EnvValue)
-	EtcdSet(stagePath + "/dependence", strings.Join(info.Dependence,","))
+	EtcdSet(stagePath + "/dependence", strings.Join(info.Dependence, ","))
 	return EtcdSet(stagePath + "/status", info.Status)
 }
 
@@ -46,35 +46,35 @@ func GetStage(info *models.Stage) error {
 		case "/namespace":
 			info.Namespace = v.Value
 		case "/replicas":
-			value,err :=  strconv.ParseInt(v.Value,10,0)
+			value, err := strconv.ParseInt(v.Value, 10, 0)
 			if err != nil {
 				log.Println(err)
-			}else{
+			} else {
 				info.Replicas = value
 			}
 		case "/image":
 			info.Image = v.Value
 		case "/port":
-			value,err :=  strconv.ParseInt(v.Value,10,0)
+			value, err := strconv.ParseInt(v.Value, 10, 0)
 			if err != nil {
 				log.Println(err)
-			}else{
+			} else {
 				info.Port = value
 			}
 		case "/statusCheckLink":
 			info.StatusCheckLink = v.Value
 		case "/statusCheckInterval":
-			value,err :=  strconv.ParseInt(v.Value,10,0)
+			value, err := strconv.ParseInt(v.Value, 10, 0)
 			if err != nil {
 				log.Println(err)
-			}else{
+			} else {
 				info.StatusCheckInterval = value
 			}
 		case "/statusCheckCount":
-			value,err :=  strconv.ParseInt(v.Value,10,0)
+			value, err := strconv.ParseInt(v.Value, 10, 0)
 			if err != nil {
 				log.Println(err)
-			}else{
+			} else {
 				info.StatusCheckCount = value
 			}
 		case "/envName":
@@ -82,7 +82,7 @@ func GetStage(info *models.Stage) error {
 		case "/envValue":
 			info.EnvValue = v.Value
 		case "/dependence":
-			info.Dependence = strings.Split(v.Value,",")
+			info.Dependence = strings.Split(v.Value, ",")
 		case "/status":
 			info.Status = v.Value
 		}
@@ -92,7 +92,7 @@ func GetStage(info *models.Stage) error {
 
 func SetStageTTL(info *models.Stage, timeLife uint64) error {
 	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, info.Namespace, info.Name)
-	return EtcdSetTTL(stagePath, nil, timeLife)
+	return EtcdSetDirTTL(stagePath, timeLife)
 }
 
 func ChangeStageStatus(info *models.Stage) error {

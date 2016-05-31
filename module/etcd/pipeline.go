@@ -22,7 +22,7 @@ func SavePipeline(info *models.Pipeline) error {
 	EtcdSet(pipelinePath + "/stages", strings.Join(info.Stages, ","))
 	EtcdSet(pipelinePath + "/creationTimestamp", info.CreationTimestamp)
 	EtcdSet(pipelinePath + "/deletionTimestamp", info.DeletionTimestamp)
-	EtcdSet(pipelinePath + "/timeoutDuration", strconv.FormatInt(info.TimeoutDuration,10))
+	EtcdSet(pipelinePath + "/timeoutDuration", strconv.FormatInt(info.TimeoutDuration, 10))
 	return EtcdSet(pipelinePath + "/status", info.Status)
 }
 
@@ -48,10 +48,10 @@ func GetPipeline(info *models.Pipeline) error {
 		case "/deletionTimestamp":
 			info.DeletionTimestamp = v.Value
 		case "/timeoutDuration":
-			value,err :=  strconv.ParseInt(v.Value,10,0)
+			value, err := strconv.ParseInt(v.Value, 10, 0)
 			if err != nil {
 				log.Println(err)
-			}else{
+			} else {
 				info.TimeoutDuration = value
 			}
 		case "/status":
@@ -75,7 +75,7 @@ func SetDeletionTimestamp(info *models.Pipeline) error {
 
 func SetPipelineTTL(info *models.Pipeline, timeLife uint64) error {
 	pipelinePath := fmt.Sprintf(VESSEL_PIPELINE_ETCD_PATH, info.Namespace, info.Name)
-	return EtcdSetTTL(pipelinePath, nil, timeLife)
+	return EtcdSetDirTTL(pipelinePath, timeLife)
 }
 
 func ChangePipelineStatus(info *models.Pipeline) error {

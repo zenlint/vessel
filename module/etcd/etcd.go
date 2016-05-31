@@ -45,6 +45,14 @@ func EtcdSetTTL(key string, value string, timeLife uint64) error {
 	return err
 }
 
+func EtcdSetDirTTL(key string, timeLife uint64) error {
+	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, "", &client.SetOptions{
+		TTL:time.Duration(timeLife),
+		Dir:true,
+	})
+	return err
+}
+
 func EtcdGet(key string) (*client.Response, error) {
 	return client.NewKeysAPI(etcdClient).Get(context.Background(), key, nil)
 }
