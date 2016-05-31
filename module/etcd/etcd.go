@@ -1,1 +1,57 @@
 package etcd
+
+import (
+	"fmt"
+	"time"
+	"github.com/coreos/etcd/client"
+	"golang.org/x/net/context"
+)
+
+var (
+	etcd_connect_path = "http://%s:%s"
+	etcdClient client.Client
+)
+
+func CreateClient(settingPoints []map[string]string) (err error) {
+	if etcdClient != nil {
+		return nil
+	}
+	endPoints := []string{}
+	for _, value := range settingPoints {
+		endPoints = append(endPoints, fmt.Printf(etcd_connect_path, value["host"], value["port"]))
+	}
+
+	cfg := client.Config{
+		Endpoints:endPoints,
+		Transport:client.DefaultCheckRedirect,
+		HeaderTimeoutPerRequest:time.Second,
+	}
+	etcdClient, err = client.New(cfg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func EtcdSet(key string, value string) error {
+	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, value, nil)
+	return err
+}
+
+func EtcdSetTTL(key string, value string, timeLife uint64) error {
+	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, value, &client.SetOptions{
+		TTL:time.Duration(timeLife),
+	})
+	return err
+}
+
+func EtcdGet(key string) (*client.Response, error) {
+	_, err := client.NewKeysAPI(etcdClient).Get(context.Background(), key, nil)
+	return err
+}
+
+func EtcdWatch(key string) client.Watcher {
+	return client.NewKeysAPI(etcdClient).Watcher(context.Background(), &client.WatcherOptions{
+		Recursive:true,
+	})
+}
