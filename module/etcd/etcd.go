@@ -39,26 +39,19 @@ func EtcdSet(key string, value string) error {
 }
 
 func EtcdSetDir(key string) error{
-	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, "", &client.SetOptions{
-		Dir:true,
-		Refresh:true,
-	})
+	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, "",&client.SetOptions{Dir: true, PrevExist: client.PrevExist})
 	return err
 }
 
-func EtcdSetTTL(key string, value string, timeLife uint64, isDir bool) error {
+func EtcdSetTTL(key string, value string, timeLife uint64) error {
 	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, value, &client.SetOptions{
 		TTL:time.Duration(timeLife),
-		Dir:isDir,
 	})
 	return err
 }
 
 func EtcdSetDirTTL(key string, timeLife uint64) error {
-	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, "", &client.SetOptions{
-		TTL:time.Duration(timeLife),
-		Dir:true,
-	})
+	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, "",&client.SetOptions{TTL:time.Duration(timeLife), Dir: true, PrevExist: client.PrevExist})
 	return err
 }
 
