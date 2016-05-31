@@ -93,7 +93,7 @@ func GetStage(info *models.Stage) error {
 
 func SetStageTTL(info *models.Stage, timeLife uint64) error {
 	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, info.Namespace, info.Name)
-	return EtcdSetTTL(stagePath + "/status", info.Status, timeLife, true)
+	return EtcdSetDirTTL(stagePath, timeLife)
 }
 
 func ChangeStageStatus(info *models.Stage) error {
