@@ -3,20 +3,19 @@ package etcd
 import (
 	"fmt"
 	"errors"
-
-	"github.com/containerops/vessel/models"
 	"strings"
 	"strconv"
 	"log"
+
+	"github.com/containerops/vessel/models"
 )
 
 var (
-	VESSEL_STAGE_ETCD_PATH = "containerops/vessel/ns_%v/sn_%v"
+	vessel_stage_etcd_path = "containerops/vessel/ns_%v/sn_%v"
 )
 
 func SaveStage(info *models.Stage) error {
-	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, info.Namespace, info.Name)
-	EtcdSetDir(stagePath)
+	stagePath := fmt.Sprintf(vessel_stage_etcd_path, info.Namespace, info.Name)
 	EtcdSet(stagePath + "/name", info.Name)
 	EtcdSet(stagePath + "/namespace", info.Namespace)
 	EtcdSet(stagePath + "/replicas", strconv.FormatInt(info.Replicas, 10))
@@ -32,7 +31,7 @@ func SaveStage(info *models.Stage) error {
 }
 
 func GetStage(info *models.Stage) error {
-	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, info.Namespace, info.Name)
+	stagePath := fmt.Sprintf(vessel_stage_etcd_path, info.Namespace, info.Name)
 	response, err := EtcdGet(stagePath)
 	if err != nil {
 		return err
@@ -92,17 +91,17 @@ func GetStage(info *models.Stage) error {
 }
 
 func SetStageTTL(info *models.Stage, timeLife uint64) error {
-	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, info.Namespace, info.Name)
+	stagePath := fmt.Sprintf(vessel_stage_etcd_path, info.Namespace, info.Name)
 	return EtcdSetDirTTL(stagePath, timeLife)
 }
 
 func ChangeStageStatus(info *models.Stage) error {
-	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, info.Namespace, info.Name)
+	stagePath := fmt.Sprintf(vessel_stage_etcd_path, info.Namespace, info.Name)
 	return EtcdSet(stagePath + "/status", info.Status)
 }
 
 func GetStageStatus(info *models.Stage) (string, error) {
-	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, info.Namespace, info.Name)
+	stagePath := fmt.Sprintf(vessel_stage_etcd_path, info.Namespace, info.Name)
 	response, err := EtcdGet(stagePath + "/status")
 	if err != nil {
 		return "", err

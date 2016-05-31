@@ -3,6 +3,7 @@ package etcd
 import (
 	"fmt"
 	"time"
+
 	"github.com/coreos/etcd/client"
 	"golang.org/x/net/context"
 )
@@ -38,8 +39,8 @@ func EtcdSet(key string, value string) error {
 	return err
 }
 
-func EtcdSetDir(key string) error{
-	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, "",&client.SetOptions{Dir: true, PrevExist: client.PrevExist})
+func EtcdSetDir(key string) error {
+	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, "", &client.SetOptions{Dir: true, PrevExist: client.PrevExist})
 	return err
 }
 
@@ -51,7 +52,7 @@ func EtcdSetTTL(key string, value string, timeLife uint64) error {
 }
 
 func EtcdSetDirTTL(key string, timeLife uint64) error {
-	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, "",&client.SetOptions{TTL:time.Duration(timeLife), Dir: true, PrevExist: client.PrevExist})
+	_, err := client.NewKeysAPI(etcdClient).Set(context.Background(), key, "", &client.SetOptions{TTL:time.Duration(timeLife), Dir: true, PrevExist: client.PrevExist})
 	return err
 }
 

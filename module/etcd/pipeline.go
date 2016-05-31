@@ -4,20 +4,19 @@ import (
 	"fmt"
 	"errors"
 	"time"
-
-	"github.com/containerops/vessel/models"
 	"strings"
 	"strconv"
 	"log"
+
+	"github.com/containerops/vessel/models"
 )
 
 var (
-	VESSEL_PIPELINE_ETCD_PATH = "containerops/vessel/ns_%v/pl_%v"
+	vessel_pipeline_etcd_path = "containerops/vessel/ns_%v/pl_%v"
 )
 
 func SavePipeline(info *models.Pipeline) error {
-	pipelinePath := fmt.Sprintf(VESSEL_PIPELINE_ETCD_PATH, info.Namespace, info.Name)
-	EtcdSetDir(pipelinePath)
+	pipelinePath := fmt.Sprintf(vessel_pipeline_etcd_path, info.Namespace, info.Name)
 	EtcdSet(pipelinePath + "/name", info.Name)
 	EtcdSet(pipelinePath + "/namespace", info.Namespace)
 	EtcdSet(pipelinePath + "/stages", strings.Join(info.Stages, ","))
@@ -28,7 +27,7 @@ func SavePipeline(info *models.Pipeline) error {
 }
 
 func GetPipeline(info *models.Pipeline) error {
-	pipelinePath := fmt.Sprintf(VESSEL_PIPELINE_ETCD_PATH, info.Namespace, info.Name)
+	pipelinePath := fmt.Sprintf(vessel_pipeline_etcd_path, info.Namespace, info.Name)
 	response, err := EtcdGet(pipelinePath)
 	if err != nil {
 		return err
@@ -63,29 +62,29 @@ func GetPipeline(info *models.Pipeline) error {
 }
 
 func SetCreationTimestamp(info *models.Pipeline) error {
-	pipelinePath := fmt.Sprintf(VESSEL_PIPELINE_ETCD_PATH, info.Namespace, info.Name)
+	pipelinePath := fmt.Sprintf(vessel_pipeline_etcd_path, info.Namespace, info.Name)
 	info.CreationTimestamp = time.Now().Format("2006-01-02 15:04:05")
 	return EtcdSet(pipelinePath + "/creationTimestamp", info.CreationTimestamp)
 }
 
 func SetDeletionTimestamp(info *models.Pipeline) error {
-	pipelinePath := fmt.Sprintf(VESSEL_PIPELINE_ETCD_PATH, info.Namespace, info.Name)
+	pipelinePath := fmt.Sprintf(vessel_pipeline_etcd_path, info.Namespace, info.Name)
 	info.DeletionTimestamp = time.Now().Format("2006-01-02 15:04:05")
 	return EtcdSet(pipelinePath + "/creationTimestamp", info.DeletionTimestamp)
 }
 
 func SetPipelineTTL(info *models.Pipeline, timeLife uint64) error {
-	pipelinePath := fmt.Sprintf(VESSEL_PIPELINE_ETCD_PATH, info.Namespace, info.Name)
+	pipelinePath := fmt.Sprintf(vessel_pipeline_etcd_path, info.Namespace, info.Name)
 	return EtcdSetDirTTL(pipelinePath, timeLife)
 }
 
 func ChangePipelineStatus(info *models.Pipeline) error {
-	pipelinePath := fmt.Sprintf(VESSEL_PIPELINE_ETCD_PATH, info.Namespace, info.Name)
+	pipelinePath := fmt.Sprintf(vessel_pipeline_etcd_path, info.Namespace, info.Name)
 	return EtcdSet(pipelinePath + "/status", info.Status)
 }
 
 func GetPipelineStatus(info *models.Pipeline) (string, error) {
-	pipelinePath := fmt.Sprintf(VESSEL_PIPELINE_ETCD_PATH, info.Namespace, info.Name)
+	pipelinePath := fmt.Sprintf(vessel_pipeline_etcd_path, info.Namespace, info.Name)
 	response, err := EtcdGet(pipelinePath + "/status")
 	if err != nil {
 		return "", err

@@ -2,9 +2,10 @@ package etcd
 
 import (
 	"testing"
-	"github.com/containerops/vessel/models"
 	"time"
 	"log"
+
+	"github.com/containerops/vessel/models"
 )
 
 func Test_Etcd(t *testing.T) {
@@ -53,7 +54,7 @@ func checkStage() {
 	if err != nil {
 		log.Print(err)
 	} else {
-		log.Println(str,stage)
+		log.Println(str, stage)
 	}
 
 	stage.Status = "Delete"
