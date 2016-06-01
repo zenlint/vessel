@@ -12,34 +12,45 @@ func init() {
 	clientEtcd()
 }
 
+func TestSaveStage(t *testing.T) {
+	stage := fulStage()
+	log.Println(stage, SaveStage(stage))
+}
+
 func TestGetStage(t *testing.T) {
 	stage := easyStage()
 	log.Println(stage, GetStage(stage))
 }
 
-func TestSaveStage(t *testing.T) {
-	stage := fulStage()
-	log.Println(stage, SaveStage(stage))
-
-	stage = easyStage()
-	log.Println(stage, GetStage(stage))
+func TestSetStageStatus(t *testing.T) {
+	stage := easyStage()
+	stage.Status = models.STATE_DELETED
+	log.Println(stage, SetStageStatus(stage))
 }
 
 func TestGetStageStatus(t *testing.T) {
 	stage := easyStage()
-
 	str, err := GetStageStatus(stage)
 	log.Println(stage, str, err)
 }
 
-func TestChangeStageStatus(t *testing.T) {
-	stage := easyStage()
-	stage.Status = models.StateSuccess
-	log.Println(stage, ChangeStageStatus(stage))
+func TestSetStageResult(t *testing.T) {
+	result := &models.StageResult{
+		Namespace:"etcdStageResult",
+		Id:"bbbbbbbbbb",
+		Name:"stageNamea",
+		Result:models.RESULT_SUCCESS,
+		Detail:"VVVVVVVV",
+	}
+	log.Println(SetStageResult(result))
+}
 
-	stage = easyStage()
-	str, err := GetStageStatus(stage)
-	log.Println(stage, str, err)
+func TestGetStageResult(t *testing.T) {
+	result := &models.StageResult{
+		Namespace:"etcdStageResult",
+		Name:"stageNamea",
+	}
+	log.Println(result,GetStageResult(result))
 }
 
 func TestSetStageTTL(t *testing.T) {
@@ -64,12 +75,12 @@ func fulStage() *models.Stage {
 		Replicas:3,
 		Image:"unknow",
 		Port:80,
-		StatusCheckLink:"/heath",
+		StatusCheckUrl:"/heath",
 		StatusCheckInterval:30,
 		StatusCheckCount:3,
 		EnvName:"",
 		EnvValue:"",
-		Dependence:[]string{"stageA", "stageB", "stageC"},
-		Status:models.StateStarting,
+		Dependence:"stageA,stageB,stageC",
+		Status:models.STATE_SUCCESS,
 	}
 }

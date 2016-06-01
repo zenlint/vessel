@@ -12,17 +12,19 @@ func init() {
 	clientEtcd()
 }
 
+func TestSavePipeline(t *testing.T) {
+	pipeline := fulPipeline()
+	log.Println(pipeline, SavePipeline(pipeline))
+}
+
 func TestGetPipeline(t *testing.T) {
 	pipeline := easyPipeline()
 	log.Println(pipeline, GetPipeline(pipeline))
 }
 
-func TestSavePipeline(t *testing.T) {
+func TestSetPipelineStatus(t *testing.T) {
 	pipeline := fulPipeline()
-	log.Println(pipeline, SavePipeline(pipeline))
-
-	pipeline = easyPipeline()
-	log.Println(pipeline, GetPipeline(pipeline))
+	log.Println(pipeline, SetPipelineStatus(pipeline))
 }
 
 func TestGetPipelineStatus(t *testing.T) {
@@ -31,30 +33,46 @@ func TestGetPipelineStatus(t *testing.T) {
 	log.Println(pipeline, str, err)
 }
 
-func TestChangePipelineStatus(t *testing.T) {
-	pipeline := easyPipeline()
-	pipeline.Status = models.StateSuccess
-	log.Println(pipeline, ChangePipelineStatus(pipeline))
-
-	pipeline = easyPipeline()
-	str, err := GetPipelineStatus(pipeline)
-	log.Println(pipeline, str, err)
-}
-
 func TestSetCreationTimestamp(t *testing.T) {
 	pipeline := easyPipeline()
-	pipeline.CreationTimestamp = time.Now().Format("2016-01-02 15:04:05")
 	log.Println(pipeline, SetCreationTimestamp(pipeline))
+}
 
-	log.Println(pipeline, GetPipeline(pipeline))
+func TestGetCreationTimestamp(t *testing.T) {
+	pipeline := easyPipeline()
+	str, err := GetCreationTimestamp(pipeline)
+	log.Println(pipeline, str, err)
 }
 
 func TestSetDeletionTimestamp(t *testing.T) {
 	pipeline := easyPipeline()
-	pipeline.DeletionTimestamp = time.Now().Format("2016-01-02 15:04:05")
 	log.Println(pipeline, SetDeletionTimestamp(pipeline))
+}
 
-	log.Println(pipeline, GetPipeline(pipeline))
+func TestGetDeletionTimestamp(t *testing.T) {
+	pipeline := easyPipeline()
+	str, err := GetDeletionTimestamp(pipeline)
+	log.Println(pipeline, str, err)
+}
+
+func TestSetPipelineResult(t *testing.T) {
+	result := &models.PipelineResult{
+		Name:"etcdPipelineResult",
+		Namespace:"chenzhu",
+		WorkspaceId: 1000,
+		ProjectId:2000,
+		PipelineId:"aaaaaaaaaaa",
+		Status:models.STATE_STARTING,
+	}
+	log.Println(result, SetPipelineResult(result))
+}
+
+func TestGetPipelineResult(t *testing.T) {
+	result := &models.PipelineResult{
+		Name:"etcdPipelineResult",
+		Namespace:"chenzhu",
+	}
+	log.Println(result, GetPipelineResult(result))
 }
 
 func TestSetPipelineTTL(t *testing.T) {
@@ -73,14 +91,11 @@ func easyPipeline() *models.Pipeline {
 }
 
 func fulPipeline() *models.Pipeline {
-	timeStr := time.Now().Format("2016-01-02 15:04:05")
 	return &models.Pipeline{
 		Name:"etcdPipeline",
 		Namespace:"chenzhu",
 		Stages:[]string{"stageA", "stageB", "stageC"},
-		CreationTimestamp:timeStr,
-		DeletionTimestamp:timeStr,
 		TimeoutDuration:60,
-		Status:models.StateStarting,
+		Status:models.STATE_STARTING,
 	}
 }

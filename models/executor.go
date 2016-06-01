@@ -1,17 +1,12 @@
 package models
 
 const (
-	StateReady 	= "Ready"
-	StateStarting 	= "Working"
-	StateSuccess 	= "OK"
-	StateFailed 	= "Error"
-	StateTimeout 	= "Timeout"
-	StateDeleting 	= "Deleting"
-	StateDeleted 	= "Deleted"
-)
+	STATE_NOT_TART 	= "NotStart"
+	STATE_STARTING 	= "Working"
+	STATE_SUCCESS 	= "Running"
+	STATE_DELETED 	= "Deleted"
 
-type ExecutorRes struct {
-	Name   string
-	Err    error
-	Result string
-}
+	RESULT_SUCCESS	= "OK"
+	RESULT_FAILED 	= "Error"
+	RESULT_TIMEOUT 	= "Timeout"
+)
