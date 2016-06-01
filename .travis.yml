@@ -13,5 +13,5 @@ install: true
 script:
   - go test -v $(go list ./... | grep -v /vendor/)
   - go vet -x ./...
-  - $HOME/gopath/bin/golint ./...
+  - $HOME/gopath/bin/golint $(go list ./... | grep -v /vendor/)
   - go build
