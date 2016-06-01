@@ -1,17 +1,24 @@
 package models
 
+import "time"
+
 const (
-	StateReady 	= "Ready"
-	StateStarting 	= "Working"
-	StateSuccess 	= "OK"
-	StateFailed 	= "Error"
-	StateTimeout 	= "Timeout"
-	StateDeleting 	= "Deleting"
-	StateDeleted 	= "Deleted"
+	STATE_NOT_TART 	= "NotStart"
+	STATE_STARTING 	= "Working"
+	STATE_SUCCESS 	= "Running"
+	STATE_DELETED 	= "Deleted"
+
+	RESULT_SUCCESS	= "OK"
+	RESULT_FAILED 	= "Error"
+	RESULT_TIMEOUT 	= "Timeout"
 )
 
-type ExecutorRes struct {
-	Name   string
-	Err    error
-	Result string
+type Start interface {
+	Start(finishChan chan Result, endTime time.Time)
+	IsReady(dependenceName string) bool
+}
+
+type Result interface {
+	GetResult() interface{}
+	GetName() string
 }

@@ -9,32 +9,26 @@ import (
 	"github.com/containerops/vessel/module/stage"
 )
 
-func ParsePipelineTemplate(template *models.PipelineSpecTemplate) (*models.Pipeline, map[string][]*stage.Stage, error) {
-	pipelineInfo := createPipelineInfo(template.MetaData)
+func ParsePipelineTemplate(template *models.PipelineSpecTemplate) (map[string][]*stage.Stage, error) {
+	pipelineInfo := template.MetaData
 
 	stageSpec := template.Spec
 	stageDagMap := make(map[string][]*stage.Stage, 0)
 	stageMap := make(map[string]*stage.Stage, 0)
-	dependenceCountMap := make(map[string]int, 0)
 
 	pipelineInfo.Stages = make([]string, 0, len(stageSpec))
-	for _, spec := range stageSpec {
-		if spec.Name == "" {
-			return nil, nil, errors.New("Stage has an empty name")
+	for _, stageInfo := range stageSpec {
+		if stageInfo.Name == "" {
+			return nil, errors.New("Stage has an empty name")
+		}
+		_, ok := stageMap[stageInfo.Name]
+		if ok {
+			return nil, errors.New(fmt.Sprintf("Stage has repeat name: %v", stageInfo.Name))
 		}
 
-		_, ok := stageMap[spec.Name]
-		if ok {
-			return nil, nil, errors.New(fmt.Sprintf("Stage has repeat name: %v", spec.Name))
-		}
-		//init stage dependence count
-		if _, ok := stageMap[spec.Name]; !ok {
-			dependenceCountMap[spec.Name] = 0
-		}
-		currStage := createStage(pipelineInfo.Namespace, spec)
-		stageMap[spec.Name] = currStage
-		dependence := currStage.GetDependence()
-		for _, dependenceItem := range dependence {
+		currStage := createStage(pipelineInfo.Namespace, stageInfo)
+		stageMap[stageInfo.Name] = currStage
+		for _, dependenceItem := range currStage.Dependence {
 			stageList, ok := stageDagMap[dependenceItem];
 			if !ok {
 				stageList = make([]*stage.Stage, 0, 10)
@@ -42,32 +36,15 @@ func ParsePipelineTemplate(template *models.PipelineSpecTemplate) (*models.Pipel
 			stageList = append(stageList, currStage)
 			stageDagMap[dependenceItem] = stageList
 		}
-		pipelineInfo.Stages = append(pipelineInfo.Stages, spec.Name)
+		pipelineInfo.Stages = append(pipelineInfo.Stages, stageInfo.Name)
 	}
-	return pipelineInfo, stageDagMap, checkDependenceValidity(stageDagMap, stageMap)
+	return stageDagMap, checkDependenceValidity(stageDagMap, stageMap)
 }
 
-func createPipelineInfo(metaData *models.PipelineMetaData) *models.Pipeline {
-	return &models.Pipeline{
-		Name:metaData.Name,
-		Namespace:metaData.Namespace,
-		TimeoutDuration:int64(metaData.TimeoutDuration),
-	}
-}
-
-func createStage(namespace string, stageSpec *models.StageSpec) *stage.Stage {
+func createStage(namespace string, stageInfo *models.Stage) *stage.Stage {
 	stage := &stage.Stage{}
-	stageInfo := stage.Info()
 	stageInfo.Namespace = namespace
-	stageInfo.Name = stageSpec.Name
-	stageInfo.Port = int64(stageSpec.Port)
-	stageInfo.Image = stageSpec.Image
-	stageInfo.StatusCheckLink = stageSpec.StatusCheckUrl
-	stageInfo.StatusCheckInterval = int64(stageSpec.StatusCheckInterval)
-	stageInfo.StatusCheckCount = int64(stageSpec.StatusCheckCount)
-	stageInfo.EnvName = stageSpec.EnvName
-	stageInfo.EnvValue = stageSpec.EnvValue
-	stage.SetDependence(stageSpec.Dependence)
+	stage.SetInfo(stageInfo)
 	return stage
 }
 
@@ -96,7 +73,7 @@ func checkEndlessChain(stageMap map[string][]*stage.Stage, chain []string, stage
 	if stage == nil {
 		stageName = ""
 	} else {
-		stageName = stage.Info().Name
+		stageName = stage.GetName()
 		for _, chainItem := range chain {
 			if chainItem == stageName {
 				return errors.New(fmt.Sprintf("Dependence chain [%v,%v] is endless chain",

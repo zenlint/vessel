@@ -14,17 +14,13 @@ func Test_ParsePipelineTemp(t *testing.T){
 	if err != nil {
 		log.Println(err)
 	}
-	pipeline, stageMap,err := ParsePipelineTemplate(pipelineTemp)
+	log.Println(pipelineTemp)
+	stageMap,err := ParsePipelineTemplate(pipelineTemp)
 	if err != nil {
 		log.Println(err)
 	}
-	bytes,err := json.Marshal(pipeline)
-	if err != nil {
-		log.Println(err)
-	}
-	log.Println(string(bytes))
-
-	bytes,err = json.Marshal(stageMap)
+	log.Println(stageMap)
+	bytes,err := json.Marshal(stageMap)
 	if err != nil {
 		log.Println(err)
 	}

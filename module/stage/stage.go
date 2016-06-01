@@ -7,18 +7,21 @@ import (
 )
 
 type Stage struct {
+	readies    map[string]bool
 	info       *models.Stage
-	dependence map[string]bool
-	Result     string
-	Err        error
+	result     *models.StageResult
+	Dependence []string
 }
 
-func (stage *Stage)DependenceReady(name string) bool {
-	_, ok := stage.dependence[name]
-	if ok {
-		stage.dependence[name] = true
+func (self *Stage)Start(finishChan chan models.Result, endTime time.Time) {
+
+}
+
+func (self *Stage)IsReady(dependenceName string) bool {
+	if _, ok := self.readies[dependenceName]; ok {
+		self.readies[dependenceName] = true
 	}
-	for _, item := range stage.dependence {
+	for _, item := range self.readies {
 		if !item {
 			return false
 		}
@@ -26,33 +29,24 @@ func (stage *Stage)DependenceReady(name string) bool {
 	return true
 }
 
-func (stage *Stage)Info() *models.Stage {
-	if stage.info == nil {
-		stage.info = &models.Stage{}
-	}
-	return stage.info
+func (self *Stage) GetResult() *models.StageResult {
+	return self.result
 }
 
-func (stage Stage)SetDependence(names string) {
-	list := strings.Split(names, ",")
-	stage.dependence = make(map[string]bool)
+func (self *Stage) GetName() string {
+	return self.info.Name
+}
+
+func (self *Stage) SetInfo(info *models.Stage) {
+	self.info = info
+	list := strings.Split(info.Dependence, ",")
+	self.readies = make(map[string]bool)
 	for _, item := range list {
-		if item == "" {
-			continue
-		}
-		stage.dependence[item] = false
+		self.readies[item] = false
 	}
-	stage.info.Dependence = list
+	self.Dependence = list
 }
 
-func (stage Stage)GetDependence() []string {
-	return stage.info.Dependence
-}
-
-func (stage *Stage)Start(finishChan chan models.ExecutorRes, endTime time.Time) {
-
-}
-
-func (stage *Stage)Stop(finishChan chan models.ExecutorRes, endTime time.Time) {
+func (self *Stage)Stop(finishChan chan models.Result, endTime time.Time) {
 
 }
