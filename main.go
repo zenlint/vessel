@@ -20,7 +20,7 @@ func main() {
 
 	cmdWeb := cmd.GetCmdWeb()
 
-	app := cli.NewApp()
+	ap := cli.NewApp()
 
 	app.Name = setting.Global.AppName
 	app.Usage = setting.Global.Usage
