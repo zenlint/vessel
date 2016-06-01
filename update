@@ -1,0 +1,2 @@
+#!/bin/sh
+sed -i "s/containerops/zenlinTechnofreak/g" $(go list ./... |grep containerops -rl)

@@ -3,6 +3,9 @@ language: go
 go:
   - 1.5.3
 
+env:
+   global:
+      - "GO15VENDOREXPERIMENT=1"
 sudo: false
 
 before_install:
@@ -11,7 +14,7 @@ before_install:
 install: true
 
 script:
-  - sed -i "s/containerops/zenlinTechnofreak/g" $(go list ./... |grep containerops -rl)
+  - sed -i "s/containerops/zenlinTechnofreak/g" `find ./ -type f |grep -v vendor |grep -v .git |grep -v Godeps`
   - go test -v $(go list ./... | grep -v /vendor/)
   - go vet -x ./...
   - $HOME/gopath/bin/golint $(go list ./... | grep -v /vendor/)
