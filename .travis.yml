@@ -1,0 +1,23 @@
+language: go
+
+go:
+  - 1.6
+  - 1.5.3
+  - tip
+
+sudo: false
+
+before_install:
+  - go get github.com/golang/lint/golint
+  - go get k8s.io/kubernetes/pkg/*
+  - go get github.com/go-macaron/inject
+  - go get github.com/codegangsta/cli
+  - go get github.com/Unknown/com
+  
+install: true
+
+script:
+  - go test -v $(go list ./... | grep -v /Godeps/)
+  - go vet -x ./...
+  - $(HOME)/gopath/bin/golint ./...
+  - go build
