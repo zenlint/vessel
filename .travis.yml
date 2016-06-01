@@ -9,11 +9,7 @@ sudo: false
 
 before_install:
   - go get github.com/golang/lint/golint
-  - go get k8s.io/kubernetes/pkg/*
-  - go get github.com/go-macaron/inject
-  - go get github.com/codegangsta/cli
-  - go get github.com/Unknown/com
-  
+
 install: true
 
 script:
