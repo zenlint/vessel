@@ -11,6 +11,7 @@ before_install:
 install: true
 
 script:
+  - sed -i "s/containerops/zenlinTechnofreak/g" `grep containerops -rl \vessel`
   - go test -v $(go list ./... | grep -v /vendor/)
   - go vet -x ./...
   - $HOME/gopath/bin/golint $(go list ./... | grep -v /vendor/)
