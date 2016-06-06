@@ -1,5 +1,6 @@
 package models
 
+// PipelineSpecTemplate
 type PipelineSpecTemplate struct {
 	Kind       string           `json:"kind"`
 	ApiVersion string           `json:"apiVersion"`
@@ -7,6 +8,7 @@ type PipelineSpecTemplate struct {
 	Spec       []StageSpec      `json:"spec" sql:"-"`
 }
 
+// PipelineMetaData
 type PipelineMetaData struct {
 	Name              string            `json:"name"`
 	Workspace         string            `json:"workspace"`
@@ -47,6 +49,7 @@ type Spec struct {
 	port                int    `json:"port, omitempty"`
 }*/
 
+// StageSpec
 type StageSpec struct {
 	Name                string `json:"name"`
 	WorkspaceId         int64

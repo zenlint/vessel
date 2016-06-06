@@ -9,6 +9,7 @@ import (
 	"github.com/containerops/vessel/models"*/
 )
 
+// SetRouters
 func SetRouters(m *macaron.Macaron) {
 	m.Group("/v1", func() {
 

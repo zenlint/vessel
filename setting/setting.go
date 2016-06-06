@@ -7,6 +7,7 @@ package setting
 	"github.com/ghodss/yaml"
 )*/
 
+// GlobalConf
 type GlobalConf struct {
 	AppName     string
 	Usage       string
@@ -16,43 +17,62 @@ type GlobalConf struct {
 	RuntimePath string
 }
 
+// RunTimeConf
 type RunTimeConf struct {
-	Run struct {
-		runMode string
-		logPath string
-	}
-	Http struct {
-		ListenMode    string
-		HttpsCertFile string
-		HttpsKeyFile  string
-		Host          string
-		Port          string
-	}
-	Database struct {
-		Username string
-		Password string
-		Protocol string
-		Host     string
-		Port     string
-		Schema   string
-		Param    map[string]string
-	}
-	Etcd struct {
-		Endpoints []map[string]string
-		Username  string
-		Password  string
-	}
-	K8s struct {
-		Host string
-		Port string
-	}
+	Run      Run
+	Http     Http
+	Database Database
+	Etcd     Etcd
+	K8s      K8s
+}
+
+// Run
+type Run struct {
+	runMode string
+	logPath string
+}
+
+// Http
+type Http struct {
+	ListenMode    string
+	HttpsCertFile string
+	HttpsKeyFile  string
+	Host          string
+	Port          string
+}
+
+// Database
+type Database struct {
+	Username string
+	Password string
+	Protocol string
+	Host     string
+	Port     string
+	Schema   string
+	Param    map[string]string
+}
+
+// Etcd
+type Etcd struct {
+	Endpoints []map[string]string
+	Username  string
+	Password  string
+}
+
+// K8s
+type K8s struct {
+	Host string
+	Port string
 }
 
 var (
+	// Global
 	Global  *GlobalConf
+	// RunTime
 	RunTime *RunTimeConf
 )
 
+// InitConf
 func InitConf(globalFilePath string, runtimeFilePath string) error {
 
 	/*globalFile, err := ioutil.ReadFile(globalFilePath)

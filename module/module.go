@@ -12,6 +12,7 @@ package module
 
 // var db *gorm.DB
 
+// InitModule
 func InitModule() {
 
 	// var err error

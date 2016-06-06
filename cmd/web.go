@@ -13,6 +13,7 @@ import (
 	"github.com/containerops/vessel/web"
 )
 
+// GetCmdWeb
 func GetCmdWeb() cli.Command {
 	var CmdWeb = cli.Command{
 		Name:        "web",

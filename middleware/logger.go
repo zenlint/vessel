@@ -7,6 +7,7 @@ import (
 	"gopkg.in/macaron.v1"
 )
 
+// InitLog
 func InitLog(runmode, path string) {
 	//	log := module.GetLog()
 
