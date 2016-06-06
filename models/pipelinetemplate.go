@@ -3,7 +3,7 @@ package models
 // PipelineSpecTemplate struct convert from for user request data
 type PipelineSpecTemplate struct {
 	Kind       string           `json:"kind"`
-	ApiVersion string           `json:"apiVersion"`
+	APIVersion string           `json:"apiVersion"`
 	MetaData   PipelineMetaData `json:"metadata"`
 	Spec       []StageSpec      `json:"spec" sql:"-"`
 }
@@ -15,7 +15,7 @@ type PipelineMetaData struct {
 	Project           string            `json:"project"`
 	Namespace         string            `json:"namespace"`
 	SelfLink          string            `json:"selfLink"`
-	Uid               string            `json:"uid"`
+	UID               string            `json:"uid"`
 	CreateonTimestamp string            `json:"createonTimestamp"`
 	DeletionTimestamp string            `json:"deletionTimestamp"`
 	TimeoutDuration   int64             `json:"timeoutDuration"`
@@ -26,14 +26,14 @@ type PipelineMetaData struct {
 // StageSpec struct for convert from user request data
 type StageSpec struct {
 	Name                string `json:"name"`
-	WorkspaceId         int64
-	ProjectId           int64
-	PipelineId          int64
-	StageId             int64
+	WorkspaceID         int64
+	ProjectID           int64
+	PipelineID          int64
+	StageID             int64
 	Replicas            int    `json:"replicas"`
 	Dependence          string `json:"dependence"`
 	Kind                string `json:"kind"`
-	StatusCheckUrl      string `json:"statusCheckLink"`
+	StatusCheckURL      string `json:"statusCheckLink"`
 	StatusCheckInterval int64  `json:"statusCheckInterval"`
 	StatusCheckCount    int    `json:"statusCheckCount"`
 	Image               string `json:"image"`
