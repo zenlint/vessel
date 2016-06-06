@@ -6,33 +6,38 @@ import (
 	"github.com/containerops/vessel/models"
 )
 
-var (
-	vessel_stage_etcd_path = "containerops/vessel/ns_%v/sn_%v"
+const (
+	VESSEL_STAGE_ETCD_PATH = "containerops/vessel/ns_%v/sn_%v"
 )
 
+// SaveStage Save stage to etcd
 func SaveStage(stage *models.Stage) error {
-	stagePath := fmt.Sprintf(vessel_stage_etcd_path, stage.Namespace, stage.Name)
+	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, stage.Namespace, stage.Name)
 	return EtcdSetJson(stagePath + "/data", stage);
 }
 
+// GetStage Get stage from etcd
 func GetStage(stage *models.Stage) error {
-	stagePath := fmt.Sprintf(vessel_stage_etcd_path, stage.Namespace, stage.Name)
+	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, stage.Namespace, stage.Name)
 	return EtcdGetJson(stagePath + "/data", stage)
 }
 
+// SetStageTTL Set stage TTL to etcd
 func SetStageTTL(stage *models.Stage, timeLife uint64) error {
-	stagePath := fmt.Sprintf(vessel_stage_etcd_path, stage.Namespace, stage.Name)
+	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, stage.Namespace, stage.Name)
 	return EtcdSetDirTTL(stagePath, timeLife)
 }
 
+// SetStageStatus Set stage status to etcd
 func SetStageStatus(stage *models.Stage) error {
-	stagePath := fmt.Sprintf(vessel_stage_etcd_path, stage.Namespace, stage.Name)
-	return EtcdSet(stagePath + "/status", stage.Status)
+	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, stage.Namespace, stage.Name)
+	return EtcdSetValue(stagePath + "/status", stage.Status)
 }
 
+// GetStageStatus Get stage status from etcd
 func GetStageStatus(stage *models.Stage) (string, error) {
-	stagePath := fmt.Sprintf(vessel_stage_etcd_path, stage.Namespace, stage.Name)
-	value, err := EtcdGet(stagePath + "/status")
+	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, stage.Namespace, stage.Name)
+	value, err := EtcdGetValue(stagePath + "/status")
 	if err != nil {
 		return "", err
 	}
@@ -40,12 +45,14 @@ func GetStageStatus(stage *models.Stage) (string, error) {
 	return value, err
 }
 
+// SetStageResult Set stage result to etcd
 func SetStageResult(stageResult *models.StageResult) error {
-	stagePath := fmt.Sprintf(vessel_stage_etcd_path, stageResult.Namespace, stageResult.Name)
+	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, stageResult.Namespace, stageResult.Name)
 	return EtcdSetJson(stagePath + "/result", stageResult)
 }
 
+// GetStageResult Get stage result from etcd
 func GetStageResult(stageResult *models.StageResult) error {
-	stagePath := fmt.Sprintf(vessel_stage_etcd_path, stageResult.Namespace, stageResult.Name)
+	stagePath := fmt.Sprintf(VESSEL_STAGE_ETCD_PATH, stageResult.Namespace, stageResult.Name)
 	return EtcdGetJson(stagePath + "/result", stageResult)
 }

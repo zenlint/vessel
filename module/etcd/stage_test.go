@@ -12,28 +12,33 @@ func init() {
 	clientEtcd()
 }
 
+// TestSaveStage
 func TestSaveStage(t *testing.T) {
 	stage := fulStage()
 	log.Println(stage, SaveStage(stage))
 }
 
+// TestGetStage
 func TestGetStage(t *testing.T) {
 	stage := easyStage()
 	log.Println(stage, GetStage(stage))
 }
 
+// TestSetStageStatus
 func TestSetStageStatus(t *testing.T) {
 	stage := easyStage()
 	stage.Status = models.STATE_DELETED
 	log.Println(stage, SetStageStatus(stage))
 }
 
+// TestGetStageStatus
 func TestGetStageStatus(t *testing.T) {
 	stage := easyStage()
 	str, err := GetStageStatus(stage)
 	log.Println(stage, str, err)
 }
 
+// TestSetStageResult
 func TestSetStageResult(t *testing.T) {
 	result := &models.StageResult{
 		Namespace:"etcdStageResult",
@@ -45,6 +50,7 @@ func TestSetStageResult(t *testing.T) {
 	log.Println(SetStageResult(result))
 }
 
+// TestGetStageResult
 func TestGetStageResult(t *testing.T) {
 	result := &models.StageResult{
 		Namespace:"etcdStageResult",
@@ -53,6 +59,7 @@ func TestGetStageResult(t *testing.T) {
 	log.Println(result,GetStageResult(result))
 }
 
+// TestSetStageTTL
 func TestSetStageTTL(t *testing.T) {
 	stage := easyStage()
 	log.Println(stage, SetStageTTL(stage, 2))

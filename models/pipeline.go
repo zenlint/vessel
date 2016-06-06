@@ -1,19 +1,20 @@
 package models
 
 type PipelineResult struct {
-	Namespace    string                `json:"-"`
-	Name         string                `json:"-"`
-	Status       string                `json:"status"`
-	WorkspaceId  int64                 `json:"workspaceId"`
-	ProjectId    int64                 `json:"projectId"`
-	PipelineId   string                `json:"pipelineId"`
-	Details      []*StageResult        `json:"details"`
-	PipelineSpec *PipelineSpecTemplate `json:"pipelineSpec"`
+	Namespace      string                `json:"-"`
+	Name           string                `json:"-"`
+	Status         string                `json:"status"`
+	WorkspaceId    int64                 `json:"workspaceId"`
+	ProjectId      int64                 `json:"projectId"`
+	PipelineId     string                `json:"pipelineId"`
+	PipelineDetail string                `json:"pipelineDetail"`
+	Details        []interface{}         `json:"details"`
+	PipelineSpec   *PipelineSpecTemplate `json:"pipelineSpec"`
 }
 
 type PipelineSpecTemplate struct {
-	Kind           string           `json:"kind" binding:"Required"`
-	ApiVersion     string           `json:"apiVersion" binding:"Required"`
+	Kind           string           `json:"kind" binding:"In(CCloud)"`
+	ApiVersion     string           `json:"apiVersion" binding:"In(v1)"`
 	ApiServiceUrl  string           `json:"-"`
 	ApiServiceAuth string           `json:"-"`
 	MetaData       *Pipeline        `json:"metadata" binding:"Required"`

@@ -2,6 +2,7 @@ package models
 
 type Stage struct {
 	Namespace           string `json:"-"`
+	PipelineName        string `json:"-"`
 	Name                string `json:"name"  binding:"Required"`
 	Replicas            uint64 `json:"replicas" binding:"Required"`
 	Dependence          string `json:"dependence"`
