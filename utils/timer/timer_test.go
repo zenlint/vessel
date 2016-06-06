@@ -25,5 +25,4 @@ func TestOverflow(t *testing.T) {
 
 	<-time.After(time.Second * time.Duration(11))
 	t.Logf("Testing timer.GetLeftTime overflow err, TimeLeft: %d", int64(tim.GetLeftNanoseconds()))
-
 }

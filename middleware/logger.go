@@ -1,9 +1,6 @@
 package middleware
 
 import (
-	//"github.com/ngaut/log"
-	//	"github.com/containerops/vessel/module"
-
 	"gopkg.in/macaron.v1"
 )
 

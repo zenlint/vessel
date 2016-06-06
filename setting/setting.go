@@ -1,12 +1,5 @@
 package setting
 
-/*import (
-	"fmt"
-	"io/ioutil"
-
-	"github.com/ghodss/yaml"
-)*/
-
 // GlobalConf for start vessel
 type GlobalConf struct {
 	AppName     string
@@ -20,44 +13,44 @@ type GlobalConf struct {
 // RunTimeConf runtime config for start vessel
 type RunTimeConf struct {
 	// Run mode config for vessel
-	Run      struct {
-			 runMode string
-			 logPath string
-		 }
+	Run struct {
+		runMode string
+		logPath string
+	}
 	// Http config for vessel
-	HTTP     struct {
-			 ListenMode    string
-			 HTTPSCertFile string
-			 HTTPSKeyFile  string
-			 Host          string
-			 Port          string
-		 }
+	HTTP struct {
+		ListenMode    string
+		HTTPSCertFile string
+		HTTPSKeyFile  string
+		Host          string
+		Port          string
+	}
 	// Database config for vessel
 	Database struct {
-			 Username string
-			 Password string
-			 Protocol string
-			 Host     string
-			 Port     string
-			 Schema   string
-			 Param    map[string]string
-		 }
+		Username string
+		Password string
+		Protocol string
+		Host     string
+		Port     string
+		Schema   string
+		Param    map[string]string
+	}
 	// Etcd config for vessel
-	Etcd     struct {
-			 Endpoints []map[string]string
-			 Username  string
-			 Password  string
-		 }
+	Etcd struct {
+		Endpoints []map[string]string
+		Username  string
+		Password  string
+	}
 	// K8s config for vessel
-	K8s      struct {
-			 Host string
-			 Port string
-		 }
+	K8s struct {
+		Host string
+		Port string
+	}
 }
 
 var (
 	// Global globalConf reference
-	Global  *GlobalConf
+	Global *GlobalConf
 	// RunTime runTime reference
 	RunTime *RunTimeConf
 )

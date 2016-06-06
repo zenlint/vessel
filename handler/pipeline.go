@@ -1,9 +1,8 @@
 package handler
 
 import (
-	// "net/http"
-	"gopkg.in/macaron.v1"
 	"github.com/containerops/vessel/models"
+	"gopkg.in/macaron.v1"
 )
 
 // V1POSTPipelineHandler pipeline handler for vessel v1 version by HTTP POST
@@ -22,6 +21,6 @@ func V1GETPipelineHandler(ctx *macaron.Context) (int, []byte) {
 }
 
 // V1DELETEPipelineHandler pipeline handler for vessel v1 version by HTTP DELETE
-func V1DELETEPipelineHandler(ctx *macaron.Context, reqData models.PipelineSpecTemplate) (int, []byte) {	
+func V1DELETEPipelineHandler(ctx *macaron.Context, reqData models.PipelineSpecTemplate) (int, []byte) {
 	return 0, []byte("")
 }

@@ -6,11 +6,9 @@ import (
 	"net/http"
 
 	"github.com/codegangsta/cli"
-	"gopkg.in/macaron.v1"
-
-	// "github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/setting"
 	"github.com/containerops/vessel/web"
+	"gopkg.in/macaron.v1"
 )
 
 // GetCmdWeb get a client command
