@@ -29,7 +29,7 @@ func getClient() error {
 	return nil
 }
 
-// EtcdGet Get data from etcd by key
+// EtcdGet Get data from etcd
 func EtcdGet(key string) (*client.Response, error) {
 	if err := getClient(); err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func EtcdGet(key string) (*client.Response, error) {
 	return client.NewKeysAPI(etcdClient).Get(context.Background(), key, nil)
 }
 
-// EtcdSet Set data to etcd  by key
+// EtcdSet Set data to etcd 
 func EtcdSet(key string, value string, opts *client.SetOptions) error {
 	if err := getClient(); err != nil {
 		return err
@@ -46,7 +46,7 @@ func EtcdSet(key string, value string, opts *client.SetOptions) error {
 	return err
 }
 
-// EtcdGetValue Get string from etcd by key
+// EtcdGetValue Get string from etcd
 func EtcdGetValue(key string) (string, error) {
 	resp, err := EtcdGet(key)
 	if err != nil {
@@ -55,12 +55,12 @@ func EtcdGetValue(key string) (string, error) {
 	return resp.Node.Value, nil
 }
 
-// EtcdSetValue Set string to etcd by key
+// EtcdSetValue Set string to etcd
 func EtcdSetValue(key string, value string) error {
 	return EtcdSet(key, value, nil)
 }
 
-// EtcdGetJson Get json data from etcd by key
+// EtcdGetJson Get json data from etcd
 func EtcdGetJson(key string, v interface{}) (error) {
 	jsonStr, err := EtcdGetValue(key)
 	if err != nil {
@@ -69,7 +69,7 @@ func EtcdGetJson(key string, v interface{}) (error) {
 	return json.Unmarshal([]byte(jsonStr), v)
 }
 
-// EtcdSetJson Set json data to etcd by key
+// EtcdSetJson Set json data to etcd
 func EtcdSetJson(key string, value interface{}) error {
 	jsonBytes, err := json.Marshal(value)
 	if err != nil {
@@ -78,12 +78,12 @@ func EtcdSetJson(key string, value interface{}) error {
 	return EtcdSetValue(key, string(jsonBytes))
 }
 
-// EtcdSetDir Set dir to etcd by key
+// EtcdSetDir Set dir to etcd
 func EtcdSetDir(key string) error {
 	return EtcdSet(key, "", &client.SetOptions{Dir: true, PrevExist: client.PrevExist})
 }
 
-// EtcdGetDir Get dir data from etcd by key
+// EtcdGetDir Get dir data from etcd
 func EtcdGetDir(key string) (client.Nodes, error) {
 	resp, err := EtcdGet(key)
 	if err != nil {
@@ -95,17 +95,17 @@ func EtcdGetDir(key string) (client.Nodes, error) {
 	return resp.Node.Nodes, nil
 }
 
-// EtcdSetTTL Set data TTL to etcd by key
+// EtcdSetTTL Set data TTL to etcd
 func EtcdSetTTL(key string, value string, timeLife uint64) error {
 	return EtcdSet(key, value, &client.SetOptions{TTL:time.Duration(timeLife)})
 }
 
-// EtcdSetDirTTL Set dir TTL to etcd by key
+// EtcdSetDirTTL Set dir TTL to etcd
 func EtcdSetDirTTL(key string, timeLife uint64) error {
 	return EtcdSet(key, "", &client.SetOptions{TTL:time.Duration(timeLife), Dir: true, PrevExist: client.PrevExist})
 }
 
-// EtcdWatch Watch from etcd by key
+// EtcdWatch Watch from etcd
 func EtcdWatch(key string) (client.Watcher, error) {
 	if etcdClient == nil {
 		return nil, etcdClientErr()
