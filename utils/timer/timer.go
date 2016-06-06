@@ -17,6 +17,6 @@ func InitHourglass(nanoseconds time.Duration) *Hourglass {
 }
 
 // GetLeftNanoseconds get left time for nanoseconds
-func (this *Hourglass) GetLeftNanoseconds() time.Duration {
-	return time.Duration(this.endTime.Sub(time.Now()).Nanoseconds())
+func (hourglass *Hourglass) GetLeftNanoseconds() time.Duration {
+	return time.Duration(hourglass.endTime.Sub(time.Now()).Nanoseconds())
 }

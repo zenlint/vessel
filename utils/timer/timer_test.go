@@ -8,7 +8,7 @@ import (
 // TestLeftTime test left time
 func TestLeftTime(t *testing.T) {
 	initialTimeout := 10
-	timeNanoSeconds := int64(time.Second * time.Duration(initialTimeout))
+	timeNanoSeconds := time.Second * time.Duration(initialTimeout)
 	tim := InitHourglass(timeNanoSeconds)
 
 	<-time.After(time.Second * time.Duration(1))
@@ -21,7 +21,7 @@ func TestLeftTime(t *testing.T) {
 // TestOverflow test over flow
 func TestOverflow(t *testing.T) {
 	initialTimeout := 10
-	tim := InitHourglass(int64(time.Second * time.Duration(initialTimeout)))
+	tim := InitHourglass(time.Second * time.Duration(initialTimeout))
 
 	<-time.After(time.Second * time.Duration(11))
 	t.Errorf("Testing timer.GetLeftTime overflow err, TimeLeft: %d", tim.GetLeftNanoseconds())
