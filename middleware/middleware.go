@@ -2,7 +2,7 @@ package middleware
 
 import "gopkg.in/macaron.v1"
 
-// SetMiddlewares
+// SetMiddlewares set middlewares to macaron
 func SetMiddlewares(m *macaron.Macaron) {
 	// InitLog(setting.RunMode, setting.LogPath)
 

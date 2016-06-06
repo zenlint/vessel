@@ -7,7 +7,7 @@ import (
 	"gopkg.in/macaron.v1"
 )
 
-// InitLog
+// InitLog init log for vessel
 func InitLog(runmode, path string) {
 	//	log := module.GetLog()
 

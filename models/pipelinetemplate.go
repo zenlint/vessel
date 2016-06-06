@@ -1,6 +1,6 @@
 package models
 
-// PipelineSpecTemplate
+// PipelineSpecTemplate struct convert from for user request data
 type PipelineSpecTemplate struct {
 	Kind       string           `json:"kind"`
 	ApiVersion string           `json:"apiVersion"`
@@ -8,7 +8,7 @@ type PipelineSpecTemplate struct {
 	Spec       []StageSpec      `json:"spec" sql:"-"`
 }
 
-// PipelineMetaData
+// PipelineMetaData struct for convert from user request data
 type PipelineMetaData struct {
 	Name              string            `json:"name"`
 	Workspace         string            `json:"workspace"`
@@ -23,33 +23,7 @@ type PipelineMetaData struct {
 	Annotations       map[string]string `json:"annotations" sql:"-"`
 }
 
-/*// pipelineMetadata struct for convert from pipelineVersion.MetaData
-type piplineMetadata struct {
-	name            string            `json:"name, omitempty"`
-	namespace       string            `json:"namespace, omitempty"`
-	selfLink        string            `json:"selflink, omitempty"`
-	uid             types.UID         `json:"uid, omitempty"`
-	createTimestamp unversioned.Time  `json:"createTimestamp, omitempty"`
-	deleteTimestamp unversioned.Time  `json:"deleteTimestamp, omitempty"`
-	timeoutDuration int64             `json:"timeoutDuration, omitempty"`
-	labels          map[string]string `json:"labels, omitempty"`
-	annotations     map[string]string `json:"annotations, omitempty"`
-}
-
-// pipelineSpec struct for convert from pipelineVersion.Spec
-type Spec struct {
-	name                string `json:"name, omitempty"`
-	replicas            int    `json:"replicas, omitempty"`
-	dependencies        string `json:"dependencies, omitempty"`
-	kind                string `json:"kind, omitempty"`
-	statusCheckLink     string `json:"statusCheckLink, omitempty"`
-	statusCheckInterval int64  `json:"statusCheckInterval, omitempty"`
-	statusCheckCount    int64  `json:"statusCheckCount, omitempty"`
-	imageName           string `json:"imagename, omitempty"`
-	port                int    `json:"port, omitempty"`
-}*/
-
-// StageSpec
+// StageSpec struct for convert from user request data
 type StageSpec struct {
 	Name                string `json:"name"`
 	WorkspaceId         int64

@@ -12,7 +12,7 @@ package module
 
 // var db *gorm.DB
 
-// InitModule
+// InitModule for vessel
 func InitModule() {
 
 	// var err error

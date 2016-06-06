@@ -7,7 +7,7 @@ package setting
 	"github.com/ghodss/yaml"
 )*/
 
-// GlobalConf
+// GlobalConf for start vessel
 type GlobalConf struct {
 	AppName     string
 	Usage       string
@@ -17,14 +17,14 @@ type GlobalConf struct {
 	RuntimePath string
 }
 
-// RunTimeConf
+// RunTimeConf runtime config for start vessel
 type RunTimeConf struct {
-	// Run
+	// Run mode config for vessel
 	Run struct {
 		runMode string
 		logPath string
 	}
-	// Http
+	// Http config for vessel
 	Http struct {
 		ListenMode    string
 		HttpsCertFile string
@@ -32,7 +32,7 @@ type RunTimeConf struct {
 		Host          string
 		Port          string
 	}
-	// Database
+	// Database config for vessel
 	Database struct {
 		Username string
 		Password string
@@ -42,13 +42,13 @@ type RunTimeConf struct {
 		Schema   string
 		Param    map[string]string
 	}
-	// Etcd
+	// Etcd config for vessel
 	Etcd struct {
 		Endpoints []map[string]string
 		Username  string
 		Password  string
 	}
-	// K8s
+	// K8s config for vessel
 	K8s struct {
 		Host string
 		Port string
@@ -56,13 +56,13 @@ type RunTimeConf struct {
 }
 
 var (
-	// Global
+	// Global globalConf reference
 	Global  *GlobalConf
-	// RunTime
+	// RunTime runTime reference
 	RunTime *RunTimeConf
 )
 
-// InitConf
+// InitConf Init config for start vessel
 func InitConf(globalFilePath string, runtimeFilePath string) error {
 
 	/*globalFile, err := ioutil.ReadFile(globalFilePath)

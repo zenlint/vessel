@@ -8,7 +8,7 @@ import (
 	"github.com/containerops/vessel/router"
 )
 
-// SetVesselMacaron
+// SetVesselMacaron set middle wares and routers to macaron
 func SetVesselMacaron(m *macaron.Macaron) {
 	//Setting Middleware
 	middleware.SetMiddlewares(m)
