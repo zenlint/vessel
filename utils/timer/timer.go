@@ -4,22 +4,19 @@ import (
 	"time"
 )
 
-type Timer struct {
-	Start           time.Time
-	TimeoutDuration float64
-	LeftTime        float64
+// Hourglass calculate left time
+type Hourglass struct {
+	endTime time.Time
 }
 
-func InitTimer(initialTimeout float64) (timer *Timer) {
-	t := new(Timer)
-	t.Start = time.Now()
-	t.TimeoutDuration = initialTimeout
-	t.LeftTime = initialTimeout
+// InitHourglass create hourglass
+func InitHourglass(nanoseconds time.Duration) *Hourglass {
+	t := new(Hourglass)
+	t.endTime = time.Now().Add(nanoseconds)
 	return t
 }
 
-func (this *Timer) GetLeftTime() (leftTime float64) {
-	this.LeftTime = this.LeftTime - time.Now().Sub(this.Start).Seconds()
-	this.Start = time.Now()
-	return this.LeftTime
+// GetLeftNanoseconds get left time for nanoseconds
+func (hourglass *Hourglass) GetLeftNanoseconds() time.Duration {
+	return time.Duration(hourglass.endTime.Sub(time.Now()).Nanoseconds())
 }

@@ -1,12 +1,10 @@
 package middleware
 
 import (
-	//"github.com/ngaut/log"
-	//	"github.com/containerops/vessel/module"
-
 	"gopkg.in/macaron.v1"
 )
 
+// InitLog init log for vessel
 func InitLog(runmode, path string) {
 	//	log := module.GetLog()
 
