@@ -57,8 +57,8 @@ func InitK8S() error {
 		// clientConfig.Host = setting.RunTime.Database.Host
 		client, err := unversioned.New(&clientConfig)
 		if err != nil {
+			fmt.Printf("New unversioned client err: %v!\n", err.Error())
 			return err
-			fmt.Errorf("New unversioned client err: %v!\n", err.Error())
 		}
 		K8sClient = client
 	}
