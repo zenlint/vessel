@@ -15,12 +15,12 @@ type PipelineResult struct {
 
 // PipelineSpecTemplate struct template for request data
 type PipelineSpecTemplate struct {
-	Kind           string           `json:"kind" binding:"In(CCloud)"`
-	APIVersion     string           `json:"apiVersion" binding:"In(v1)"`
-	APIServiceURL  string           `json:"-"`
-	APIServiceAuth string           `json:"-"`
-	MetaData       *Pipeline        `json:"metadata" binding:"Required"`
-	Spec           []*Stage         `json:"spec"  binding:"Required"`
+	Kind           string    `json:"kind" binding:"In(CCloud)"`
+	APIVersion     string    `json:"apiVersion" binding:"In(v1)"`
+	APIServiceURL  string    `json:"-"`
+	APIServiceAuth string    `json:"-"`
+	MetaData       *Pipeline `json:"metadata" binding:"Required"`
+	Spec           []*Stage  `json:"spec"  binding:"Required"`
 }
 
 // Pipeline struct pipeline data
