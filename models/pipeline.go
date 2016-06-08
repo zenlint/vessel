@@ -1,6 +1,6 @@
 package models
 
-// PipelineResult struct pipeline result
+// PipelineResult pipeline result
 type PipelineResult struct {
 	Namespace      string                `json:"-"`
 	Name           string                `json:"-"`
@@ -13,17 +13,17 @@ type PipelineResult struct {
 	PipelineSpec   *PipelineSpecTemplate `json:"pipelineSpec"`
 }
 
-// PipelineSpecTemplate struct template for request data
+// PipelineSpecTemplate template for request data
 type PipelineSpecTemplate struct {
-	Kind           string           `json:"kind" binding:"In(CCloud)"`
-	APIVersion     string           `json:"apiVersion" binding:"In(v1)"`
-	APIServiceURL  string           `json:"-"`
-	APIServiceAuth string           `json:"-"`
-	MetaData       *Pipeline        `json:"metadata" binding:"Required"`
-	Spec           []*Stage         `json:"spec"  binding:"Required"`
+	Kind           string    `json:"kind" binding:"In(CCloud)"`
+	APIVersion     string    `json:"apiVersion" binding:"In(v1)"`
+	APIServiceURL  string    `json:"-"`
+	APIServiceAuth string    `json:"-"`
+	MetaData       *Pipeline `json:"metadata" binding:"Required"`
+	Spec           []*Stage  `json:"spec"  binding:"Required"`
 }
 
-// Pipeline struct pipeline data
+// Pipeline pipeline data
 type Pipeline struct {
 	Namespace         string            `json:"namespace" binding:"Required"`
 	Name              string            `json:"name" binding:"Required"`

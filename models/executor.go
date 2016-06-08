@@ -1,8 +1,8 @@
 package models
 
 const (
-	// StateReadying  operating state readying
-	StateReadying = "Readying"
+	// StateReady  operating state ready
+	StateReady = "Ready"
 	// StateRunning  operating state running
 	StateRunning = "Running"
 	// StateDeleted  operating state deleted
@@ -16,14 +16,14 @@ const (
 	ResultTimeout = "Timeout"
 )
 
-// Executor struct with pre condition and info
+// Executor executor for scheduler
 type Executor struct {
 	From []string
 	Info interface{}
 }
 
-// SchedulingResult struct scheduling result
-type SchedulingResult struct {
+// ExecutedResult executor operating result
+type ExecutedResult struct {
 	Name   string
 	Status string
 	Result interface{}

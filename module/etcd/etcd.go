@@ -16,7 +16,7 @@ var (
 )
 
 const (
-	// ClientErr client not start error
+	// ClientErr client start error
 	ClientErr = "ETCD client is not start"
 )
 
@@ -34,7 +34,7 @@ func clientErr() error {
 	return errors.New(ClientErr)
 }
 
-// Get from etcd
+// Get get data from etcd
 func Get(key string) (*client.Response, error) {
 	if err := getClient(); err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func Get(key string) (*client.Response, error) {
 	return client.NewKeysAPI(etcdClient).Get(context.Background(), key, nil)
 }
 
-// Set to etcd
+// Set save data to etcd
 func Set(key string, value string, opts *client.SetOptions) error {
 	if err := getClient(); err != nil {
 		return err
@@ -51,7 +51,7 @@ func Set(key string, value string, opts *client.SetOptions) error {
 	return err
 }
 
-// GetValue (string) from etcd
+// GetValue get data from etcd as string
 func GetValue(key string) (string, error) {
 	resp, err := Get(key)
 	if err != nil {
@@ -60,12 +60,12 @@ func GetValue(key string) (string, error) {
 	return resp.Node.Value, nil
 }
 
-// SetValue (string) to etcd
+// SetValue save data to etcd as string
 func SetValue(key string, value string) error {
 	return Set(key, value, nil)
 }
 
-// GetJSON data from etcd
+// GetJSON get data from etcd as JSON
 func GetJSON(key string, v interface{}) error {
 	jsonStr, err := GetValue(key)
 	if err != nil {
@@ -74,7 +74,7 @@ func GetJSON(key string, v interface{}) error {
 	return json.Unmarshal([]byte(jsonStr), v)
 }
 
-// SetJSON data to etcd
+// SetJSON save data to etcd as JSON
 func SetJSON(key string, value interface{}) error {
 	jsonBytes, err := json.Marshal(value)
 	if err != nil {
@@ -83,12 +83,12 @@ func SetJSON(key string, value interface{}) error {
 	return SetValue(key, string(jsonBytes))
 }
 
-// SetDir to etcd
+// SetDir create dir for etcd
 func SetDir(key string) error {
 	return Set(key, "", &client.SetOptions{Dir: true, PrevExist: client.PrevExist})
 }
 
-// GetDir data from etcd
+// GetDir get data from etcd dir
 func GetDir(key string) (client.Nodes, error) {
 	resp, err := Get(key)
 	if err != nil {
@@ -100,12 +100,12 @@ func GetDir(key string) (client.Nodes, error) {
 	return resp.Node.Nodes, nil
 }
 
-// SetValueTTL to etcd
+// SetValueTTL set data TTL to etcd
 func SetValueTTL(key string, value string, timeLife uint64) error {
 	return Set(key, value, &client.SetOptions{TTL: time.Duration(timeLife)})
 }
 
-// SetDirTTL to etcd
+// SetDirTTL set dir TTl to etcd
 func SetDirTTL(key string, timeLife uint64) error {
 	return Set(key, "", &client.SetOptions{TTL: time.Duration(timeLife), Dir: true, PrevExist: client.PrevExist})
 }

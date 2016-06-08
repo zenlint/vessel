@@ -1,16 +1,16 @@
 package models
 
 const (
-	// LabelKey k8s label key
+	// LabelKey K8S label key
 	LabelKey = "app"
-	// WatchAdded k8s watch added
-	WatchAdded   = "ADDED"
-	// WatchDeleted k8s watch deleted
+	// WatchAdded K8S watch added
+	WatchAdded = "ADDED"
+	// WatchDeleted K8S watch deleted
 	WatchDeleted = "DELETED"
 )
 
-// K8sRes struct k8s scheduling result
-type K8sRes struct {
+// K8SRes call result from K8S
+type K8SRes struct {
 	Result string
 	Detail string
 }

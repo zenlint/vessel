@@ -1,6 +1,6 @@
 package models
 
-// Stage struct stage data
+// Stage stage data
 type Stage struct {
 	Namespace           string `json:"-"`
 	PipelineName        string `json:"-"`
@@ -17,7 +17,7 @@ type Stage struct {
 	Status              string `json:"-"`
 }
 
-// StageResult struct stage result
+// StageResult stage result
 type StageResult struct {
 	Namespace string `json:"-"`
 	ID        string `json:"stageVersionID"`

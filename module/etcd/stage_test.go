@@ -86,14 +86,14 @@ func TestSetStageTTL(t *testing.T) {
 func easyStage() *models.Stage {
 	return &models.Stage{
 		Name:      "etcdStage",
-		Namespace: "chenzhu",
+		Namespace: "etcdStageResult",
 	}
 }
 
 func fulStage() *models.Stage {
 	return &models.Stage{
 		Name:                "etcdStage",
-		Namespace:           "chenzhu",
+		Namespace:           "etcdStageResult",
 		Replicas:            3,
 		Image:               "unknow",
 		Port:                80,

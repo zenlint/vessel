@@ -13,7 +13,7 @@ const (
 	VesselPipelinePath = "containerops/vessel/ns_%v/pl_%v"
 )
 
-// SavePipeline data to etcd
+// SavePipeline save data to etcd
 func SavePipeline(pipeline *models.Pipeline) error {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipeline.Namespace, pipeline.Name)
 	if err := SetJSON(pipelinePath+"/data", pipeline); err != nil {
@@ -22,7 +22,7 @@ func SavePipeline(pipeline *models.Pipeline) error {
 	return SavePipelineStages(pipeline)
 }
 
-// GetPipeline data from etcd
+// GetPipeline get data from etcd
 func GetPipeline(pipeline *models.Pipeline) error {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipeline.Namespace, pipeline.Name)
 	if err := GetJSON(pipelinePath+"/data", pipeline); err != nil {
@@ -31,13 +31,13 @@ func GetPipeline(pipeline *models.Pipeline) error {
 	return GetPipelineStages(pipeline)
 }
 
-// SavePipelineStages to etcd
+// SavePipelineStages save pipeline stages to etcd
 func SavePipelineStages(pipeline *models.Pipeline) error {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipeline.Namespace, pipeline.Name)
 	return SetValue(pipelinePath+"/stages", strings.Join(pipeline.Stages, ","))
 }
 
-// GetPipelineStages from etcd
+// GetPipelineStages get pipeline stages from etcd
 func GetPipelineStages(pipeline *models.Pipeline) error {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipeline.Namespace, pipeline.Name)
 	value, err := GetValue(pipelinePath + "/stages")
@@ -48,19 +48,19 @@ func GetPipelineStages(pipeline *models.Pipeline) error {
 	return nil
 }
 
-// SetPipelineTTL to etcd
+// SetPipelineTTL set pipeline TTL to etcd
 func SetPipelineTTL(pipeline *models.Pipeline, timeLife uint64) error {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipeline.Namespace, pipeline.Name)
 	return SetDirTTL(pipelinePath, timeLife)
 }
 
-// SetPipelineStatus to etcd
+// SetPipelineStatus set pipeline status to etcd
 func SetPipelineStatus(pipeline *models.Pipeline) error {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipeline.Namespace, pipeline.Name)
 	return SetValue(pipelinePath+"/status", pipeline.Status)
 }
 
-// GetPipelineStatus from etcd
+// GetPipelineStatus get pipeline status from etcd
 func GetPipelineStatus(pipeline *models.Pipeline) (string, error) {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipeline.Namespace, pipeline.Name)
 	value, err := GetValue(pipelinePath + "/status")
@@ -71,14 +71,14 @@ func GetPipelineStatus(pipeline *models.Pipeline) (string, error) {
 	return value, err
 }
 
-// SetCreationTimestamp to etcd
+// SetCreationTimestamp set creation timestamp to etcd
 func SetCreationTimestamp(pipeline *models.Pipeline) error {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipeline.Namespace, pipeline.Name)
 	pipeline.CreationTimestamp = time.Now().Format("2006-01-02 15:04:05")
 	return SetValue(pipelinePath+"/creationTimestamp", pipeline.CreationTimestamp)
 }
 
-// GetCreationTimestamp from etcd
+// GetCreationTimestamp get creation timestamp from etcd
 func GetCreationTimestamp(pipeline *models.Pipeline) (string, error) {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipeline.Namespace, pipeline.Name)
 	value, err := GetValue(pipelinePath + "/creationTimestamp")
@@ -89,14 +89,14 @@ func GetCreationTimestamp(pipeline *models.Pipeline) (string, error) {
 	return value, err
 }
 
-// SetDeletionTimestamp to etcd
+// SetDeletionTimestamp set deletion timestamp to etcd
 func SetDeletionTimestamp(pipeline *models.Pipeline) error {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipeline.Namespace, pipeline.Name)
 	pipeline.DeletionTimestamp = time.Now().Format("2006-01-02 15:04:05")
 	return SetValue(pipelinePath+"/deletiontimestamp", pipeline.DeletionTimestamp)
 }
 
-// GetDeletionTimestamp from etcd
+// GetDeletionTimestamp get deletion timestamp from etcd
 func GetDeletionTimestamp(pipeline *models.Pipeline) (string, error) {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipeline.Namespace, pipeline.Name)
 	value, err := GetValue(pipelinePath + "/deletiontimestamp")
@@ -107,13 +107,13 @@ func GetDeletionTimestamp(pipeline *models.Pipeline) (string, error) {
 	return value, err
 }
 
-// SetPipelineResult to etcd
+// SetPipelineResult set pipeline result to etcd
 func SetPipelineResult(pipelineResult *models.PipelineResult) error {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipelineResult.Namespace, pipelineResult.Name)
 	return SetJSON(pipelinePath+"/result", pipelineResult)
 }
 
-// GetPipelineResult from etcd
+// GetPipelineResult get pipeline result from etcd
 func GetPipelineResult(pipelineResult *models.PipelineResult) error {
 	pipelinePath := fmt.Sprintf(VesselPipelinePath, pipelineResult.Namespace, pipelineResult.Name)
 	return GetJSON(pipelinePath+"/result", pipelineResult)

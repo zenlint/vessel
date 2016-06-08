@@ -24,7 +24,7 @@ const (
 	K8sConnectPath = "%v:%v"
 )
 
-// InitEtcd for star vessel
+// InitEtcd for etcd init
 func InitEtcd() error {
 	if EtcdClient == nil {
 		var etcdEndPoints []string
@@ -35,7 +35,7 @@ func InitEtcd() error {
 		cfg := client.Config{
 			Endpoints: etcdEndPoints,
 			Transport: client.DefaultTransport,
-			// set timeout per request to fail fast when the target endpoint is unavailable
+			// Set timeout per request to fail fast when the target endpoint is unavailable
 			HeaderTimeoutPerRequest: time.Second,
 		}
 		var err error
@@ -47,14 +47,14 @@ func InitEtcd() error {
 	return nil
 }
 
-// InitK8S for star vessel
+// InitK8S for K8S init
 func InitK8S() error {
 	if K8sClient == nil {
 		clientConfig := restclient.Config{}
 		host := fmt.Sprintf(K8sConnectPath, setting.RunTime.K8s.Host, setting.RunTime.K8s.Port)
 		fmt.Println(host)
 		clientConfig.Host = host
-		// clientConfig.Host = setting.RunTime.Database.Host
+		// ClientConfig.Host = setting.RunTime.Database.Host
 		client, err := unversioned.New(&clientConfig)
 		if err != nil {
 			fmt.Printf("New unversioned client err: %v!\n", err.Error())

@@ -83,11 +83,11 @@ func TestGetDeletionTimestamp(t *testing.T) {
 func TestSetPipelineResult(t *testing.T) {
 	result := &models.PipelineResult{
 		Name:        "etcdPipelineResult",
-		Namespace:   "chenzhu",
+		Namespace:   "xx",
 		WorkspaceID: 1000,
 		ProjectID:   2000,
 		PipelineID:  "aaaaaaaaaaa",
-		Status:      models.StateReadying,
+		Status:      models.StateReady,
 	}
 	if err := SetPipelineResult(result); err != nil {
 		t.Errorf("Save pipeline result to etcd err : %v", err.Error())
@@ -97,7 +97,7 @@ func TestSetPipelineResult(t *testing.T) {
 func TestGetPipelineResult(t *testing.T) {
 	result := &models.PipelineResult{
 		Name:      "etcdPipelineResult",
-		Namespace: "chenzhu",
+		Namespace: "xx",
 	}
 	if err := GetPipelineResult(result); err != nil {
 		t.Errorf("Get pipeline result from etcd err : %v", err.Error())
@@ -121,16 +121,16 @@ func TestSetPipelineTTL(t *testing.T) {
 func easyPipeline() *models.Pipeline {
 	return &models.Pipeline{
 		Name:      "etcdPipeline",
-		Namespace: "chenzhu",
+		Namespace: "xx",
 	}
 }
 
 func fulPipeline() *models.Pipeline {
 	return &models.Pipeline{
 		Name:            "etcdPipeline",
-		Namespace:       "chenzhu",
+		Namespace:       "xx",
 		Stages:          []string{"pipelineA", "pipelineB", "pipelineC"},
 		TimeoutDuration: 60,
-		Status:          models.StateReadying,
+		Status:          models.StateReady,
 	}
 }
