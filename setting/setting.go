@@ -1,6 +1,13 @@
 package setting
 
-// GlobalConf for start vessel
+import (
+	"fmt"
+	"io/ioutil"
+
+	"github.com/ghodss/yaml"
+)
+
+// GlobalConf global config
 type GlobalConf struct {
 	AppName     string
 	Usage       string
@@ -10,14 +17,14 @@ type GlobalConf struct {
 	RuntimePath string
 }
 
-// RunTimeConf runtime config for start vessel
+// RunTimeConf runtime config
 type RunTimeConf struct {
-	// Run mode config for vessel
+	// Run config
 	Run struct {
 		runMode string
 		logPath string
 	}
-	// Http config for vessel
+	// Http config
 	HTTP struct {
 		ListenMode    string
 		HTTPSCertFile string
@@ -25,7 +32,7 @@ type RunTimeConf struct {
 		Host          string
 		Port          string
 	}
-	// Database config for vessel
+	// Database config
 	Database struct {
 		Username string
 		Password string
@@ -35,13 +42,13 @@ type RunTimeConf struct {
 		Schema   string
 		Param    map[string]string
 	}
-	// Etcd config for vessel
+	// Etcd config
 	Etcd struct {
 		Endpoints []map[string]string
 		Username  string
 		Password  string
 	}
-	// K8s config for vessel
+	// K8s config
 	K8s struct {
 		Host string
 		Port string
@@ -49,16 +56,16 @@ type RunTimeConf struct {
 }
 
 var (
-	// Global globalConf reference
+	// Global global config
 	Global *GlobalConf
-	// RunTime runTime reference
+	// RunTime runTime config
 	RunTime *RunTimeConf
 )
 
-// InitConf Init config for start vessel
+// InitConf config init
 func InitConf(globalFilePath string, runtimeFilePath string) error {
 
-	/*globalFile, err := ioutil.ReadFile(globalFilePath)
+	globalFile, err := ioutil.ReadFile(globalFilePath)
 	if err != nil {
 		return err
 	}
@@ -72,12 +79,11 @@ func InitConf(globalFilePath string, runtimeFilePath string) error {
 	if err != nil {
 		return err
 	}
-	// RunTime := RunTimeConf{}
 	RunTime = &RunTimeConf{}
 	err = yaml.Unmarshal([]byte(runtimeFile), &RunTime)
 	if err != nil {
 		return err
 	}
-	fmt.Println(RunTime)*/
+	fmt.Println(RunTime)
 	return nil
 }

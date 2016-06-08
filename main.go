@@ -1,23 +1,20 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/codegangsta/cli"
-
 	"github.com/containerops/vessel/cmd"
 	"github.com/containerops/vessel/setting"
-	"log"
 )
 
 func main() {
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
 	if err := setting.InitConf("./conf/global.yaml", "./conf/runtime.yaml"); err != nil {
-		fmt.Printf("Read config error: %v", err.Error())
+		log.Printf("Read config error: %v", err.Error())
 		return
 	}
-	log.SetFlags(log.Lshortfile | log.LstdFlags)
-
 	cmdWeb := cmd.GetCmdWeb()
 
 	app := cli.NewApp()
