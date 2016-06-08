@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/codegangsta/cli"
+	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/setting"
 	"github.com/containerops/vessel/web"
 	"gopkg.in/macaron.v1"
@@ -13,7 +14,7 @@ import (
 
 // GetCmdWeb get a client command
 func GetCmdWeb() cli.Command {
-	var CmdWeb = cli.Command{
+	return cli.Command{
 		Name:        "web",
 		Usage:       "start vessel web service",
 		Description: "vessel is a CI module.",
@@ -31,19 +32,17 @@ func GetCmdWeb() cli.Command {
 			},
 		},
 	}
-	return CmdWeb
 }
 
 func runWeb(c *cli.Context) {
-	/*if err := models.InitEtcd(); err != nil {
+	if err := models.InitEtcd(); err != nil {
 		fmt.Println(err)
 		return
 	}
-	if err := models.InitK8s(); err != nil {
+	if err := models.InitK8S(); err != nil {
 		fmt.Println(err)
 		return
 	}
-	models.SyncDatabase()*/
 
 	m := macaron.New()
 
