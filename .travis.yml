@@ -17,6 +17,6 @@ install: true
 script:
   - sed -i "s/containerops/zenlinTechnofreak/g" `find ./ -type f |grep -v vendor |grep -v .git |grep -v Godeps`
   - go test -v $(go list ./... | grep -v /vendor/)
-  - go vet -x ./...
+  - go vet `go list  ./... |grep -v /vendor/`
   - fgt $HOME/gopath/bin/golint ./... |grep -v vendor/ | tee /dev/stderr
   - go build
