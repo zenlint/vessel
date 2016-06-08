@@ -138,6 +138,10 @@
 			"Rev": "aa0c862057666179de291b67d9f093d12b5a8473"
 		},
 		{
+			"ImportPath": "github.com/go-macaron/binding",
+			"Rev": "bd00823a7e9aa00cb3b1738fde244573ba7cce2c"
+		},
+		{
 			"ImportPath": "github.com/go-macaron/inject",
 			"Rev": "c5ab7bf3a307593cd44cb272d1a5beea473dd072"
 		},
