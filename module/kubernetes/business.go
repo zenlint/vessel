@@ -11,7 +11,7 @@ import (
 )
 
 // GetBusinessRes for pod from kubernetes
-func GetBusinessRes(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8sRes) {
+func GetBusinessRes(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
 	if hourglass.GetLeftNanoseconds() < 0 {
 		return formatResult(models.ResultTimeout, "Get business result in kubernetes timeout")
 	}
@@ -80,7 +80,7 @@ func httpGet(checkURL string) int {
 	return resp.StatusCode
 }
 
-func formatBusResult(mapRes map[string]int) *models.K8sRes {
+func formatBusResult(mapRes map[string]int) *models.K8SRes {
 	detail := ""
 	for key, value := range mapRes {
 		if value == 200 {

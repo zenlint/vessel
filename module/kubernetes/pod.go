@@ -11,7 +11,7 @@ import (
 	"k8s.io/kubernetes/pkg/watch"
 )
 
-func watchPodStatus(stage *models.Stage, checkOp string, hourglass *timer.Hourglass, ch chan *models.K8sRes) {
+func watchPodStatus(stage *models.Stage, checkOp string, hourglass *timer.Hourglass, ch chan *models.K8SRes) {
 	if err := getClient(); err != nil {
 		ch <- formatResult(models.ResultFailed, err.Error())
 		return

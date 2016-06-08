@@ -45,7 +45,7 @@ func deleteService(stage *models.Stage) error {
 	return k8sClient.Services(stage.Namespace).Delete(stage.Name)
 }
 
-func watchServiceStatus(stage *models.Stage, checkOp string, hourglass *timer.Hourglass, ch chan *models.K8sRes) {
+func watchServiceStatus(stage *models.Stage, checkOp string, hourglass *timer.Hourglass, ch chan *models.K8SRes) {
 	if err := getClient(); err != nil {
 		ch <- formatResult(models.ResultFailed, err.Error())
 		return

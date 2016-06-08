@@ -36,8 +36,8 @@ func k8sClientErr() error {
 	return errors.New(K8sClientErr)
 }
 
-func formatResult(result string, detail string) *models.K8sRes {
-	return &models.K8sRes{
+func formatResult(result string, detail string) *models.K8SRes {
+	return &models.K8SRes{
 		Result: result,
 		Detail: detail,
 	}

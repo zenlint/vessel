@@ -8,7 +8,7 @@ import (
 )
 
 // CreateStage from kubernetes
-func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8sRes) {
+func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
 	if hourglass.GetLeftNanoseconds() < 0 {
 		return formatResult(models.ResultTimeout, "Start stage in kubernetes timeout")
 	}
@@ -22,7 +22,7 @@ func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 		return formatResult(models.ResultFailed, err.Error())
 	}
 
-	ch := make(chan *models.K8sRes)
+	ch := make(chan *models.K8SRes)
 	go watchServiceStatus(stage, models.WatchAdded, hourglass, ch)
 	go watchRCStatus(stage, models.WatchAdded, hourglass, ch)
 	go watchPodStatus(stage, models.WatchAdded, hourglass, ch)
@@ -46,7 +46,7 @@ func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 }
 
 // DeleteStage from kubernetes
-func DeleteStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8sRes) {
+func DeleteStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
 	if hourglass.GetLeftNanoseconds() < 0 {
 		return formatResult(models.ResultFailed, "Delete stage in kubernetes timeout")
 	}
@@ -57,7 +57,7 @@ func DeleteStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 		return formatResult(models.ResultFailed, fmt.Sprintf("Replication controller %v not start", stage.Name))
 	}
 
-	ch := make(chan *models.K8sRes)
+	ch := make(chan *models.K8SRes)
 	go watchPodStatus(stage, models.WatchDeleted, hourglass, ch)
 
 	if err := deleteService(stage); err != nil {

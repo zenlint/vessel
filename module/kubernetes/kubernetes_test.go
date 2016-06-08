@@ -60,7 +60,7 @@ func createClient(host string, prop string) error {
 func getStage() *models.Stage {
 	return &models.Stage{
 		Name:                "etcdStage",
-		Namespace:           "chenzhu",
+		Namespace:           "xxxx",
 		Replicas:            3,
 		Image:               "unknow",
 		Port:                80,
