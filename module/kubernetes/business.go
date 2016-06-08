@@ -10,7 +10,7 @@ import (
 	"github.com/containerops/vessel/utils/timer"
 )
 
-// GetBusinessRes get business result from kubernetes pods
+// GetBusinessRes get business result with kubernetes pods
 func GetBusinessRes(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
 	if hourglass.GetLeftNanoseconds() < 0 {
 		return formatResult(models.ResultTimeout, "Get business result in kubernetes timeout")
