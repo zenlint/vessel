@@ -10,6 +10,7 @@ sudo: false
 
 before_install:
   - go get github.com/golang/lint/golint
+  - go get github.com/GeertJohan/fgt
 
 install: true
 
@@ -17,5 +18,5 @@ script:
   - sed -i "s/containerops/zenlinTechnofreak/g" `find ./ -type f |grep -v vendor |grep -v .git |grep -v Godeps`
   - go test -v $(go list ./... | grep -v /vendor/)
   - go vet -x ./...
-  - $HOME/gopath/bin/golint ./...
+  - fgt $HOME/gopath/bin/golint ./... |grep -v vendor/ | tee /dev/stderr
   - go build
