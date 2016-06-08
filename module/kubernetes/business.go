@@ -11,14 +11,12 @@ import (
 )
 
 // GetBusinessRes for pod from kubernetes
-func GetBusinessRes(stage *models.Stage, stageCh chan *models.K8sRes, hourglass *timer.Hourglass) {
+func GetBusinessRes(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8sRes) {
 	if hourglass.GetLeftNanoseconds() < 0 {
-		stageCh <- formatResult(models.ResultTimeout, "Get business result in kubernetes timeout")
-		return
+		return formatResult(models.ResultTimeout, "Get business result in kubernetes timeout")
 	}
 	checkCount := stage.StatusCheckCount
 	checkInterval := stage.StatusCheckInterval
-	replicas := stage.Replicas
 	if checkInterval == 0 {
 		checkInterval = 30
 	}
@@ -29,8 +27,7 @@ func GetBusinessRes(stage *models.Stage, stageCh chan *models.K8sRes, hourglass 
 	resPods := make(map[string]int)
 	ipList, err := getPodIPList(stage)
 	if err != nil {
-		stageCh <- formatResult(models.ResultFailed, err.Error())
-		return
+		return formatResult(models.ResultFailed, err.Error())
 	}
 
 	checkCh := make(chan bool)
@@ -38,17 +35,14 @@ func GetBusinessRes(stage *models.Stage, stageCh chan *models.K8sRes, hourglass 
 		checkURL := fmt.Sprintf("http://%v:%v%v", item, stage.Port, stage.StatusCheckURL)
 		go getPodResult(checkURL, checkCount, checkInterval, resPods, checkCh, hourglass)
 	}
-
-	for i := 0; i < replicas; i++ {
-		select {
-		case <-checkCh:
-		}
+	for i := 0; i < len(ipList); i++ {
+		<-checkCh
 	}
 	close(checkCh)
-	stageCh <- formatBusResult(resPods)
+	return formatBusResult(resPods)
 }
 
-func getPodResult(checkURL string, count uint, interval uint, resPods map[string]int, checkCh chan int, hourglass *timer.Hourglass) {
+func getPodResult(checkURL string, count uint64, interval uint64, resPods map[string]int, checkCh chan bool, hourglass *timer.Hourglass) {
 	resCode := -1
 	hasTime := hourglass.GetLeftNanoseconds() > 0
 	for hasTime {

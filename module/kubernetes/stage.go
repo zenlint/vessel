@@ -8,22 +8,18 @@ import (
 )
 
 // CreateStage from kubernetes
-func CreateStage(stage *models.Stage, stageCh chan *models.K8sRes, hourglass *timer.Hourglass) {
+func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8sRes) {
 	if hourglass.GetLeftNanoseconds() < 0 {
-		stageCh <- formatResult(models.ResultTimeout, "Start stage in kubernetes timeout")
-		return
+		return formatResult(models.ResultTimeout, "Start stage in kubernetes timeout")
 	}
 	has, err := checkRC(stage)
 	if err != nil {
-		stageCh <- formatResult(models.ResultFailed, err.Error())
-		return
+		return formatResult(models.ResultFailed, err.Error())
 	} else if has {
-		stageCh <- formatResult(models.ResultFailed, fmt.Sprintf("Replication controller %v already exist", stage.Name))
-		return
+		return formatResult(models.ResultFailed, fmt.Sprintf("Replication controller %v already exist", stage.Name))
 	}
 	if err := createNamespace(stage); err != nil {
-		stageCh <- formatResult(models.ResultFailed, err.Error())
-		return
+		return formatResult(models.ResultFailed, err.Error())
 	}
 
 	ch := make(chan *models.K8sRes)
@@ -32,59 +28,50 @@ func CreateStage(stage *models.Stage, stageCh chan *models.K8sRes, hourglass *ti
 	go watchPodStatus(stage, models.WatchAdded, hourglass, ch)
 
 	if err := createService(stage); err != nil {
-		stageCh <- formatResult(models.ResultFailed, err.Error())
-		return
+		return formatResult(models.ResultFailed, err.Error())
 	}
 	if err := createRC(stage); err != nil {
-		stageCh <- formatResult(models.ResultFailed, err.Error())
-		return
+		return formatResult(models.ResultFailed, err.Error())
 	}
-	var res *models.K8sRes
+
 	for count := 3; count > 0; count-- {
 		select {
 		case res = <-ch:
 			if res.Result != models.ResultSuccess {
-				stageCh <- res
-				return
+				return res
 			}
 		}
 	}
-	stageCh <- res
+	return res
 }
 
 // DeleteStage from kubernetes
-func DeleteStage(stage *models.Stage, stageCh chan *models.K8sRes, hourglass *timer.Hourglass) {
+func DeleteStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8sRes) {
 	if hourglass.GetLeftNanoseconds() < 0 {
-		stageCh <- formatResult(models.ResultFailed, "Delete stage in kubernetes timeout")
-		return
+		return formatResult(models.ResultFailed, "Delete stage in kubernetes timeout")
 	}
 	has, err := checkRC(stage)
 	if err != nil {
-		stageCh <- formatResult(models.ResultFailed, err.Error())
-		return
+		return formatResult(models.ResultFailed, err.Error())
 	} else if !has {
-		stageCh <- formatResult(models.ResultFailed, fmt.Sprintf("Replication controller %v not start", stage.Name))
-		return
+		return formatResult(models.ResultFailed, fmt.Sprintf("Replication controller %v not start", stage.Name))
 	}
 
 	ch := make(chan *models.K8sRes)
 	go watchPodStatus(stage, models.WatchDeleted, hourglass, ch)
 
 	if err := deleteService(stage); err != nil {
-		stageCh <- formatResult(models.ResultFailed, err.Error())
-		return
+		return formatResult(models.ResultFailed, err.Error())
 	}
 	if err := deleteRC(stage); err != nil {
-		stageCh <- formatResult(models.ResultFailed, err.Error())
-		return
+		return formatResult(models.ResultFailed, err.Error())
 	}
 	if err := deletePods(stage); err != nil {
-		stageCh <- formatResult(models.ResultFailed, err.Error())
-		return
+		return formatResult(models.ResultFailed, err.Error())
 	}
 
 	if count, err := getRCCount(stage); err == nil && count == 0 {
 		deleteNamespace(stage)
 	}
-	stageCh <- ch
+	return <-ch
 }

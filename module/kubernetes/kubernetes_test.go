@@ -17,19 +17,17 @@ func TestCreateInK8s(t *testing.T) {
 		t.Errorf("Create client err : %v", err.Error())
 		return
 	}
-	ch := make(chan *models.K8sRes)
 	stage := getStage()
 	hourglass := timer.InitHourglass(time.Duration(20))
-	go CreateStage(stage, ch, hourglass)
-	go GetBusinessRes(stage, ch, hourglass)
-	for count := 2; count > 0; count-- {
-		select {
-		case res := <-ch:
-			if res.Result != models.ResultSuccess {
-				t.Errorf("Create stage err : %v", res.Detail)
-				return
-			}
-		}
+	res := CreateStage(stage, hourglass)
+	if res.Result != models.ResultSuccess {
+		t.Errorf("Create stage err : %v", res.Detail)
+		return
+	}
+	res = GetBusinessRes(stage, hourglass)
+	if res.Result != models.ResultSuccess {
+		t.Errorf("Create stage err : %v", res.Detail)
+		return
 	}
 }
 
@@ -38,9 +36,7 @@ func TestDeleteInK8s(t *testing.T) {
 		t.Errorf("Create client err : %v", err.Error())
 		return
 	}
-	ch := make(chan *models.K8sRes)
-	go DeleteStage(getStage(), ch, timer.InitHourglass(time.Duration(20)))
-	res := <-ch
+	res := DeleteStage(getStage(), timer.InitHourglass(time.Duration(20)))
 	if res.Result != models.ResultSuccess {
 		t.Errorf("Delete stage err : %v", res.Detail)
 	}
