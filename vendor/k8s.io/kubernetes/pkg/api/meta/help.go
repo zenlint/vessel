@@ -76,9 +76,8 @@ func ExtractList(obj runtime.Object) ([]runtime.Object, error) {
 			switch {
 			case item.Object != nil:
 				list[i] = item.Object
-			case item.Raw != nil:
-				// TODO: Set ContentEncoding and ContentType correctly.
-				list[i] = &runtime.Unknown{Raw: item.Raw}
+			case item.RawJSON != nil:
+				list[i] = &runtime.Unknown{RawJSON: item.RawJSON}
 			default:
 				list[i] = nil
 			}
