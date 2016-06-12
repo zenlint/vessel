@@ -52,7 +52,6 @@ func InitK8S() error {
 	if K8sClient == nil {
 		clientConfig := restclient.Config{}
 		host := fmt.Sprintf(K8sConnectPath, setting.RunTime.K8s.Host, setting.RunTime.K8s.Port)
-		fmt.Println(host)
 		clientConfig.Host = host
 		// ClientConfig.Host = setting.RunTime.Database.Host
 		client, err := unversioned.New(&clientConfig)
