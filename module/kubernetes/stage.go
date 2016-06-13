@@ -11,7 +11,7 @@ import (
 
 // CreateStage from kubernetes
 func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
-	log.Println("Create statge in k8s")
+	log.Printf("Create statge in k8s stage name = %v", stage.Name)
 	if hourglass.GetLeftNanoseconds() < 0 {
 		return formatResult(models.ResultTimeout, "Start stage in kubernetes timeout")
 	}
@@ -51,7 +51,7 @@ func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 
 // DeleteStage from kubernetes
 func DeleteStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
-	log.Println("Delete statge in k8s")
+	log.Printf("Delete statge in k8s stage name = %v", stage.Name)
 	if hourglass.GetLeftNanoseconds() < 0 {
 		return formatResult(models.ResultFailed, "Delete stage in kubernetes timeout")
 	}
