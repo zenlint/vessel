@@ -61,11 +61,17 @@ func StartPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 		etcd.SetPipelineStatus(pipeline)
 	} else {
 		//rollback by pipeline failed
-		go scheduler.StopStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
+		go rollbackPipeline(executorMap, pipeline)
 	}
 	log.Printf("Start pipeline name = %v in namespace '%v' is over", pipeline.Namespace, pipeline.Name)
 	log.Print("Start job is done")
 	return bytes
+}
+
+func rollbackPipeline(executorMap map[string]*models.Executor, pipeline *models.Pipeline) {
+	scheduler.StopStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
+	pipeline.Status = models.StateDeleted
+	etcd.SetPipelineStatus(pipeline)
 }
 
 // StopPipeline stop pipeline with PipelineSpecTemplate
