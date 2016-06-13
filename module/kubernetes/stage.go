@@ -3,12 +3,15 @@ package kubernetes
 import (
 	"fmt"
 
+	"log"
+
 	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/utils/timer"
 )
 
 // CreateStage from kubernetes
 func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
+	log.Println("Create statge in k8s")
 	if hourglass.GetLeftNanoseconds() < 0 {
 		return formatResult(models.ResultTimeout, "Start stage in kubernetes timeout")
 	}
@@ -37,6 +40,7 @@ func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 	for count := 3; count > 0; count-- {
 		select {
 		case res = <-ch:
+			log.Println("Watch res :",res)
 			if res.Result != models.ResultSuccess {
 				return res
 			}
@@ -47,6 +51,7 @@ func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 
 // DeleteStage from kubernetes
 func DeleteStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
+	log.Println("Delete statge in k8s")
 	if hourglass.GetLeftNanoseconds() < 0 {
 		return formatResult(models.ResultFailed, "Delete stage in kubernetes timeout")
 	}

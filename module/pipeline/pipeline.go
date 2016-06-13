@@ -16,6 +16,7 @@ import (
 
 // StartPipeline start pipeline with PipelineSpecTemplate
 func StartPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
+	log.Println("Start pipeline")
 	pipeline := pipelineTemplate.MetaData
 	stageSpec := pipelineTemplate.Spec
 	if status, err := etcd.GetPipelineStatus(pipeline); err == nil && status != "Deleted" {
@@ -69,6 +70,7 @@ func StartPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 
 // StopPipeline stop pipeline with PipelineSpecTemplate
 func StopPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
+	log.Println("Delete pipeline")
 	pipeline := pipelineTemplate.MetaData
 	stageSpec := pipelineTemplate.Spec
 	if status, err := etcd.GetPipelineStatus(pipeline); err != nil || status == "Deleted" {
@@ -106,6 +108,8 @@ func StopPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 }
 
 func formatOutputBytes(pipelineTemplate *models.PipelineSpecTemplate, pipeline *models.Pipeline, schedulingRes []*models.ExecutedResult, pipelineDetail string) ([]byte, bool) {
+	log.Println("Pipeline result :", schedulingRes)
+	log.Printf("Pipeline detail : %v", pipelineDetail)
 	resultList := []interface{}{}
 	status := models.ResultFailed
 	if pipelineDetail == "" {
@@ -135,5 +139,6 @@ func formatOutputBytes(pipelineTemplate *models.PipelineSpecTemplate, pipeline *
 	if err != nil {
 		log.Println(err)
 	}
+	log.Printf("Pipeline result is %v", string(bytes))
 	return bytes, status == models.ResultSuccess
 }
