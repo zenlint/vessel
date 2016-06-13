@@ -1,8 +1,8 @@
 package scheduler
 
 import (
-	"log"
 	"fmt"
+	"log"
 
 	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/module/stage"
@@ -11,7 +11,7 @@ import (
 
 // StartStage start stage on scheduler
 func StartStage(executorMap map[string]*models.Executor, hourglass *timer.Hourglass) []*models.ExecutedResult {
-	readyMap := map[string]bool{"":true}
+	readyMap := map[string]bool{"": true}
 
 	count := len(executorMap)
 	finishChan := make(chan *models.ExecutedResult, count)
@@ -36,7 +36,7 @@ func StartStage(executorMap map[string]*models.Executor, hourglass *timer.Hourgl
 
 // StopStage stop stage on scheduler
 func StopStage(executorMap map[string]*models.Executor, hourglass *timer.Hourglass) []*models.ExecutedResult {
-	readyMap := map[string]bool{"":true}
+	readyMap := map[string]bool{"": true}
 
 	count := len(executorMap)
 	finishChan := make(chan *models.ExecutedResult, count)
