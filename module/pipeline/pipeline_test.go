@@ -9,7 +9,7 @@ import (
 )
 
 func TestStartPipeline(t *testing.T) {
-	if err := setting.InitConf("./conf/global.yaml", "./conf/runtime.yaml"); err != nil {
+	if err := setting.InitGlobalConf("./conf/global.yaml"); err != nil {
 		t.Logf("Read config error: %v", err.Error())
 		return
 	}

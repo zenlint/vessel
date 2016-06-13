@@ -1,8 +1,8 @@
 package setting
 
 import (
-	"fmt"
 	"io/ioutil"
+	"log"
 
 	"github.com/ghodss/yaml"
 )
@@ -62,28 +62,31 @@ var (
 	RunTime *RunTimeConf
 )
 
-// InitConf config init
-func InitConf(globalFilePath string, runtimeFilePath string) error {
-
+// InitGlobalConf global config init
+func InitGlobalConf(globalFilePath string) error {
 	globalFile, err := ioutil.ReadFile(globalFilePath)
 	if err != nil {
 		return err
 	}
+
 	Global = &GlobalConf{}
-	err = yaml.Unmarshal([]byte(globalFile), &Global)
-	if err != nil {
+	if err = yaml.Unmarshal([]byte(globalFile), &Global); err != nil {
 		return err
 	}
 
+	return initRuntimeConf(Global.RuntimePath)
+}
+
+func initRuntimeConf(runtimeFilePath string) error {
 	runtimeFile, err := ioutil.ReadFile(runtimeFilePath)
 	if err != nil {
 		return err
 	}
+
 	RunTime = &RunTimeConf{}
-	err = yaml.Unmarshal([]byte(runtimeFile), &RunTime)
-	if err != nil {
+	if err := yaml.Unmarshal([]byte(runtimeFile), &RunTime); err != nil {
 		return err
 	}
-	fmt.Println(RunTime)
+	log.Println(RunTime)
 	return nil
 }
