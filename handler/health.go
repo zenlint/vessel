@@ -7,5 +7,5 @@ import (
 
 // V1GETHealth handler for HTTP GET
 func V1GETHealth(ctx *macaron.Context) (int, []byte) {
-	return http.StatusOK, []byte(0)
+	return http.StatusOK, []byte("0")
 }
