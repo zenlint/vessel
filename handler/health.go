@@ -1,8 +1,9 @@
 package handler
 
 import (
-	"gopkg.in/macaron.v1"
 	"net/http"
+
+	"gopkg.in/macaron.v1"
 )
 
 // V1GETHealth handler for HTTP GET

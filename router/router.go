@@ -9,7 +9,7 @@ import (
 
 // SetRouters set routers to macaron
 func SetRouters(m *macaron.Macaron) {
-	m.Get("/test",handler.V1GETHealth)
+	m.Get("/test", handler.V1GETHealth)
 	m.Group("/vessel", func() {
 		m.Group("/v1", func() {
 			m.Group("/pipeline", func() {

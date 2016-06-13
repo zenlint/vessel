@@ -2,7 +2,6 @@ package kubernetes
 
 import (
 	"fmt"
-
 	"log"
 
 	"github.com/containerops/vessel/models"
@@ -40,7 +39,7 @@ func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 	for count := 3; count > 0; count-- {
 		select {
 		case res = <-ch:
-			log.Println("Watch res :",res)
+			log.Println("Watch res :", res)
 			if res.Result != models.ResultSuccess {
 				return res
 			}

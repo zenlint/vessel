@@ -61,7 +61,7 @@ func StopStage(executorMap map[string]*models.Executor, hourglass *timer.Hourgla
 
 func startProgress(executorMap map[string]*models.Executor, readyMap map[string]bool, finishChan chan *models.ExecutedResult, hourglass *timer.Hourglass,
 	handler func(info interface{}, finishChan chan *models.ExecutedResult, hourglass *timer.Hourglass)) {
-	log.Println("Scheduler ready map is ",readyMap)
+	log.Println("Scheduler ready map is ", readyMap)
 	for name, executor := range executorMap {
 		if _, ok := readyMap[name]; ok {
 			continue
