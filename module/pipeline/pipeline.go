@@ -36,7 +36,7 @@ func StartPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 		}
 	}
 
-	executorMap, err := dependence.ParsePipelineTemplate(pipelineTemplate)
+	executorMap, err := dependence.ParsePipelineTemplateForStart(pipelineTemplate)
 	if err != nil {
 		bytes, _ := formatOutputBytes(pipelineTemplate, pipeline, nil, err.Error())
 		return bytes
@@ -61,17 +61,18 @@ func StartPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 		etcd.SetPipelineStatus(pipeline)
 	} else {
 		//rollback by pipeline failed
-		go rollbackPipeline(executorMap, pipeline)
+		go removePipeline(executorMap, pipeline)
 	}
 	log.Printf("Start pipeline name = %v in namespace '%v' is over", pipeline.Namespace, pipeline.Name)
 	log.Print("Start job is done")
 	return bytes
 }
 
-func rollbackPipeline(executorMap map[string]*models.Executor, pipeline *models.Pipeline) {
-	scheduler.StopStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
+func removePipeline(executorMap map[string]*models.Executor, pipeline *models.Pipeline) []*models.ExecutedResult {
+	schedulingRes := scheduler.StopStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
 	pipeline.Status = models.StateDeleted
 	etcd.SetPipelineStatus(pipeline)
+	return schedulingRes
 }
 
 // StopPipeline stop pipeline with PipelineSpecTemplate
@@ -96,18 +97,14 @@ func StopPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 		}
 	}
 
-	executorMap, err := dependence.ParsePipelineTemplate(pipelineTemplate)
+	executorMap, err := dependence.ParsePipelineTemplateForDelete(pipelineTemplate)
 	if err != nil {
 		bytes, _ := formatOutputBytes(pipelineTemplate, pipeline, nil, err.Error())
 		return bytes
 	}
 
-	schedulingRes := scheduler.StopStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
-	bytes, success := formatOutputBytes(pipelineTemplate, pipeline, schedulingRes, "")
-	if success {
-		pipeline.Status = models.StateDeleted
-		etcd.SetPipelineStatus(pipeline)
-	}
+	schedulingRes := removePipeline(executorMap, pipeline)
+	bytes, _ := formatOutputBytes(pipelineTemplate, pipeline, schedulingRes, "")
 	log.Printf("Delete pipeline name = %v in namespace '%v' is over", pipeline.Namespace, pipeline.Name)
 	log.Print("Delete job is done")
 	return bytes

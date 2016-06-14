@@ -51,9 +51,6 @@ func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 // DeleteStage from kubernetes
 func DeleteStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
 	log.Printf("Delete statge in k8s stage name = %v", stage.Name)
-	if hourglass.GetLeftNanoseconds() < 0 {
-		return formatResult(models.ResultFailed, "Delete stage in kubernetes timeout")
-	}
 	has, err := checkRC(stage)
 	if err != nil {
 		return formatResult(models.ResultFailed, err.Error())

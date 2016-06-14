@@ -8,8 +8,8 @@ import (
 	"github.com/containerops/vessel/models"
 )
 
-// ParsePipelineTemplate parse executor map from pipelineSpecTemplate
-func ParsePipelineTemplate(template *models.PipelineSpecTemplate) (map[string]*models.Executor, error) {
+// ParsePipelineTemplateForStart parse executor map for start pipeline  from pipelineSpecTemplate
+func ParsePipelineTemplateForStart(template *models.PipelineSpecTemplate) (map[string]*models.Executor, error) {
 	pipeline := template.MetaData
 	stageSpec := template.Spec
 
@@ -43,6 +43,18 @@ func ParsePipelineTemplate(template *models.PipelineSpecTemplate) (map[string]*m
 		}
 	}
 	return executorMap, checkDependenceValidity(executorListMap, executorMap)
+}
+
+// ParsePipelineTemplateForDelete parse executor map for delete pipeline from pipelineSpecTemplate
+func ParsePipelineTemplateForDelete(template *models.PipelineSpecTemplate) (map[string]*models.Executor, error) {
+	executorMap, err := ParsePipelineTemplateForStart(template)
+	if err != nil {
+		return executorMap, err
+	}
+	for _, executor := range executorMap {
+		executor.From = []string{""}
+	}
+	return executorMap, nil
 }
 
 func checkDependenceValidity(executorListMap map[string][]string, executorMap map[string]*models.Executor) error {

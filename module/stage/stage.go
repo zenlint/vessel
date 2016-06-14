@@ -47,10 +47,8 @@ func StopStage(info interface{}, finishChan chan *models.ExecutedResult, hourgla
 	}
 
 	res := kubeclt.DeleteStage(stage, hourglass)
-	if res.Result == models.ResultSuccess {
-		stage.Status = models.StateDeleted
-		etcd.SetStageStatus(stage)
-	}
+	stage.Status = models.StateDeleted
+	etcd.SetStageStatus(stage)
 	finishChan <- fillSchedulingResult(stage, res.Result, res.Detail)
 }
 
