@@ -36,7 +36,7 @@ func StartPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 		}
 	}
 
-	executorMap, err := dependence.ParsePipelineTemplateForStart(pipelineTemplate)
+	executorMap, err := dependence.ParsePipelineTemplate(pipelineTemplate)
 	if err != nil {
 		bytes, _ := formatOutputBytes(pipelineTemplate, pipeline, nil, err.Error())
 		return bytes
@@ -69,6 +69,9 @@ func StartPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 }
 
 func removePipeline(executorMap map[string]*models.Executor, pipeline *models.Pipeline) []*models.ExecutedResult {
+	for _, executor := range executorMap {
+		executor.From = []string{""}
+	}
 	schedulingRes := scheduler.StopStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
 	pipeline.Status = models.StateDeleted
 	etcd.SetPipelineStatus(pipeline)
@@ -97,7 +100,7 @@ func StopPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 		}
 	}
 
-	executorMap, err := dependence.ParsePipelineTemplateForDelete(pipelineTemplate)
+	executorMap, err := dependence.ParsePipelineTemplate(pipelineTemplate)
 	if err != nil {
 		bytes, _ := formatOutputBytes(pipelineTemplate, pipeline, nil, err.Error())
 		return bytes
