@@ -71,7 +71,7 @@ func watchDeleteNamespace(stage *models.Stage, hourglass *timer.Hourglass, names
 			return
 		}
 		select {
-		case <-time.After(time.Duration(1)):
+		case <-time.After(time.Duration(1)*time.Second):
 		case <-timeChan:
 			running = false
 		}
