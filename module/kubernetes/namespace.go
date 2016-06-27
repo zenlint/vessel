@@ -61,7 +61,7 @@ func deleteNamespace(stage *models.Stage) error {
 	return nil
 }
 
-func watchDeleteNamespace(stage *models.Stage, hourglass *timer.Hourglass, namespaceCh chan *error) {
+func watchDeleteNamespace(stage *models.Stage, hourglass *timer.Hourglass, namespaceCh chan error) {
 	k8sNamespace := k8sClient.Namespaces()
 	timeChan := time.After(time.Duration(hourglass.GetLeftNanoseconds()))
 	running := true
