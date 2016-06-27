@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"runtime"
 
 	"github.com/codegangsta/cli"
 	"github.com/containerops/vessel/cmd"
@@ -10,6 +11,7 @@ import (
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	cmdWeb := cmd.GetCmdWeb()
 
 	app := cli.NewApp()

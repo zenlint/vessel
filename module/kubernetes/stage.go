@@ -72,7 +72,10 @@ func DeleteStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 	}
 
 	if count, err := getRCCount(stage); err == nil && count == 0 {
+		namespaceCh := make(chan *error)
+		go watchDeleteNamespace(stage, hourglass, namespaceCh)
 		deleteNamespace(stage)
+		<-namespaceCh
 	}
 	return <-ch
 }

@@ -54,8 +54,8 @@ func StartPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 	}
 
 	schedulingRes := scheduler.StartStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
-	bytes, success := formatOutputBytes(pipelineTemplate, pipeline, schedulingRes, "")
 	etcd.SetCreationTimestamp(pipeline)
+	bytes, success := formatOutputBytes(pipelineTemplate, pipeline, schedulingRes, "")
 	if success {
 		pipeline.Status = models.StateRunning
 		etcd.SetPipelineStatus(pipeline)
@@ -74,7 +74,9 @@ func removePipeline(executorMap map[string]*models.Executor, pipeline *models.Pi
 	}
 	schedulingRes := scheduler.StopStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
 	pipeline.Status = models.StateDeleted
+	etcd.SetDeletionTimestamp(pipeline)
 	etcd.SetPipelineStatus(pipeline)
+	etcd.SetPipelineTTL(pipeline,30)
 	return schedulingRes
 }
 
@@ -105,7 +107,7 @@ func StopPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 		bytes, _ := formatOutputBytes(pipelineTemplate, pipeline, nil, err.Error())
 		return bytes
 	}
-
+	etcd.GetCreationTimestamp(pipeline)
 	schedulingRes := removePipeline(executorMap, pipeline)
 	bytes, _ := formatOutputBytes(pipelineTemplate, pipeline, schedulingRes, "")
 	log.Printf("Delete pipeline name = %v in namespace '%v' is over", pipeline.Namespace, pipeline.Name)

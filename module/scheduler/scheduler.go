@@ -9,6 +9,8 @@ import (
 	"github.com/containerops/vessel/utils/timer"
 )
 
+type schedulerHand func(info interface{}, finishChan chan *models.ExecutedResult, hourglass *timer.Hourglass)
+
 // StartStage start stage on scheduler
 func StartStage(executorMap map[string]*models.Executor, hourglass *timer.Hourglass) []*models.ExecutedResult {
 	readyMap := map[string]bool{"": true}
@@ -18,9 +20,8 @@ func StartStage(executorMap map[string]*models.Executor, hourglass *timer.Hourgl
 	resultList := make([]*models.ExecutedResult, 0, count)
 
 	running := true
-	handler := stage.StartStage
 	for running {
-		go startProgress(executorMap, readyMap, finishChan, hourglass, handler)
+		go startProgress(executorMap, readyMap, finishChan, hourglass, stage.StartStage)
 		result := <-finishChan
 		resultList = append(resultList, result)
 		if result.Status != models.ResultSuccess {
@@ -43,9 +44,8 @@ func StopStage(executorMap map[string]*models.Executor, hourglass *timer.Hourgla
 	resultList := make([]*models.ExecutedResult, 0, count)
 
 	running := true
-	handler := stage.StopStage
 	for running {
-		go startProgress(executorMap, readyMap, finishChan, hourglass, handler)
+		go startProgress(executorMap, readyMap, finishChan, hourglass, stage.StopStage)
 		result := <-finishChan
 		resultList = append(resultList, result)
 		if result.Status != models.ResultSuccess {
@@ -59,8 +59,7 @@ func StopStage(executorMap map[string]*models.Executor, hourglass *timer.Hourgla
 	return resultList
 }
 
-func startProgress(executorMap map[string]*models.Executor, readyMap map[string]bool, finishChan chan *models.ExecutedResult, hourglass *timer.Hourglass,
-	handler func(info interface{}, finishChan chan *models.ExecutedResult, hourglass *timer.Hourglass)) {
+func startProgress(executorMap map[string]*models.Executor, readyMap map[string]bool, finishChan chan *models.ExecutedResult, hourglass *timer.Hourglass, handler schedulerHand) {
 	log.Println("Scheduler ready map is ", readyMap)
 	for name, executor := range executorMap {
 		if _, ok := readyMap[name]; ok {
