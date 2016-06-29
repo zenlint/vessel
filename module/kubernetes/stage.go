@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/utils/timer"
@@ -9,6 +10,7 @@ import (
 
 // CreateStage from kubernetes
 func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
+	log.Printf("Create statge in k8s stage name = %v", stage.Name)
 	if hourglass.GetLeftNanoseconds() < 0 {
 		return formatResult(models.ResultTimeout, "Start stage in kubernetes timeout")
 	}
@@ -37,6 +39,7 @@ func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 	for count := 3; count > 0; count-- {
 		select {
 		case res = <-ch:
+			log.Println("Watch res :", res)
 			if res.Result != models.ResultSuccess {
 				return res
 			}
@@ -47,9 +50,7 @@ func CreateStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 
 // DeleteStage from kubernetes
 func DeleteStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
-	if hourglass.GetLeftNanoseconds() < 0 {
-		return formatResult(models.ResultFailed, "Delete stage in kubernetes timeout")
-	}
+	log.Printf("Delete statge in k8s stage name = %v", stage.Name)
 	has, err := checkRC(stage)
 	if err != nil {
 		return formatResult(models.ResultFailed, err.Error())
@@ -71,7 +72,10 @@ func DeleteStage(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K
 	}
 
 	if count, err := getRCCount(stage); err == nil && count == 0 {
+		namespaceCh := make(chan error)
+		go watchDeleteNamespace(stage, hourglass, namespaceCh)
 		deleteNamespace(stage)
+		<-namespaceCh
 	}
 	return <-ch
 }

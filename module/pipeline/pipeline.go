@@ -16,6 +16,7 @@ import (
 
 // StartPipeline start pipeline with PipelineSpecTemplate
 func StartPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
+	log.Println("Start pipeline")
 	pipeline := pipelineTemplate.MetaData
 	stageSpec := pipelineTemplate.Spec
 	if status, err := etcd.GetPipelineStatus(pipeline); err == nil && status != "Deleted" {
@@ -53,20 +54,35 @@ func StartPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 	}
 
 	schedulingRes := scheduler.StartStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
-	bytes, success := formatOutputBytes(pipelineTemplate, pipeline, schedulingRes, "")
 	etcd.SetCreationTimestamp(pipeline)
+	bytes, success := formatOutputBytes(pipelineTemplate, pipeline, schedulingRes, "")
 	if success {
 		pipeline.Status = models.StateRunning
 		etcd.SetPipelineStatus(pipeline)
 	} else {
 		//rollback by pipeline failed
-		go scheduler.StopStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
+		go removePipeline(executorMap, pipeline)
 	}
+	log.Printf("Start pipeline name = %v in namespace '%v' is over", pipeline.Namespace, pipeline.Name)
+	log.Print("Start job is done")
 	return bytes
+}
+
+func removePipeline(executorMap map[string]*models.Executor, pipeline *models.Pipeline) []*models.ExecutedResult {
+	for _, executor := range executorMap {
+		executor.From = []string{""}
+	}
+	schedulingRes := scheduler.StopStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
+	pipeline.Status = models.StateDeleted
+	etcd.SetDeletionTimestamp(pipeline)
+	etcd.SetPipelineStatus(pipeline)
+	etcd.SetPipelineTTL(pipeline,30)
+	return schedulingRes
 }
 
 // StopPipeline stop pipeline with PipelineSpecTemplate
 func StopPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
+	log.Println("Delete pipeline")
 	pipeline := pipelineTemplate.MetaData
 	stageSpec := pipelineTemplate.Spec
 	if status, err := etcd.GetPipelineStatus(pipeline); err != nil || status == "Deleted" {
@@ -91,17 +107,17 @@ func StopPipeline(pipelineTemplate *models.PipelineSpecTemplate) []byte {
 		bytes, _ := formatOutputBytes(pipelineTemplate, pipeline, nil, err.Error())
 		return bytes
 	}
-
-	schedulingRes := scheduler.StopStage(executorMap, timer.InitHourglass(time.Duration(pipeline.TimeoutDuration)*time.Second))
-	bytes, success := formatOutputBytes(pipelineTemplate, pipeline, schedulingRes, "")
-	if success {
-		pipeline.Status = models.StateDeleted
-		etcd.SetPipelineStatus(pipeline)
-	}
+	etcd.GetCreationTimestamp(pipeline)
+	schedulingRes := removePipeline(executorMap, pipeline)
+	bytes, _ := formatOutputBytes(pipelineTemplate, pipeline, schedulingRes, "")
+	log.Printf("Delete pipeline name = %v in namespace '%v' is over", pipeline.Namespace, pipeline.Name)
+	log.Print("Delete job is done")
 	return bytes
 }
 
 func formatOutputBytes(pipelineTemplate *models.PipelineSpecTemplate, pipeline *models.Pipeline, schedulingRes []*models.ExecutedResult, pipelineDetail string) ([]byte, bool) {
+	log.Println("Pipeline result :", schedulingRes)
+	log.Printf("Pipeline detail : %v", pipelineDetail)
 	resultList := []interface{}{}
 	status := models.ResultFailed
 	if pipelineDetail == "" {
@@ -131,5 +147,6 @@ func formatOutputBytes(pipelineTemplate *models.PipelineSpecTemplate, pipeline *
 	if err != nil {
 		log.Println(err)
 	}
+	log.Printf("Pipeline result is %v", string(bytes))
 	return bytes, status == models.ResultSuccess
 }

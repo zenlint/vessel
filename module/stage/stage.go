@@ -1,6 +1,9 @@
 package stage
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/containerops/vessel/models"
 	"github.com/containerops/vessel/module/etcd"
 	kubeclt "github.com/containerops/vessel/module/kubernetes"
@@ -44,14 +47,13 @@ func StopStage(info interface{}, finishChan chan *models.ExecutedResult, hourgla
 	}
 
 	res := kubeclt.DeleteStage(stage, hourglass)
-	if res.Result == models.ResultSuccess {
-		stage.Status = models.StateDeleted
-		etcd.SetStageStatus(stage)
-	}
+	stage.Status = models.StateDeleted
+	etcd.SetStageStatus(stage)
 	finishChan <- fillSchedulingResult(stage, res.Result, res.Detail)
 }
 
 func fillSchedulingResult(stage *models.Stage, result string, detail string) *models.ExecutedResult {
+	log.Println(fmt.Sprintf("Stage name = %v result is %v, detail is %v", stage.Name, result, detail))
 	stageName := ""
 	namespace := ""
 	if stage != nil {
