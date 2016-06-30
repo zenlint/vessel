@@ -56,6 +56,9 @@ func getPodResult(checkURL string, count uint64, interval uint64, resPods map[st
 				return
 			}
 			<-time.After(time.Duration(interval) * time.Second)
+			if count--; count == 0 {
+				hasTime = false
+			}
 		case <-time.After(time.Duration(interval) * time.Second):
 			if count--; count == 0 {
 				hasTime = false
