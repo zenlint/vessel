@@ -12,17 +12,16 @@ import (
 
 // GetBusinessRes get business result with kubernetes pods
 func GetBusinessRes(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
-	checkCount := stage.StatusCheckCount
-	if checkCount == 0 {
-		return formatResult(models.ResultSuccess, "")
+	if hourglass.GetLeftNanoseconds() < 0 {
+		return formatResult(models.ResultTimeout, "Get business result in kubernetes timeout")
 	}
+	checkCount := stage.StatusCheckCount
 	checkInterval := stage.StatusCheckInterval
 	if checkInterval == 0 {
 		checkInterval = 30
 	}
-
-	if hourglass.GetLeftNanoseconds() < 0 {
-		return formatResult(models.ResultTimeout, "Get business result in kubernetes timeout")
+	if checkCount == 0 {
+		checkCount = 3
 	}
 
 	resPods := make(map[string]int)
@@ -46,21 +45,14 @@ func GetBusinessRes(stage *models.Stage, hourglass *timer.Hourglass) (res *model
 func getPodResult(checkURL string, count uint64, interval uint64, resPods map[string]int, checkCh chan bool, hourglass *timer.Hourglass) {
 	resCode := -1
 	hasTime := hourglass.GetLeftNanoseconds() > 0
-	codeCh := make(chan int)
 	for hasTime {
-		go httpGet(checkURL, codeCh)
+		resCode = httpGet(checkURL)
+		if resCode == 200 || resCode == 0 {
+			resPods[checkURL] = 200
+			checkCh <- true
+			return
+		}
 		select {
-		case resCode := <-codeCh:
-			if resCode == 200 || resCode == 0 {
-				resPods[checkURL] = 200
-				checkCh <- true
-				return
-			}
-			if count--; count == 0 {
-				hasTime = false
-			} else {
-				<-time.After(time.Duration(interval) * time.Second)
-			}
 		case <-time.After(time.Duration(interval) * time.Second):
 			if count--; count == 0 {
 				hasTime = false
@@ -73,22 +65,19 @@ func getPodResult(checkURL string, count uint64, interval uint64, resPods map[st
 	checkCh <- false
 }
 
-func httpGet(checkURL string, codeCh chan int) {
+func httpGet(checkURL string) int {
 	resp, err := http.Get(checkURL)
 	if err != nil {
-		codeCh <- -1
-		return
+		return -1
 	}
 	_, err = ioutil.ReadAll(resp.Body)
 	if resp.Body != nil {
 		resp.Body.Close()
 	}
 	if err != nil {
-		codeCh <- -1
-		return
+		return -1
 	}
-	codeCh <- resp.StatusCode
-	return
+	return resp.StatusCode
 }
 
 func formatBusResult(mapRes map[string]int) *models.K8SRes {
