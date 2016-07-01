@@ -12,16 +12,17 @@ import (
 
 // GetBusinessRes get business result with kubernetes pods
 func GetBusinessRes(stage *models.Stage, hourglass *timer.Hourglass) (res *models.K8SRes) {
-	if hourglass.GetLeftNanoseconds() < 0 {
-		return formatResult(models.ResultTimeout, "Get business result in kubernetes timeout")
-	}
 	checkCount := stage.StatusCheckCount
+	if checkCount == 0 {
+		return formatResult(models.ResultSuccess, "")
+	}
 	checkInterval := stage.StatusCheckInterval
 	if checkInterval == 0 {
 		checkInterval = 30
 	}
-	if checkCount == 0 {
-		checkCount = 3
+
+	if hourglass.GetLeftNanoseconds() < 0 {
+		return formatResult(models.ResultTimeout, "Get business result in kubernetes timeout")
 	}
 
 	resPods := make(map[string]int)
